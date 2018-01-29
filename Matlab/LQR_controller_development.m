@@ -16,9 +16,9 @@ Izz = 0.035;% same as above
 br = 0.3;
 bp = 0.6; % assume pitch thrusters produce 20N -> 4.8nm together. Assume SS at 1.5 flips/s. b = 4.8/(3*pi)
 bw = 0.6;
-br_v0 = 90*pi/180;
-bp_v0 = 90*pi/180;
-bw_v0 = 90*pi/180;
+br_v0 = 120*pi/180;
+bp_v0 = 120*pi/180;
+bw_v0 = 180*pi/180;
 
 % Thrusters
 sign = -1; %use this to reverse the direction of the vertical thrusters from the original direction
@@ -141,20 +141,22 @@ Y_pos_cost = 100;
 Y_vel_cost = 10;
 Z_pos_cost = 100;
 Z_vel_cost = 10;
-R_pos_cost = 1;
-R_vel_cost = 100;
-P_pos_cost = 1;
+R_pos_cost = 15;
+R_vel_cost = 150;
+P_pos_cost = 10;
 P_vel_cost = 100;
-W_pos_cost = 10;
-W_vel_cost = 100;
-Ta_cost = 1000;
-Tb_cost = 1000;
-Tc_cost = 1000;
-Td_cost = 1000;
-Te_cost = 1000;
-Tf_cost = 1000;
+W_pos_cost = 1;
+W_vel_cost = 20;
+Ta_cost = 150;
+Tb_cost = 150;
+Tc_cost = 150;
+Td_cost = 150;
+Te_cost = 150;
+Tf_cost = 150;
 
 % Scale costs by their expected valid range. This helps to linearize the tuning process
+
+
 
 % Q matrix
 X_pos_range = 1;
