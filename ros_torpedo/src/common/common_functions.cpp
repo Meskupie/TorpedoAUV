@@ -1,0 +1,6 @@
+#ifndef _COMMONFUNCTIONS
+#define _COMMONFUNCTIONS
+
+
+
+#endif
