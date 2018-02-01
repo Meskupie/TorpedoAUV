@@ -195,6 +195,27 @@ Kc = round(Kc,4);
 Kd = dlqr(Ad, Bd, Q, R);
 Kd = round(Kd,4);
 
+%% Build Controller File for Import
+fileID = fopen('rough_controller.txt','w');
+for i = 1:12
+    for j = 1:12
+        fprintf(fileID,'%f\n',Ad(i,j));
+    end
+end
+fprintf(fileID,'\n');
+for i = 1:12
+    for j = 1:6
+        fprintf(fileID,'%f\n',Bd(i,j));
+    end
+end
+fprintf(fileID,'\n');
+for i = 1:6
+    for j = 1:12
+        fprintf(fileID,'%f\n',Kd(i,j));
+    end
+end
+fclose(fileID);
+
 %% Plot Individual Step Responses
 t_f = 4;
 vx = 1.5;
