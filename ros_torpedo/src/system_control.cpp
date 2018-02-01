@@ -22,21 +22,80 @@
 #define MAPS_FILE_LOCATION "/home/meskupie/catkin_ws/src/TorpedoAUV/ros_torpedo/maps/"
 #define MAP_MARKER_SIZE 0.05
 
+class Parameters{
+public:
+    Parameters(ros::NodeHandle _n);
+    void generate();
+    void publish();
 
-ros_torpedo::map_targets load_map_file(std::string file_name){
+    std::string controller_filename;
+    std::string map_filename;
+    std::string path_filename;
+
+private:
+    void loadMapFile();
+    //void loadControllerFile();
+
+    ros::NodeHandle n;
+    ros::Publisher map_marker_1_pub;
+    ros::Publisher map_marker_2_pub;
+    ros::Publisher map_marker_3_pub;
+    ros::Publisher map_marker_4_pub;
+    ros::Publisher map_vector_pub;
+    tf::TransformBroadcaster fixed_frame_br;
+    tf::Transform fixed_frame_tr;
+
+    visualization_msgs::Marker marker_1;
+    visualization_msgs::Marker marker_2;
+    visualization_msgs::Marker marker_3;
+    visualization_msgs::Marker marker_4;
+
     ros_torpedo::map_targets map_vector;
-    std::fstream map_file((MAPS_FILE_LOCATION+file_name+".txt").c_str());
-    std::string line;
+
+    Eigen::Matrix<float, 12, 12> model_A;
+    Eigen::Matrix<float, 12, 6> model_B;
+    Eigen::Matrix<float, 6, 12> lqr_K;
+};
+
+Parameters::Parameters(ros::NodeHandle _n){
+    // Grab node handle
+    n = _n;
+
+    // Setup topics to Publish from this node
+    map_vector_pub   = n.advertise<ros_torpedo::map_targets>("map_vector", 1, true);
+    map_marker_1_pub = n.advertise<visualization_msgs::Marker>("map_marker_1", 1, true);
+    map_marker_2_pub = n.advertise<visualization_msgs::Marker>("map_marker_2", 1, true);
+    map_marker_3_pub = n.advertise<visualization_msgs::Marker>("map_marker_3", 1, true);
+    map_marker_4_pub = n.advertise<visualization_msgs::Marker>("map_marker_4", 1, true);
+
+    // Setup tf
+    fixed_frame_tr.setOrigin(tf::Vector3(0,0,0));
+    fixed_frame_tr.setRotation(tf::Quaternion(1,0,0,0));
+}
+
+void Parameters::generate(){
+    this->loadMapFile();
+}
+
+void Parameters::publish(){
+    map_vector_pub.publish(map_vector);
+    map_marker_1_pub.publish(marker_1);
+    map_marker_2_pub.publish(marker_2);
+    map_marker_3_pub.publish(marker_3);
+    map_marker_4_pub.publish(marker_4);
+
+    fixed_frame_br.sendTransform(tf::StampedTransform(fixed_frame_tr, ros::Time::now(), "/fixed_frame", "/inertial"));
+}
+
+void Parameters::loadMapFile(){
+    std::fstream map_file((MAPS_FILE_LOCATION+map_filename+".txt").c_str());
     if(map_file.is_open()){
         ros_torpedo::map_target temp_target;
         float temp_size;
         map_file >> temp_size;
         map_vector.size = (int)temp_size;
         map_file >> map_vector.scale;
-        ROS_INFO("%d,%f",map_vector.size,map_vector.scale);
         for(int i = 0; i < map_vector.size; i++){
-            //int dump;
-            //map_file >> dump;
             map_file >> temp_target.x;
             map_file >> temp_target.y;
             map_file >> temp_target.z;
@@ -52,18 +111,6 @@ ros_torpedo::map_targets load_map_file(std::string file_name){
     else{
         ROS_ERROR("Map failed to load");
     }
-    return(map_vector);
-}
-
-void publish_map_markers(ros::NodeHandle n, ros_torpedo::map_targets map_vector){   
-    ros::Publisher map_marker_1_pub = n.advertise<visualization_msgs::Marker>("map_marker_1", 5);
-    ros::Publisher map_marker_2_pub = n.advertise<visualization_msgs::Marker>("map_marker_2", 5);
-    ros::Publisher map_marker_3_pub = n.advertise<visualization_msgs::Marker>("map_marker_3", 5);
-    ros::Publisher map_marker_4_pub = n.advertise<visualization_msgs::Marker>("map_marker_4", 5);
-    visualization_msgs::Marker marker_1;
-    visualization_msgs::Marker marker_2;
-    visualization_msgs::Marker marker_3;
-    visualization_msgs::Marker marker_4;
 
     marker_1.type = visualization_msgs::Marker::SPHERE_LIST;
     marker_1.header.frame_id = "/inertial";
@@ -133,11 +180,6 @@ void publish_map_markers(ros::NodeHandle n, ros_torpedo::map_targets map_vector)
             break;
         }
     }
-
-    map_marker_1_pub.publish(marker_1);
-    map_marker_2_pub.publish(marker_2);
-    map_marker_3_pub.publish(marker_3);
-    map_marker_4_pub.publish(marker_4);
 }
 
 /*
@@ -169,23 +211,15 @@ void publish_map_stl(ros::NodeHandle n){
 
 int main(int argc, char **argv){
 	//Initialize the ROS framework
-    ros::init(argc,argv,"testing_node");
+    ros::init(argc,argv,"system_control_node");
     ros::NodeHandle n;
-    ros::Publisher map_vector_pub = n.advertise<ros_torpedo::map_targets>("map_vector", 5);
 
-    tf::TransformBroadcaster br;
-    tf::Transform transform;
-    transform.setOrigin(tf::Vector3(0,0,0));
-    transform.setRotation(tf::Quaternion(1,0,0,0));
-
-    ros_torpedo::map_targets map = load_map_file("rough_course_map");
+    Parameters parameters(n);
+    parameters.map_filename = "rough_course_map";
+    parameters.generate();
 
     while(true){
-        br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "/fixed_frame", "/inertial"));
-        publish_map_markers(n,map);
-        map_vector_pub.publish(map);
+        parameters.publish();
     }
-
-    
     return 0;
 }
