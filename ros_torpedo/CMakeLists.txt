@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   message_generation
+  resource_retriever
 )
 find_package(PCL 1.2 REQUIRED)
 find_package(Eigen3 REQUIRED)
