@@ -16,10 +16,13 @@
 
 #include <ros_torpedo/map_target.h>
 #include <ros_torpedo/map_targets.h>
+#include <ros_torpedo/system_parameters.h>
 
 #include <resource_retriever/retriever.h>
 
 #define MAPS_FILE_LOCATION "/home/meskupie/catkin_ws/src/TorpedoAUV/ros_torpedo/maps/"
+#define CONTROLLER_FILE_LOCATION "/home/meskupie/catkin_ws/src/TorpedoAUV/ros_torpedo/controllers/"
+#define PATHS_FILE_LOCATION "/home/meskupie/catkin_ws/src/TorpedoAUV/ros_torpedo/paths/"
 #define MAP_MARKER_SIZE 0.05
 
 class Parameters{
@@ -34,14 +37,14 @@ public:
 
 private:
     void loadMapFile();
-    //void loadControllerFile();
+    void loadControllerFile();
 
     ros::NodeHandle n;
+    ros::Publisher system_parameters_pub;
     ros::Publisher map_marker_1_pub;
     ros::Publisher map_marker_2_pub;
     ros::Publisher map_marker_3_pub;
     ros::Publisher map_marker_4_pub;
-    ros::Publisher map_vector_pub;
     tf::TransformBroadcaster fixed_frame_br;
     tf::Transform fixed_frame_tr;
 
@@ -50,7 +53,11 @@ private:
     visualization_msgs::Marker marker_3;
     visualization_msgs::Marker marker_4;
 
-    ros_torpedo::map_targets map_vector;
+    ros_torpedo::system_parameters system_parameters;
+
+    std::vector<float> model_A_msg;
+    std::vector<float> model_B_msg;
+    std::vector<float> lqr_K_msg;
 
     Eigen::Matrix<float, 12, 12> model_A;
     Eigen::Matrix<float, 12, 6> model_B;
@@ -62,7 +69,7 @@ Parameters::Parameters(ros::NodeHandle _n){
     n = _n;
 
     // Setup topics to Publish from this node
-    map_vector_pub   = n.advertise<ros_torpedo::map_targets>("map_vector", 1, true);
+    system_parameters_pub   = n.advertise<ros_torpedo::system_parameters>("system_parameters", 1, true);
     map_marker_1_pub = n.advertise<visualization_msgs::Marker>("map_marker_1", 1, true);
     map_marker_2_pub = n.advertise<visualization_msgs::Marker>("map_marker_2", 1, true);
     map_marker_3_pub = n.advertise<visualization_msgs::Marker>("map_marker_3", 1, true);
@@ -78,13 +85,13 @@ void Parameters::generate(){
 }
 
 void Parameters::publish(){
-    map_vector_pub.publish(map_vector);
+    system_parameters_pub.publish(system_parameters);
+    fixed_frame_br.sendTransform(tf::StampedTransform(fixed_frame_tr, ros::Time::now(), "/fixed_frame", "/inertial"));
+
     map_marker_1_pub.publish(marker_1);
     map_marker_2_pub.publish(marker_2);
     map_marker_3_pub.publish(marker_3);
     map_marker_4_pub.publish(marker_4);
-
-    fixed_frame_br.sendTransform(tf::StampedTransform(fixed_frame_tr, ros::Time::now(), "/fixed_frame", "/inertial"));
 }
 
 void Parameters::loadMapFile(){
@@ -93,23 +100,23 @@ void Parameters::loadMapFile(){
         ros_torpedo::map_target temp_target;
         float temp_size;
         map_file >> temp_size;
-        map_vector.size = (int)temp_size;
-        map_file >> map_vector.scale;
-        for(int i = 0; i < map_vector.size; i++){
+        system_parameters.map_vector.size = (int)temp_size;
+        map_file >> system_parameters.map_vector.scale;
+        for(int i = 0; i < system_parameters.map_vector.size; i++){
             map_file >> temp_target.x;
             map_file >> temp_target.y;
             map_file >> temp_target.z;
             map_file >> temp_target.id;
-            temp_target.x *= map_vector.scale;
-            temp_target.y *= map_vector.scale;
-            temp_target.z *= map_vector.scale;
+            temp_target.x *= system_parameters.map_vector.scale;
+            temp_target.y *= system_parameters.map_vector.scale;
+            temp_target.z *= system_parameters.map_vector.scale;
             temp_target.id -= 48;
-            map_vector.map_targets.push_back(temp_target);
+            system_parameters.map_vector.map_targets.push_back(temp_target);
         }
         map_file.close();
     }
     else{
-        ROS_ERROR("Map failed to load");
+        ROS_ERROR("Map file failed to load");
     }
 
     marker_1.type = visualization_msgs::Marker::SPHERE_LIST;
@@ -154,7 +161,7 @@ void Parameters::loadMapFile(){
 
 
     geometry_msgs::Point p;
-    for(std::vector<ros_torpedo::map_target>::iterator i = map_vector.map_targets.begin(); i != map_vector.map_targets.end(); i++){
+    for(std::vector<ros_torpedo::map_target>::iterator i = system_parameters.map_vector.map_targets.begin(); i != system_parameters.map_vector.map_targets.end(); i++){
         p.x = i->x;
         p.y = i->y;
         p.z = i->z;
@@ -182,32 +189,28 @@ void Parameters::loadMapFile(){
     }
 }
 
-/*
-void publish_map_stl(ros::NodeHandle n){
-    ros::Publisher map_stl_pub = n.advertise<visualization_msgs::Marker>("map_stl", 5);
-    visualization_msgs::Marker stl;
-
-    stl.header.frame_id = "/inertial";
-    stl.header.stamp = ros::Time();
-    stl.type = visualization_msgs::Marker::MESH_RESOURCE;
-    stl.pose.position.x = 0;
-    stl.pose.position.y = 0;
-    stl.pose.position.z = 0;
-    stl.pose.orientation.x = 0.0;
-    stl.pose.orientation.y = 0.0;
-    stl.pose.orientation.z = 0.0;
-    stl.pose.orientation.w = 1.0;
-    stl.scale.x = 1;
-    stl.scale.y = 1;
-    stl.scale.z = 1;
-    stl.color.a = 1.0; // Don't forget to set the alpha!
-    stl.color.r = 1.0;
-    stl.color.g = 1.0;
-    stl.color.b = 1.0;
-    stl.mesh_resource = "package://ros_torpedo/maps/course.stl";
-
-    map_stl_pub.publish(stl);
-}*/
+void Parameters::loadControllerFile(){
+    std::fstream controller_file((CONTROLLER_FILE_LOCATION+controller_filename+".txt").c_str());
+    if(controller_file.is_open()){
+        float temp;
+        for(int i = 0; i < 144; i++){
+            controller_file >> temp;
+            system_parameters.model_A.push_back(temp);
+        }
+        for(int i = 0; i < 72; i++){
+            controller_file >> temp;
+            system_parameters.model_B.push_back(temp);
+        }
+        for(int i = 0; i < 72; i++){
+            controller_file >> temp;
+            system_parameters.lqr_K.push_back(temp);
+        }
+        controller_file.close();
+    }
+    else{
+        ROS_ERROR("Controller file failed to load");
+    }
+}
 
 int main(int argc, char **argv){
 	//Initialize the ROS framework
@@ -216,6 +219,7 @@ int main(int argc, char **argv){
 
     Parameters parameters(n);
     parameters.map_filename = "rough_course_map";
+    parameters.controller_filename = "rough_controller_data";
     parameters.generate();
 
     while(true){

@@ -58,7 +58,7 @@ add_message_files(
 	FILES
 	map_target.msg
 	map_targets.msg
-	#system_parameters.msg
+	system_parameters.msg
 )
 
 ## Generate services in the 'srv' folder
