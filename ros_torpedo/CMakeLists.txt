@@ -144,7 +144,6 @@ add_definitions(${PCL_DEFINITIONS})
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/ROSTorpedo_node.cpp)
-add_executable(marker_node src/testing.cpp)
 add_executable(system_control_node src/system_control.cpp)
 
 ## Rename C++ executable without prefix
@@ -156,14 +155,12 @@ add_executable(system_control_node src/system_control.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(marker_node ${PROJECT_NAME}_generate_messages_cpp)
 add_dependencies(system_control_node ${PROJECT_NAME}_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(marker_node ${catkin_LIBRARIES})
 target_link_libraries(system_control_node ${catkin_LIBRARIES})
 
 #############

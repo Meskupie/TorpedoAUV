@@ -4,7 +4,6 @@
 
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
-#include <tf/transform_listener.h>
 
 #include <Eigen/Geometry>
 
@@ -18,7 +17,6 @@
 #include <ros_torpedo/map_targets.h>
 #include <ros_torpedo/system_parameters.h>
 
-#include <resource_retriever/retriever.h>
 
 #define MAPS_FILE_LOCATION "/home/meskupie/catkin_ws/src/TorpedoAUV/ros_torpedo/maps/"
 #define CONTROLLER_FILE_LOCATION "/home/meskupie/catkin_ws/src/TorpedoAUV/ros_torpedo/controllers/"
@@ -55,13 +53,13 @@ private:
 
     ros_torpedo::system_parameters system_parameters;
 
-    std::vector<float> model_A_msg;
-    std::vector<float> model_B_msg;
-    std::vector<float> lqr_K_msg;
+    std::vector<double> model_A_msg;
+    std::vector<double> model_B_msg;
+    std::vector<double> lqr_K_msg;
 
-    Eigen::Matrix<float, 12, 12> model_A;
-    Eigen::Matrix<float, 12, 6> model_B;
-    Eigen::Matrix<float, 6, 12> lqr_K;
+    Eigen::Matrix<double, 12, 12> model_A;
+    Eigen::Matrix<double, 12, 6> model_B;
+    Eigen::Matrix<double, 6, 12> lqr_K;
 };
 
 Parameters::Parameters(ros::NodeHandle _n){
@@ -98,7 +96,7 @@ void Parameters::loadMapFile(){
     std::fstream map_file((MAPS_FILE_LOCATION+map_filename+".txt").c_str());
     if(map_file.is_open()){
         ros_torpedo::map_target temp_target;
-        float temp_size;
+        double temp_size;
         map_file >> temp_size;
         system_parameters.map_vector.size = (int)temp_size;
         map_file >> system_parameters.map_vector.scale;
@@ -192,7 +190,7 @@ void Parameters::loadMapFile(){
 void Parameters::loadControllerFile(){
     std::fstream controller_file((CONTROLLER_FILE_LOCATION+controller_filename+".txt").c_str());
     if(controller_file.is_open()){
-        float temp;
+        double temp;
         for(int i = 0; i < 144; i++){
             controller_file >> temp;
             system_parameters.model_A.push_back(temp);
