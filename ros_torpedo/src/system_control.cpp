@@ -220,8 +220,22 @@ int main(int argc, char **argv){
     parameters.controller_filename = "rough_controller_data";
     parameters.generate();
 
-    while(true){
-        parameters.publish();
-    }
+    tf::Transform start;
+    start.setRotation(tf::Quaternion(0.271,-0.653,0.271,0.653));
+    start.setOrigin(tf::Vect`or3(1,1,0));
+
+    tf::Transform delta;
+    delta.setRotation(tf::Quaternion(0,0.383,0,0.924));
+    delta.setOrigin(tf::Vector3(1,0,0));
+    
+
+    tf::Transform finish = start*delta;
+
+    ROS_INFO("%f,%f,%f",finish.getOrigin().x(),finish.getOrigin().y(),finish.getOrigin().z());
+    ROS_INFO("%f,%f,%f,%f",finish.getRotation().w(),finish.getRotation().x(),finish.getRotation().y(),finish.getRotation().z());
+
+    //while(true){
+    //    parameters.publish();
+    //}
     return 0;
 }
