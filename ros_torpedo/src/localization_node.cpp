@@ -71,7 +71,6 @@ public:
     tf::transform inertial_pose;
     Eigen::Matrix<double, 12, 1> body_pose_cur;
     Eigen::Matrix<double, 12, 1> body_pose_prev;
-    Eigen::Matrix<double, 6, 1> delta_pose;
     
     double weight;
 private:
@@ -120,9 +119,8 @@ public:
 
 private:
     void systemParametersCallback(const ros_torpedo::system_parameters);
-    //void imuCallback(const geometry_msgs::twist);
-    //void cameraPointsCallback(ros_torpedo::camera_points);
-    //void systemStateCallback(const ros_torpedo::system_state);
+    void cameraTargetsCallback(ros_torpedo::camera_targets);
+    void systemStateCallback(const ros_torpedo::system_state);
 
     ros::NodeHandle n;
     ros::Subscriber system_parameters_sub;
@@ -131,51 +129,76 @@ private:
 
     Eigen::Matrix<double, 6, 1> u_prev;
 
-    Eigen::Matrix<double, 12, 12> model_A;
     Eigen::Matrix<double, 12, 6> model_B;
 
     Eigen::Matrix<double, 12, 1> motion_noise_model;
     Eigen::Matrix<double, 12, 1> initial_noise_model;
+
+    std::vector<tf::Quaternion> front_target_lines;
+    std::vector<tf::Quaternion> rear_target_lines;
+    std::vector<tf::Transform> inertial_camera_lines;
+
+    bool camera_targets_ready;
 };
 
 
 LocalizationClass::LocalizationClass(ros::NodeHandle _n){
-        // grab node handle
-        n = _n;
+    // grab node handle
+    n = _n;
 
-        //Subscribe to the desired topics and assign callbacks
-        system_parameters_sub = n.subscribe("/system_parameters", 1, &LocalizationClass::systemParametersCallback, this);
+    //Subscribe to the desired topics and assign callbacks
+    system_parameters_sub = n.subscribe("/system_parameters", 1, &LocalizationClass::systemParametersCallback, this);
 
-        //Setup topics to Publish from this node
+    //Setup topics to Publish from this node
 
-        //Initialize variables
-        initial_noise_model <<  0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0;
+    //Initialize variables
+    initial_noise_model <<  0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0;
 
-        motion_noise_model <<   0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0,
-                                0;            
+    motion_noise_model <<   0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0;            
+}
+
+
+void systemParametersCallback(const ros_torpedo::system_parameters parameters){
+map_targets map_vector
+float64[] x_initial
+float64[] model_A
+float64[] model_B
+float64[] lqr_K
+}
+
+void cameraTargetsCallback(ros_torpedo::camera_targets _targets){
+    front_target_lines.clear();
+    rear_target_lines.clear();
+    for(std::vector<ros_torpedo::map_target>::iterator i = _targets.front_targets.begin(); i != _targets.front_targets.end(); i++){
+        front_target_lines.push_back(tf::quaternion(i->x,i->y,i->z,i->w))
     }
-
+    for(std::vector<ros_torpedo::map_target>::iterator i = _targets.rear_targets.begin(); i != _targets.rear_targets.end(); i++){
+        rear_target_lines.push_back(tf::quaternion(i->x,i->y,i->z,i->w))
+    }
+    camera_targets_ready = true;
+}
 
 void LocalizationClass::systemStateCallback(const ros_torpedo::system_state){
     if(pose_lock == false){
