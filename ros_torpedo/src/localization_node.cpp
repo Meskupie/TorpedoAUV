@@ -20,6 +20,7 @@ start:
         - multiply quaternions to apply a delta orientation update
         - zero out deltas 
         * partical now has a new global position
+
         if camera_data available
             === repeat from here if running multiple scan matches 
             - find vector and orientation to both cameras
@@ -30,6 +31,7 @@ start:
                     - calculate projection of the point to the line
                     - Disregard if projection scaling is negative
                 - pick and store the point on the map with the minimum orthoganal distance
+
             if scanmatch
                 - build a point cloud with closest points along the target line
                 - run pcl::icp and grab the transform
@@ -65,6 +67,78 @@ start:
 
 #define CAMERA_ARM_LENGTH 0.1
 
+class CameraTargetsClass{
+public:
+
+private:
+    void cameraTargetsCallback(ros_torpedo::camera_targets);
+    
+    ros::Subscriber camera_targets_sub;
+    tf::
+
+};
+
+CameraTargetsClass::CameraTargetsClass(){
+    camera_targets_sub = n.subscribe("/camera_targets", 1, &CameraTargetsClass::cameraTargetsCallback, this);
+
+}
+
+void CameraTargetsClass::cameraTargetsCallback(ros_torpedo::camera_targets _targets){
+    front_target_lines.clear();
+    rear_target_lines.clear();
+    for(std::vector<ros_torpedo::map_target>::iterator i = _targets.front_targets.begin(); i != _targets.front_targets.end(); i++){
+        front_target_lines.push_back(tf::quaternion(i->x,i->y,i->z,i->w))
+    }
+    for(std::vector<ros_torpedo::map_target>::iterator i = _targets.rear_targets.begin(); i != _targets.rear_targets.end(); i++){
+        rear_target_lines.push_back(tf::quaternion(i->x,i->y,i->z,i->w))
+    }
+    camera_targets_ready = true;
+}
+
+tf::Vector3 CameraTargetsClass::findClosestPoint(tf::Transform camera_intertial, tf::Quaternion target_direction){
+    double score = 0;
+    double min_score = 100000; //hopefully this is always big enough for initialization
+    double min_index = -1;
+    double scale = 0;
+    double distance = 0;
+    double count = 0;
+    tf::Vector3 map_point_body;
+    tf::Vector3 target_vector;
+    std::vector<tf::Vector3> potential_closest_points;
+    tf::Vector3 target_unit_vector = tf::Vector3(1,0,0)*(front_camera_inertial.getRotation()*(target_direction));
+    // Look though all map targets to find the best one
+    for(std::vector<ros_torpedo::map_targets>::iterator i = map_vector.begin(); i != map_vector.end(); i++){
+        // Calculate a vector of this map target relative to the body frame of the camera
+        map_point_body.setValue(i->map_target.x,i->map_target.y,i->map_target.z);
+        map_point_body -= camera_inertial.getOrigin();
+        // Calculate the unit target line vector scale. This is a projection to the map
+        scale = map_point_body.dot(target_unit_vector)/target_unit_vector.dot(target_unit_vector);
+        // If scale is negative, we are definately tracking the wrong target...
+        target_vector.setOrigin(0,0,0);
+        if(scale > 0){
+            target_vector = scale*target_unit_vector;
+            distance = map_point_body.distance2(target_vector);
+            // Score is a combination of the error in the closest point and how close the target is
+            // The idea is to prevent interference from far away targets which are less likely to be the match
+            score = distance+scale/500;
+            if(score < min_score){
+                min_score = score;
+                min_index = count;
+            }
+        }
+        potential_closest_points.push_back(target_vector);
+        count++;
+    }
+    // check to see if our guess is a dud
+    if(min_index < 0 || min_score > 0.5){
+        // technically this dud return is not out of bounds, but i'll ignore the unlikely case
+        return tf::Vector3(0,0,0);
+    }
+    return potential_closest_points.at(min_index)+camera_inertial.getOrigin();
+}
+
+//================================================
+
 class ParticleClass{
 public:
     void iterateState(Eigen::Matrix<double, 12, 12>, Eigen::Matrix<double, 12, 6>, Eigen::Matrix<double, 6, 1>, Eigen::Matrix<double, 12, 1>);
@@ -78,6 +152,11 @@ public:
 private:
 
 }
+
+ParticleClass::ParticleClass(){
+
+}
+
 void ParticleClass::iterateState(Eigen::Matrix<double, 12, 12> A, Eigen::Matrix<double, 12, 6> B, Eigen::Matrix<double, 6, 1> u, Eigen::Matrix<double, 12, 1> std){
     // Propogate the motion model forward one time step
     x_body_cur = A*x_body_prev + B*u;
@@ -122,11 +201,11 @@ public:
 
 private:
     void systemParametersCallback(const ros_torpedo::system_parameters);
-    void cameraTargetsCallback(ros_torpedo::camera_targets);
     void systemStateCallback(const ros_torpedo::system_state);
 
     ros::NodeHandle n;
     ros::Subscriber system_parameters_sub;
+    ros::Subscriber system_state_sub;
 
     tf::TransformListener listener;
     tf::Transform front_camera_transform;
@@ -162,6 +241,7 @@ LocalizationClass::LocalizationClass(ros::NodeHandle _n){
 
     //Subscribe to the desired topics and assign callbacks
     system_parameters_sub = n.subscribe("/system_parameters", 1, &LocalizationClass::systemParametersCallback, this);
+    system_state_sub = n.subscribe("/system_state", 1, &LocalizationClass::systemStateCallback, this);
 
     //Setup topics to Publish from this node
 
@@ -198,48 +278,6 @@ LocalizationClass::LocalizationClass(ros::NodeHandle _n){
     rear_camera_transform.setRotation(0,0,1,0)   
 }
 
-tf::Vector3 LocalizationClass::findClosestPoint(tf::Transform camera_intertial, tf::Vector3 target_unit_vector){
-    double score = 0;
-    double min_score = 100000; //hopefully this is always big enough for initialization
-    double min_index = -1;
-    double scale = 0;
-    double distance = 0;
-    double count = 0;
-    tf::Vector3 map_point_body;
-    tf::Vector3 target_vector;
-    std::vector<tf::Vector3> potential_closest_points;
-    // Look though all map targets to find the best one
-    for(std::vector<ros_torpedo::map_targets>::iterator i = map_vector.begin(); i != map_vector.end(); i++){
-        // Calculate a vector of this map target relative to the body frame of the camera
-        map_point_body.setValue(i->map_target.x,i->map_target.y,i->map_target.z);
-        map_point_body -= camera_inertial.getOrigin();
-        // Calculate the unit target line vector scale. This is a projection to the map
-        scale = map_point_body.dot(target_unit_vector)/target_unit_vector.dot(target_unit_vector);
-        // If scale is negative, we are definately tracking the wrong target...
-        target_vector.setOrigin(0,0,0);
-        if(scale > 0){
-            target_vector = scale*target_unit_vector;
-            distance = map_point_body.distance2(target_vector);
-            // Score is a combination of the error in the closest point and how close the target is
-            // The idea is to prevent interference from far away targets which are less likely to be the match
-            score = distance+scale/500;
-            if(score < min_score){
-                min_score = score;
-                min_index = count;
-            }
-        }
-        potential_closest_points.push_back(target_vector);
-        count++;
-    }
-    // check to see if our guess is a dud
-    if(min_index < 0 || min_score > 0.5){
-        // technically this dud return is not out of bounds, but i'll ignore the unlikely case
-        return tf::Vector3(0,0,0);
-    }
-    return potential_closest_points.at(min_index)+camera_inertial.getOrigin();
-}
-
-
 void systemParametersCallback(const ros_torpedo::system_parameters parameters){
     if(allow_parameter_chage == true){
         this->map_vector = parameters.map_vector;
@@ -252,18 +290,6 @@ void systemParametersCallback(const ros_torpedo::system_parameters parameters){
         for(int i = 0; i < 72; i++){
             this->lqr_K(i) = parameters.lqr_K.at(i); }
     }
-}
-
-void cameraTargetsCallback(ros_torpedo::camera_targets _targets){
-    front_target_lines.clear();
-    rear_target_lines.clear();
-    for(std::vector<ros_torpedo::map_target>::iterator i = _targets.front_targets.begin(); i != _targets.front_targets.end(); i++){
-        front_target_lines.push_back(tf::quaternion(i->x,i->y,i->z,i->w))
-    }
-    for(std::vector<ros_torpedo::map_target>::iterator i = _targets.rear_targets.begin(); i != _targets.rear_targets.end(); i++){
-        rear_target_lines.push_back(tf::quaternion(i->x,i->y,i->z,i->w))
-    }
-    camera_targets_ready = true;
 }
 
 void LocalizationClass::systemStateCallback(const ros_torpedo::system_state){
@@ -280,32 +306,21 @@ void LocalizationClass::systemStateCallback(const ros_torpedo::system_state){
     if(camera_targets_ready){
         // Iterate through all particles
         for(std::vector<ParticalClass>::iterator i = partical_cloud.begin(); i != partical_cloud.end(); i++){
-            // Iterate through all front targets and then later through all rear
+            tf::Transform front_camera_inertial = i->inertial_pose*front_camera_transform;
+            tf::Transform rear_camera_inertial = i->inertial_pose*rear_camera_transform;
+            // Iterate through all front and rear targets
             // The goal is to associate points on the map with targets from perception
             for(std::vector<tf::Quaternion>::iterator j = front_target_lines.begin(); j != front_target_lines.end(); j++){
-                tf::Transform front_camera_inertial = i->inertial_pose*front_camera_transform;
-                tf::Vector3 target_unit_vector = tf::Vector3(1,0,0)*(front_camera_inertial.getRotation()*(*j));
                 // find the closest inertial point for this target 
-                tf::Vector3 closest_point = findClosestPoint(front_camera_intertial, target_unit_vector);
+                tf::Vector3 closest_point = findClosestPoint(front_camera_intertial, *j);
+                // Check if our match was a dud
+                if(closest_point == tf::Vector3(0,0,0)){
 
+                }
             }
         }
     }
-// - start with a particle cloud at x0
-//     - Assume the vehicle has no velocity
-//     - Propagate particles forward with large noise model 
-// - while true
 
-//         if camera_data available
-//             === repeat from here if running multiple scan matches 
-//             - find vector and orientation to both cameras
-//             - calculate quaternion of each target in the inertial frame
-//             - rotate a unit direction vector by the target quaternion
-//             For each perception target aquired:
-//                 For each point in the map
-//                     - calculate projection of the point to the line
-//                     - Disregard if projection scaling is negative
-//                 - pick and store the point on the map with the minimum orthoganal distance
 //             if scanmatch
 //                 - build a point cloud with closest points along the target line
 //                 - run pcl::icp and grab the transform
