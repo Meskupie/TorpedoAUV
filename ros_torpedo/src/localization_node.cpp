@@ -69,8 +69,8 @@ public:
     void randomizeState(Eigen::Matrix<double, 12, 1>);
 
     tf::transform inertial_pose;
-    Eigen::Matrix<double, 12, 1> body_pose_cur;
-    Eigen::Matrix<double, 12, 1> body_pose_prev;
+    Eigen::Matrix<double, 12, 1> x_body_cur;
+    Eigen::Matrix<double, 12, 1> x_body_prev;
     
     double weight;
 private:
@@ -78,23 +78,23 @@ private:
 }
 void ParticleClass::iterateState(Eigen::Matrix<double, 12, 12> A, Eigen::Matrix<double, 12, 6> B, Eigen::Matrix<double, 6, 1> u, Eigen::Matrix<double, 12, 1> std){
     // Propogate the motion model forward one time step
-    body_pose_cur = A*body_pose_prev + B*u;
+    x_body_cur = A*x_body_prev + B*u;
     this.randomizeState(std);
 
     // Update the particle inertial state through a delta transform from the body frame iteration
     tf::Transform delta;
-    delta.setOrigin(tf::Vector3(body_pose_cur(0),body_pose_cur(2),body_pose_cur(4)));
-    delta.setRotation(tf::Quaternion(body_pose_cur(10),body_pose_cur(8),body_pose_cur(6)));
+    delta.setOrigin(tf::Vector3(x_body_cur(0),x_body_cur(2),x_body_cur(4)));
+    delta.setRotation(tf::Quaternion(x_body_cur(10),x_body_cur(8),x_body_cur(6)));
     inertial_pose *= delta;
 
     // Zero out deltas 
-    body_pose_cur(0) = 0;
-    body_pose_cur(2) = 0;
-    body_pose_cur(4) = 0;
-    body_pose_cur(6) = 0;
-    body_pose_cur(8) = 0;
-    body_pose_cur(10) = 0;
-    body_pose_prev = body_pose_cur;
+    x_body_cur(0) = 0;
+    x_body_cur(2) = 0;
+    x_body_cur(4) = 0;
+    x_body_cur(6) = 0;
+    x_body_cur(8) = 0;
+    x_body_cur(10) = 0;
+    x_body_prev = x_body_cur;
 }
 
 
@@ -109,9 +109,10 @@ void ParticleClass::randomizeState(Eigen::Matrix<double, 12, 1> std){
         }
         noise(i) = (n-double(iterations)/2.0f)*std(i);
     }
-    body_pose_cur += output
+    x_body_cur += output
 }
 
+//================================================
 
 class LocalizationClass{
 public:
@@ -127,9 +128,13 @@ private:
 
     tf::TransformListener listener;
 
+    Eigen::Matrix<double, 12, 1> x_initial;
     Eigen::Matrix<double, 6, 1> u_prev;
+    Eigen::Matrix<double, 12, 12> model_A;
+    Eigen::Matrix<double, 12, 6 > model_B;
+    Eigen::Matrix<double, 6 , 12> lqr_K;
 
-    Eigen::Matrix<double, 12, 6> model_B;
+    Eigen::Matrix<double, 12, 1> initial_noise_model;
 
     Eigen::Matrix<double, 12, 1> motion_noise_model;
     Eigen::Matrix<double, 12, 1> initial_noise_model;
@@ -138,7 +143,12 @@ private:
     std::vector<tf::Quaternion> rear_target_lines;
     std::vector<tf::Transform> inertial_camera_lines;
 
+    ros_torpedo::map_targets map_vector;
+
     bool camera_targets_ready;
+    bool pose_lock
+    bool allow_parameter_chage;
+
 };
 
 
@@ -181,11 +191,17 @@ LocalizationClass::LocalizationClass(ros::NodeHandle _n){
 
 
 void systemParametersCallback(const ros_torpedo::system_parameters parameters){
-map_targets map_vector
-float64[] x_initial
-float64[] model_A
-float64[] model_B
-float64[] lqr_K
+    if(allow_parameter_chage == true){
+        this->map_vector = parameters.map_vector;
+        for(int i = 0; i < 12; i++){
+            this->x_initial(i) = parameters.x_initial.at(i); }
+        for(int i = 0; i < 144; i++){
+            this->model_A(i) = parameters.model_A.at(i); }
+        for(int i = 0; i < 72; i++){
+            this->model_B(i) = parameters.model_B.at(i); }
+        for(int i = 0; i < 72; i++){
+            this->lqr_K(i) = parameters.lqr_K.at(i); }
+    }
 }
 
 void cameraTargetsCallback(ros_torpedo::camera_targets _targets){

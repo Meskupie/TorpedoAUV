@@ -222,7 +222,7 @@ int main(int argc, char **argv){
 
     tf::Transform start;
     start.setRotation(tf::Quaternion(0.271,-0.653,0.271,0.653));
-    start.setOrigin(tf::Vect`or3(1,1,0));
+    start.setOrigin(tf::Vector3(1,1,0));
 
     tf::Transform delta;
     delta.setRotation(tf::Quaternion(0,0.383,0,0.924));
@@ -233,6 +233,14 @@ int main(int argc, char **argv){
 
     ROS_INFO("%f,%f,%f",finish.getOrigin().x(),finish.getOrigin().y(),finish.getOrigin().z());
     ROS_INFO("%f,%f,%f,%f",finish.getRotation().w(),finish.getRotation().x(),finish.getRotation().y(),finish.getRotation().z());
+
+    Eigen::Matrix<double,3,3> test;
+    test << 0,0,0,0,0,0,0,0,0;
+    for(int i = 0; i < 9; i++){
+        test(i) = i;
+    }
+
+    std::cout << test << std::endl;
 
     //while(true){
     //    parameters.publish();
