@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   message_generation
+  resource_retriever
 )
 find_package(PCL 1.2 REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -57,7 +58,7 @@ add_message_files(
 	FILES
 	map_target.msg
 	map_targets.msg
-	#system_parameters.msg
+	system_parameters.msg
 )
 
 ## Generate services in the 'srv' folder
