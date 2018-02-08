@@ -67,74 +67,146 @@ start:
 
 #define CAMERA_ARM_LENGTH 0.1
 
+struct CameraTarget{
+    tf::Transform target_transform;
+    tf::Vector3 target_unit_vector;
+    tf::Vector3 estimated_position;
+    double scale;
+    double distance;
+    double score;
+    uint map_index;
+};
+
 class CameraTargetsClass{
 public:
-
+    void setMap(ros_torpedo::map_targets);
+    void setInertialPose(tf::Transform);
+    double getFitScore();
+    std::vector<tf::Vector3> getPointArray();
+    bool dataAvailable();
+    
 private:
     void cameraTargetsCallback(ros_torpedo::camera_targets);
-    
+    void calculateFit();
     ros::Subscriber camera_targets_sub;
-    tf::
 
+    ros_torpedo::map_targets map_vector;
+    std::vector<CameraTarget> target_vector;
+    tf::Transform inertial_pose
+    tf::Transform front_camera_transform;
+    tf::TRansform rear_camera_transform;
+
+    bool new_data_available;
+    bool data_valid;
 };
 
 CameraTargetsClass::CameraTargetsClass(){
     camera_targets_sub = n.subscribe("/camera_targets", 1, &CameraTargetsClass::cameraTargetsCallback, this);
 
+    // Setup the camera transforms
+    front_camera_transform.setOrigin(CAMERA_ARM_LENGTH,0,0);
+    front_camera_transform.setRotation(0,0,0,1)
+    rear_camera_transform.setOrigin(-CAMERA_ARM_LENGTH,0,0);
+    rear_camera_transform.setRotation(0,0,1,0)
+
+    new_data_available = false;
+}
+
+void CameraTargetsClass::setMap(ros_torpedo::map_targets _map_vector){
+    map_vector = _map_vector;
+    data_valid = false;
+}
+
+void CameraTargetsClass::setInertialPose(tf::Transform _inertial_pose){
+    inertial_pose = _inertial_pose;
+    data_valid = false;
+}
+
+double CameraTargetsClass::getFitScore(){
+    if(!data_valid){
+        this.calculateFit();
+    }
+    //get score
+    return();
+}
+
+std::vector<tf::Vector3> CameraTargetsClass::getPointArray(){
+    if(!data_valid){
+        this.calculateFit();
+    }
+    //extract points
+    return();
+}
+
+bool CameraTargetsClass::dataAvailable(){
+    return(new_data_available);
+}
+
+void CameraTargetsClass::calculateFit(){
+    for(std::vector<std::vector<CameraTarget> >::iterator i = target_vector.begin(); i != target_vector.end(); i++){
+        i->score = 0;
+        i->scale = 0;
+        i->distance = 0;
+        double min_score = 100000; //hopefully this is always big enough for initialization
+        double min_index = -1;
+        double count = 0;
+        tf::Vector3 map_point_body;
+        tf::Vector3 target_vector;
+        std::vector<tf::Vector3> potential_closest_points;
+        tf::Vector3 target_unit_vector = tf::Vector3(1,0,0)*(front_camera_inertial.getRotation()*(target_direction));
+        // Look though all map targets to find the best one
+        for(std::vector<ros_torpedo::map_targets>::iterator i = map_vector.begin(); i != map_vector.end(); i++){
+            // Calculate a vector of this map target relative to the body frame of the camera
+            map_point_body.setValue(i->map_target.x,i->map_target.y,i->map_target.z);
+            map_point_body -= camera_inertial.getOrigin();
+            // Calculate the unit target line vector scale. This is a projection to the map
+            scale = map_point_body.dot(target_unit_vector)/target_unit_vector.dot(target_unit_vector);
+            // If scale is negative, we are definately tracking the wrong target...
+            target_vector.setOrigin(0,0,0);
+            if(scale > 0){
+                target_vector = scale*target_unit_vector;
+                distance = map_point_body.distance2(target_vector);
+                // Score is a combination of the error in the closest point and how close the target is
+                // The idea is to prevent interference from far away targets which are less likely to be the match
+                score = distance+scale/500;
+                if(score < min_score){
+                    min_score = score;
+                    min_index = count;
+                }
+            }
+            potential_closest_points.push_back(target_vector);
+            count++;
+        }
+        // check to see if our guess is a dud
+        if(min_index < 0 || min_score > 0.5){
+            // technically this dud return is not out of bounds, but i'll ignore the unlikely case
+            return tf::Vector3(0,0,0);
+        }
+        return potential_closest_points.at(min_index)+camera_inertial.getOrigin();
+    }  
 }
 
 void CameraTargetsClass::cameraTargetsCallback(ros_torpedo::camera_targets _targets){
-    front_target_lines.clear();
-    rear_target_lines.clear();
+    target_vector.clear()
+    CameraTarget target_container
     for(std::vector<ros_torpedo::map_target>::iterator i = _targets.front_targets.begin(); i != _targets.front_targets.end(); i++){
-        front_target_lines.push_back(tf::quaternion(i->x,i->y,i->z,i->w))
+        target_container.setOrigin(0,0,0);
+        target_container.setRotation(tf::quaternion(i->x,i->y,i->z,i->w));
+        target_container *= front_camera_transform;
+        target_vector.push_back(target_container);
     }
     for(std::vector<ros_torpedo::map_target>::iterator i = _targets.rear_targets.begin(); i != _targets.rear_targets.end(); i++){
-        rear_target_lines.push_back(tf::quaternion(i->x,i->y,i->z,i->w))
+        target_container.setOrigin(0,0,0);
+        target_container.setRotation(tf::quaternion(i->x,i->y,i->z,i->w));
+        target_container *= rear_camera_transform;
+        target_vector.push_back(target_container);
     }
-    camera_targets_ready = true;
-}
-
-tf::Vector3 CameraTargetsClass::findClosestPoint(tf::Transform camera_intertial, tf::Quaternion target_direction){
-    double score = 0;
-    double min_score = 100000; //hopefully this is always big enough for initialization
-    double min_index = -1;
-    double scale = 0;
-    double distance = 0;
-    double count = 0;
-    tf::Vector3 map_point_body;
-    tf::Vector3 target_vector;
-    std::vector<tf::Vector3> potential_closest_points;
-    tf::Vector3 target_unit_vector = tf::Vector3(1,0,0)*(front_camera_inertial.getRotation()*(target_direction));
-    // Look though all map targets to find the best one
-    for(std::vector<ros_torpedo::map_targets>::iterator i = map_vector.begin(); i != map_vector.end(); i++){
-        // Calculate a vector of this map target relative to the body frame of the camera
-        map_point_body.setValue(i->map_target.x,i->map_target.y,i->map_target.z);
-        map_point_body -= camera_inertial.getOrigin();
-        // Calculate the unit target line vector scale. This is a projection to the map
-        scale = map_point_body.dot(target_unit_vector)/target_unit_vector.dot(target_unit_vector);
-        // If scale is negative, we are definately tracking the wrong target...
-        target_vector.setOrigin(0,0,0);
-        if(scale > 0){
-            target_vector = scale*target_unit_vector;
-            distance = map_point_body.distance2(target_vector);
-            // Score is a combination of the error in the closest point and how close the target is
-            // The idea is to prevent interference from far away targets which are less likely to be the match
-            score = distance+scale/500;
-            if(score < min_score){
-                min_score = score;
-                min_index = count;
-            }
-        }
-        potential_closest_points.push_back(target_vector);
-        count++;
+    if(!target_vector.empty()){
+        data_valid = false;
+        new_data_available = true;
+    } else {
+        ROS_ERROR("No camera targets visible");
     }
-    // check to see if our guess is a dud
-    if(min_index < 0 || min_score > 0.5){
-        // technically this dud return is not out of bounds, but i'll ignore the unlikely case
-        return tf::Vector3(0,0,0);
-    }
-    return potential_closest_points.at(min_index)+camera_inertial.getOrigin();
 }
 
 //================================================
@@ -208,8 +280,6 @@ private:
     ros::Subscriber system_state_sub;
 
     tf::TransformListener listener;
-    tf::Transform front_camera_transform;
-    tf::TRansform rear_camera_transform;
 
     Eigen::Matrix<double, 12, 1> x_initial;
     Eigen::Matrix<double, 6, 1> u_prev;
@@ -221,10 +291,6 @@ private:
 
     Eigen::Matrix<double, 12, 1> motion_noise_model;
     Eigen::Matrix<double, 12, 1> initial_noise_model;
-
-    std::vector<tf::Quaternion> front_target_lines;
-    std::vector<tf::Quaternion> rear_target_lines;
-    std::vector<tf::Transform> inertial_camera_lines;
 
     ros_torpedo::map_targets map_vector;
 
@@ -271,24 +337,20 @@ LocalizationClass::LocalizationClass(ros::NodeHandle _n){
                             0,
                             0,
                             0;         
-
-    front_camera_transform.setOrigin(CAMERA_ARM_LENGTH,0,0);
-    front_camera_transform.setRotation(0,0,0,1)
-    rear_camera_transform.setOrigin(-CAMERA_ARM_LENGTH,0,0);
-    rear_camera_transform.setRotation(0,0,1,0)   
+  
 }
 
 void systemParametersCallback(const ros_torpedo::system_parameters parameters){
     if(allow_parameter_chage == true){
-        this->map_vector = parameters.map_vector;
+        map_vector = parameters.map_vector;
         for(int i = 0; i < 12; i++){
-            this->x_initial(i) = parameters.x_initial.at(i); }
+            x_initial(i) = parameters.x_initial.at(i); }
         for(int i = 0; i < 144; i++){
-            this->model_A(i) = parameters.model_A.at(i); }
+            model_A(i) = parameters.model_A.at(i); }
         for(int i = 0; i < 72; i++){
-            this->model_B(i) = parameters.model_B.at(i); }
+            model_B(i) = parameters.model_B.at(i); }
         for(int i = 0; i < 72; i++){
-            this->lqr_K(i) = parameters.lqr_K.at(i); }
+            lqr_K(i) = parameters.lqr_K.at(i); }
     }
 }
 
