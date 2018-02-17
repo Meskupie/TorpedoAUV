@@ -17,6 +17,7 @@
 package com.github.rosjava.android_apps.teleop;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,6 +31,9 @@ import org.ros.android.view.VirtualJoystickView;
 import org.ros.namespace.NameResolver;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
+import org.ros.rosjava_geometry.Quaternion;
+import org.ros.rosjava_geometry.Transform;
+import org.ros.rosjava_geometry.Vector3;
 
 import java.io.IOException;
 
@@ -40,6 +44,7 @@ public class MainActivity extends RosAppActivity {
 	private RosImageView<sensor_msgs.CompressedImage> cameraView;
 	private VirtualJoystickView virtualJoystickView;
 	private Button backButton;
+	private testing test_code;
 
 	public MainActivity() {
 		// The RosActivity constructor configures the notification title and ticker messages.
@@ -49,6 +54,7 @@ public class MainActivity extends RosAppActivity {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+
 
 		setDashboardResource(R.id.top_bar);
 		setMainWindowResource(R.layout.main);
@@ -65,6 +71,18 @@ public class MainActivity extends RosAppActivity {
                 onBackPressed();
             }
         });
+	}
+
+	@Override
+	public void onStart(){
+		super.onStart();
+
+		Transform test_start = new Transform(new Vector3(0,0,0),new Quaternion(0,0,0.383,0.924));
+		Transform test_delta = new Transform(new Vector3(1,0,0),new Quaternion(0,0,0,1));
+		Transform test_finish = test_start.multiply(test_delta);
+
+		Log.d("DEBUG_MSG", "x:"+test_finish.getTranslation().getX()+", y:"+test_finish.getTranslation().getY()+", z:"+test_finish.getTranslation().getZ());
+		Log.d("DEBUG_MSG","x:"+test_finish.getRotationAndScale().getX()+", y:"+test_finish.getRotationAndScale().getY()+", z:"+test_finish.getRotationAndScale().getZ()+", w:"+test_finish.getRotationAndScale().getW());
 	}
 
 	@Override
