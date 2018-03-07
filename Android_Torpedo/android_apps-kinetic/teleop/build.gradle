@@ -15,40 +15,42 @@
  */
 
 repositories {
-  maven {
-    url "https://github.com/rosjava/rosjava_mvn_repo/raw/master"
-  }
-  mavenLocal()
-  jcenter()
+    maven {
+        url "https://github.com/rosjava/rosjava_mvn_repo/raw/master"
+    }
+    mavenLocal()
+    jcenter()
 }
 
 dependencies {
-  compile 'com.github.rosjava.android_remocons:common_tools:[0.2,0.3)'
-  compile 'org.ros.android_core:android_15:[0.3,0.4)'
+    compile 'com.github.rosjava.android_remocons:common_tools:[0.2,0.3)'
+    compile 'org.ros.android_core:android_15:[0.3,0.4)'
+    compile group: 'org.ejml', name: 'ejml-all', version: '0.33'
 
-
-  compile 'org.ros.rosjava_core:rosjava:[0.3,0.4)'
-  compile 'org.ros.rosjava_messages:geometry_msgs:[1.12,1.13)'
+    compile 'org.ros.rosjava_core:rosjava:[0.3,0.4)'
+    compile 'org.ros.rosjava_messages:geometry_msgs:[1.12,1.13)'
+    compile 'org.ros.rosjava_messages:std_msgs:0.5.10'
 }
 
 apply plugin: 'com.android.application'
 
 android {
-  compileSdkVersion 25
-  buildToolsVersion "25.0.2"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
 
-  defaultConfig {
-    minSdkVersion 15
-    targetSdkVersion 22
-    versionCode 2
-    versionName "1.0.0"
-  }
-  productFlavors {
-    kinetic {
-      applicationId "com.github.rosjava.android_apps.teleop.kinetic"
-      }
-  }
-  lintOptions {
-    abortOnError = false
-  }
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 22
+        versionCode 2
+        versionName "1.0.0"
+    }
+    productFlavors {
+        kinetic {
+            applicationId "com.github.rosjava.android_apps.teleop.kinetic"
+        }
+    }
+    lintOptions {
+        abortOnError = false
+    }
+    sourceSets { main { java.srcDirs = ['src/main/java', 'src/main/dynamics'] } }
 }

@@ -26,7 +26,9 @@ apply plugin: 'catkin'
 
 allprojects {
     group 'com.github.rosjava.android_apps'
+
     version = project.catkin.pkg.version
+
 }
 
 subprojects {
