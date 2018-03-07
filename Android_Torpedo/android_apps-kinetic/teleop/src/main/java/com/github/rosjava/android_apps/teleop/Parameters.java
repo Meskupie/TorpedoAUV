@@ -15,9 +15,9 @@ import java.util.List;
 
 public class Parameters {
     // Declare data
-    ArrayList<Number> data_A;
-    ArrayList<Number> data_B;
-    ArrayList<Number> data_K;
+    ArrayList<Double> data_A;
+    ArrayList<Double> data_B;
+    ArrayList<Double> data_K;
 
     // Other
     private String dynamics_path = "res/raw/";
@@ -37,36 +37,32 @@ public class Parameters {
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(filename);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         String line;
-        int count;
         try {
-            count = 0;
-            while ((line = reader.readLine()) != null) {
-                data_A.set(count,Double.parseDouble(line));
-                count++;
+            for(int i = 0; i < SIZE_A; i++) {
+                line = reader.readLine();
+                if(line == null){
+                    Log.e("ROV_ERROR", "Matrix A file read error");
+                    return false;}
+                data_A.add(Double.parseDouble(line));
             }
-            if (count + 1 != SIZE_A) {
-                Log.e("ROV_ERROR", "Matrix A file read error");
-                return false;
+            reader.readLine();
+            for(int i = 0; i < SIZE_B; i++) {
+                line = reader.readLine();
+                if(line == null){
+                    Log.e("ROV_ERROR", "Matrix B file read error");
+                    return false;}
+                data_B.add(Double.parseDouble(line));
             }
-            count = 0;
-            while ((line = reader.readLine()) != null) {
-                data_B.set(count,Double.parseDouble(line));
-                count++;
-            }
-            if (count + 1 != SIZE_B) {
-                Log.e("ROV_ERROR", "Matrix B file read error");
-                return false;
-            }
-            count = 0;
-            while ((line = reader.readLine()) != null) {
-                data_K.set(count,Double.parseDouble(line));
-                count++;
-            }
-            if (count + 1 != SIZE_K) {
-                Log.e("ROV_ERROR", "Matrix K file read error");
-                return false;
+            reader.readLine();
+            for(int i = 0; i < SIZE_K; i++) {
+                line = reader.readLine();
+                if(line == null){
+                    Log.e("ROV_ERROR", "Matrix K file read error");
+                    return false;}
+                data_K.add(Double.parseDouble(line));
             }
         } catch (Exception e) {
+            Log.e("ROV_ERROR", "Catch error on dynamics file read");
             e.printStackTrace();
         }
         return true;

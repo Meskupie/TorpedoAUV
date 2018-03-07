@@ -15,6 +15,9 @@ import org.ros.node.parameter.ParameterListener;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
+
+import java.util.ArrayList;
+
 import std_msgs.Float64MultiArray;
 import std_msgs.UInt8;
 
@@ -80,10 +83,7 @@ public class ControllerNode extends AbstractNodeMain{
 
         param_tree.addParameterListener("/controller_K", new ParameterListener() {
             @Override
-            public void onNewValue(Object param_data) {
-                Log.d("DEBUG_MSG", "param_listener");
-                rov_controller.setData_K((double[]) param_data);
-            }
+            public void onNewValue(Object param_data) {rov_controller.setData_K((ArrayList<Number>) param_data);}
         });
 
     }

@@ -4,6 +4,7 @@ import android.util.Log;
 
 import org.ejml.simple.SimpleMatrix;
 
+import java.util.ArrayList;
 import java.util.SimpleTimeZone;
 
 import tf2_msgs.LookupTransformGoal;
@@ -52,15 +53,14 @@ public class Controller {
     }
 
     // Mutator
-    public boolean setData_K (double[] data_K_arr){
-        if(data_K_arr.length != SIZE_STATES*SIZE_INPUTS){
+    public boolean setData_K (ArrayList<Number> data_K_arr){
+        if(data_K_arr.size() != SIZE_STATES*SIZE_INPUTS){
             Log.e("ROV_ERROR","Matrix K set controller");
             return false;
         }
-        for (int i = 0; i < SIZE_INPUTS; i++) {
-            for (int j = 0; j > SIZE_STATES; j++) {
-                lqr_K_mat.set(i,j,data_K_arr[j+i*SIZE_STATES]);
-                Log.d("DUBUG_MSG",""+data_K_arr[j+i*SIZE_STATES]);
+        for(int i = 0; i < SIZE_INPUTS; i++) {
+            for(int j = 0; j < SIZE_STATES; j++) {
+                lqr_K_mat.set(i,j,(double)data_K_arr.get(j+i*SIZE_STATES));
             }
         }
         ready = true;
