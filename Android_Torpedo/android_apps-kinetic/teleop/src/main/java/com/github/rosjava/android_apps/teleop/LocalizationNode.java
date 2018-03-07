@@ -1,10 +1,23 @@
 package com.github.rosjava.android_apps.teleop;
 
+import org.ros.namespace.GraphName;
+import org.ros.node.AbstractNodeMain;
+import org.ros.node.ConnectedNode;
+
 /**
  * Created by meskupie on 2018-03-06.
  */
 
-public class LocalizationNode {
+public class LocalizationNode extends AbstractNodeMain{
+    @Override
+    public GraphName getDefaultNodeName() {
+        return GraphName.of("LocalizationNode");
+    }
+
+    @Override
+    public void onStart(ConnectedNode connectedNode) {
+
+    }
 }
 
 //import org.ros.rosjava_geometry.Quaternion;

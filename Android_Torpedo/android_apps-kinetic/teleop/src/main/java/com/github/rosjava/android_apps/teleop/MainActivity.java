@@ -19,8 +19,13 @@ import java.io.IOException;
 public class MainActivity extends RosAppActivity {
 	private VirtualJoystickView virtualJoystickView;
 	private Button backButton;
+
+	private SystemNode system_node;
+	private CommunicationNode communication_node;
+	private LocalizationNode localization_node;
+	private PlannerNode planner_node;
 	private ControllerNode controller_node;
-	private ParametersNode parameter_node;
+	private ParametersNode parameters_node;
 
 
 	public MainActivity() {
@@ -46,8 +51,14 @@ public class MainActivity extends RosAppActivity {
                 onBackPressed();
             }
         });
+
+        // Setup nodes
+		system_node = new SystemNode();
+		communication_node = new CommunicationNode();
+		localization_node = new LocalizationNode();
+		planner_node = new PlannerNode();
         controller_node = new ControllerNode();
-        parameter_node = new ParametersNode();
+        parameters_node = new ParametersNode();
 	}
 
 	@Override
@@ -84,6 +95,50 @@ public class MainActivity extends RosAppActivity {
         	System.out.println("Socket error: " + e.getMessage());
         }
 
+		// Start System Node
+		try {
+			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
+			java.net.InetAddress local_network_address = socket.getLocalAddress();
+			socket.close();
+			NodeConfiguration nodeConfiguration =
+					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+			nodeMainExecutor.execute(system_node,
+					nodeConfiguration.setNodeName("rov/system_node"));
+		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+
+		// Start Communication Node
+		try {
+			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
+			java.net.InetAddress local_network_address = socket.getLocalAddress();
+			socket.close();
+			NodeConfiguration nodeConfiguration =
+					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+			nodeMainExecutor.execute(communication_node,
+					nodeConfiguration.setNodeName("rov/communication_node"));
+		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+
+		// Start Localization Node
+		try {
+			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
+			java.net.InetAddress local_network_address = socket.getLocalAddress();
+			socket.close();
+			NodeConfiguration nodeConfiguration =
+					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+			nodeMainExecutor.execute(localization_node,
+					nodeConfiguration.setNodeName("rov/localization_node"));
+		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+
+		// Start Planner Node
+		try {
+			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
+			java.net.InetAddress local_network_address = socket.getLocalAddress();
+			socket.close();
+			NodeConfiguration nodeConfiguration =
+					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+			nodeMainExecutor.execute(planner_node,
+					nodeConfiguration.setNodeName("rov/planner_node"));
+		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+
 		// Start Controller Node
 		try {
 			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
@@ -92,7 +147,7 @@ public class MainActivity extends RosAppActivity {
 			NodeConfiguration nodeConfiguration =
 					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
 			nodeMainExecutor.execute(controller_node,
-					nodeConfiguration.setNodeName("android/controller_node"));
+					nodeConfiguration.setNodeName("rov/controller_node"));
 		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
 
 		// Start Parameters Node
@@ -102,12 +157,12 @@ public class MainActivity extends RosAppActivity {
 			socket.close();
 			NodeConfiguration nodeConfiguration =
 					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-			nodeMainExecutor.execute(parameter_node,
-					nodeConfiguration.setNodeName("android/parameter_node"));
+			nodeMainExecutor.execute(parameters_node,
+					nodeConfiguration.setNodeName("rov/parameters_node"));
 		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
 
 		// Set parameters
-		parameter_node.setDynamics("rough_controller_data.txt");
+		parameters_node.setDynamics("rough_controller_data.txt");
 
 	}
 	

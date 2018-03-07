@@ -73,7 +73,6 @@ public class ParametersNode extends AbstractNodeMain {
                     update_dynamics = false;
                 }
 
-                // Sleep
                 Thread.sleep(1000);
             }
         });

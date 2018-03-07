@@ -61,6 +61,7 @@ public class Parameters {
                     return false;}
                 data_K.add(Double.parseDouble(line));
             }
+            reader.close();
         } catch (Exception e) {
             Log.e("ROV_ERROR", "Catch error on dynamics file read");
             e.printStackTrace();
