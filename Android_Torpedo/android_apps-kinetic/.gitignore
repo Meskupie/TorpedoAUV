@@ -1,0 +1,14 @@
+bin
+gen
+build.xml
+local.properties
+proguard-project.txt
+.gradle
+build
+
+# These are Android Studio files, might be worth including these later.
+.idea
+*.iml
+build.log
+build-log.xml
+*~
