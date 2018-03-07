@@ -1,18 +1,22 @@
 package com.github.rosjava.android_apps.teleop;
 
+import android.util.Log;
+
 import org.ejml.simple.SimpleMatrix;
 
 import java.util.SimpleTimeZone;
+
+import tf2_msgs.LookupTransformGoal;
 
 /**
  * Created by meskupie on 05/03/18.
  */
 
 public class Controller {
-    private final int STATES = 12;
-    private final int INPUTS = 6;
+    private final int SIZE_STATES = 12;
+    private final int SIZE_INPUTS = 6;
 
-    private SimpleMatrix lqr_k_mat;
+    private SimpleMatrix lqr_K_mat;
     private SimpleMatrix state_r_mat;
     private SimpleMatrix input_t_mat;
 
@@ -20,31 +24,46 @@ public class Controller {
 
     public Controller() {
         // Set variables to initial values
-        lqr_k_mat = new SimpleMatrix(INPUTS,STATES);
-        state_r_mat = new SimpleMatrix(STATES,1);
-        input_t_mat = new SimpleMatrix(INPUTS,1);
+        lqr_K_mat = new SimpleMatrix(SIZE_INPUTS,SIZE_STATES);
+        state_r_mat = new SimpleMatrix(SIZE_STATES,1);
+        input_t_mat = new SimpleMatrix(SIZE_INPUTS,1);
         ready = false;
     }
 
-    public boolean setGainMatrix(SimpleMatrix _lqr_k_mat) {
-        // Check to make sure the input matrix is formatted correctly,
-        if((_lqr_k_mat.numCols() == STATES)&&(_lqr_k_mat.numRows() == INPUTS)) {
-            lqr_k_mat = _lqr_k_mat;
-            ready = true;
-            return true;
+    public double[] computeInputThrust (double[] _state_r_arr){
+        if(ready){
+            double[] state_r_arr = _state_r_arr;
+            double[] input_t_arr = new double[6];
+            SimpleMatrix state_r_mat = new SimpleMatrix(12,1);
+            SimpleMatrix input_t_mat;
+
+            for(int i = 0; i < 12; i++){
+                state_r_mat.set(1,i,state_r_arr[i]);
+            }
+            input_t_mat = lqr_K_mat.mult(state_r_mat);
+            for(int i = 0; i < 6; i++){
+                input_t_arr[i] = input_t_mat.get(i);
+            }
+            return input_t_arr;
         } else {
-            ready = false;
-            return false;
+            // return empty input
+            return new double[6];
         }
     }
 
-    public SimpleMatrix computeInputThrust (SimpleMatrix _state_r_mat){
-        if(ready){
-            state_r_mat = _state_r_mat;
-            input_t_mat = lqr_k_mat.mult(state_r_mat);
-        } else {
-            input_t_mat.zero();
+    // Mutator
+    public boolean setData_K (double[] data_K_arr){
+        if(data_K_arr.length != SIZE_STATES*SIZE_INPUTS){
+            Log.e("ROV_ERROR","Matrix K set controller");
+            return false;
         }
-        return input_t_mat;
+        for (int i = 0; i < SIZE_INPUTS; i++) {
+            for (int j = 0; j > SIZE_STATES; j++) {
+                lqr_K_mat.set(i,j,data_K_arr[j+i*SIZE_STATES]);
+                Log.d("DUBUG_MSG",""+data_K_arr[j+i*SIZE_STATES]);
+            }
+        }
+        ready = true;
+        return true;
     }
 }

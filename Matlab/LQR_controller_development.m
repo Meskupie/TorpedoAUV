@@ -1,5 +1,9 @@
 %% Set Veriables
 %clear
+path = '/Users/meskupie/Desktop/torpedoauv/Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/';
+%path = '../Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/';
+filename = 'test.txt';
+
 % Translation
 m = 4;
 bx = 12;% assume thrust at 30N forward. Assume 3m/s SS. b = 100/3^2
@@ -165,13 +169,11 @@ R_diag = [  Ta_cost*(1/Tp_range)^2
             Tf_cost*(1/Ts_range)^2];
 R = diag(R_diag);
 
-%Kc = lqrd(Ac, Bc, Q, R, dt);
-%Kc = round(Kc,4);
 Kd = dlqr(Ad, Bd, Q, R);
 Kd = round(Kd,4);
 
 %% Build Controller File for Import
-fileID = fopen('rough_controller.txt','w');
+fileID = fopen([path,filename],'w');
 for i = 1:12
     for j = 1:12
         fprintf(fileID,'%f\n',Ad(i,j));

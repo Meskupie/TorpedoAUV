@@ -7,7 +7,7 @@ import org.ros.rosjava_geometry.Vector3;
  * Created by meskupie on 17/02/18.
  */
 
-public class cameraTarget {
+public class CameraTarget {
     Transform target_transform;
     Vector3 target_unit_vector;
     Vector3 estimated_position;
