@@ -862,6 +862,7 @@ void MC_SixStep_RESET()
   if (SIXSTEP_parameters.CW_CCW == 0)
     SIXSTEP_parameters.speed_target = TARGET_SPEED;
   else
+	
     SIXSTEP_parameters.speed_target = -TARGET_SPEED;
 #endif
   
@@ -1110,7 +1111,7 @@ void MC_SixStep_Alignment()
    MC_SixStep_HF_TIMx_SetDutyCycle_CH2(0);
    MC_SixStep_HF_TIMx_SetDutyCycle_CH1(SIXSTEP_parameters.pulse_value);  
    HAL_TIM_PWM_Start(&HF_TIMx,BSP_SIP_HF_TIMx_CH3);
-   HAL_TIM_PWM_Stop(&HF_TIMx,BSP_SIP_BSP_SIP_HF_TIMx_CH2);
+   HAL_TIM_PWM_Stop(&HF_TIMx,BSP_SIP_HF_TIMx_CH2);
    HAL_TIM_PWM_Start(&HF_TIMx,BSP_SIP_HF_TIMx_CH1);   
 #else
 #ifndef VOLTAGE_MODE

@@ -37,16 +37,22 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main_32F0.h"
+#include "SPI_UI.h"
 
 /* Variables -----------------------------------------------------------------*/
 extern STSPIN32F0_MotorDriver_TypeDef STSPIN32F0MotorDriver;
 extern TIM_HandleTypeDef HF_TIMx;
 extern TIM_HandleTypeDef LF_TIMx;
+
 #ifndef VOLTAGE_MODE
 extern TIM_HandleTypeDef REFx;
 #endif
 extern ADC_HandleTypeDef ADCx;
+#ifdef ROV
+extern SPI_HandleTypeDef	hspi1;
+#else
 extern UART_HandleTypeDef huart;
+#endif
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -59,7 +65,12 @@ static void MX_HF_TIMx_Init(void);
 static void MX_REFx_Init(void);
 #endif
 static void MX_LF_TIMx_Init(void);
+#ifndef ROV
 static void MX_UART_Init(void);
+#else
+static void MX_SPI1_Init(void);
+extern void SPI_Communication_Task(void);
+#endif
 
 int main(void)
 {
@@ -82,8 +93,12 @@ int main(void)
   MX_REFx_Init();
 #endif
   MX_LF_TIMx_Init();
-  MX_UART_Init();
-
+	
+#ifndef ROV
+MX_UART_Init();
+#else
+MX_SPI1_Init();
+#endif
  /* **************************************************************************** 
   ==============================================================================   
             ###### This function initializes 6-Step lib ######
@@ -92,6 +107,11 @@ int main(void)
   MC_SixStep_INIT();
   /****************************************************************************/  
   
+//	MC_StartMotor();
+//	HAL_Delay(1000);
+//	MC_StopMotor();
+	
+	
   /* Infinite loop */
   while (1)
   {
@@ -133,7 +153,9 @@ int main(void)
                        ###### USER SPACE ######
   ==============================================================================      
   *****************************************************************************/    
-      
+#ifdef ROV
+   SPI_Communication_Task();
+#endif
    
   /****************************************************************************/
   }
@@ -320,6 +342,7 @@ void MX_LF_TIMx_Init(void)
 #endif
 
 /* UART init function */
+#ifndef ROV
 void MX_UART_Init(void)
 {
   huart.Instance = BSP_SIP_UART;
@@ -334,6 +357,28 @@ void MX_UART_Init(void)
   huart.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
   HAL_UART_Init(&huart);
 }
+#else
+static void MX_SPI1_Init(void)
+{
+
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_SLAVE;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_HARD_INPUT;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+	hspi1.Init.TIMode = SPI_TIMODE_DISABLED;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLED;
+  hspi1.Init.CRCPolynomial = 7;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLED;
+  HAL_SPI_Init(&hspi1);
+
+}
+#endif
 
 /** Configure pins as 
         * Analog 
@@ -351,6 +396,7 @@ void MX_GPIO_Init(void)
   __GPIOA_CLK_ENABLE();
   __GPIOB_CLK_ENABLE();
 
+	#ifndef ROV
   /*Configure the START STOP BUTTON GPIO pin (USER1) */
   GPIO_InitStruct.Pin = BSP_BOARD_START_STOP_BUTTON_PIN;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -363,6 +409,13 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BSP_BOARD_FAULT_LED_PORT, &GPIO_InitStruct);
   BSP_BOARD_FAULT_LED_OFF();
+	#else
+	// hack for bodged pin
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+	#endif
   
   /*Configure overcurrent threshold GPIO pins */
   GPIO_InitStruct.Pin = BSP_SIP_OC_TH_STBY_PIN;

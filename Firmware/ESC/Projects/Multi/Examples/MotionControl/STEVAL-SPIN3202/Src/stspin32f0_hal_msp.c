@@ -333,6 +333,7 @@ void HAL_TIMEx_HallSensor_MspDeInit(TIM_HandleTypeDef* htimex_hallsensor)
 }
 #endif
 
+#ifndef ROV
 /**
   * @brief     UART MSP Initialization 
   * @param[in] huart UART handle pointer
@@ -410,7 +411,39 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
     HAL_NVIC_DisableIRQ(BSP_SIP_UART_IRQn);
   }
 }
+#else
+void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
+{
 
+  GPIO_InitTypeDef GPIO_InitStruct;
+  if(hspi->Instance==SPI1)
+  {
+  /* USER CODE BEGIN SPI1_MspInit 0 */
+
+  /* USER CODE END SPI1_MspInit 0 */
+    /* Peripheral clock enable */
+    __SPI1_CLK_ENABLE();
+  
+    /**SPI1 GPIO Configuration    
+    PA4     ------> SPI1_NSS
+    PA5     ------> SPI1_SCK
+    PA6     ------> SPI1_MISO
+    PA7     ------> SPI1_MOSI 
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF0_SPI1;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN SPI1_MspInit 1 */
+
+  /* USER CODE END SPI1_MspInit 1 */
+  }
+
+}
+#endif
 #if (!defined(HALL_SENSORS)||defined(POTENTIOMETER))
 /**
   * @brief     ADC conversion complete callback 
@@ -549,6 +582,7 @@ void HAL_SYSTICK_Callback()
   */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	#ifndef ROV
   if (GPIO_Pin == BSP_BOARD_USER1_BUTTON_PIN)
   {
     // USER1 button callback function
@@ -558,6 +592,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   {
     // USER2 button callback function
   }
+	#endif
 }
 
 /**

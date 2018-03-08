@@ -41,7 +41,12 @@
 #ifndef __6STEP_LIB_H
 #define __6STEP_LIB_H
 
-#include "STEVAL-SPIN3202.h"
+#ifndef ROV
+	#include "STEVAL-SPIN3202.h"
+#else
+	#include "ROV_R1.h"
+#endif
+
 #include "stm32f0xx_hal.h"
 
 #include "math.h"

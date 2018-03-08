@@ -68,8 +68,12 @@ TIM_HandleTypeDef REFx;
 /// EVALSTSPIN32F0 adc handler
 ADC_HandleTypeDef ADCx;
 
+#ifdef ROV
+SPI_HandleTypeDef hspi1;
+#else
 /// EVALSTSPIN32F0 uart handler
 UART_HandleTypeDef huart;
+#endif
 
 /**
   * @}
@@ -91,8 +95,10 @@ STSPIN32F0_MotorDriver_TypeDef STSPIN32F0MotorDriver =
   HF_TIMx_SetDutyCycle,
   Overcurrent_Selection,
   Overcurrent_Threshold_Setvalue,
-  ADC_Channel,
-  Get_UART_Data
+  ADC_Channel
+	#ifndef ROV
+	,Get_UART_Data
+	#endif
 };
 
 /**
@@ -344,10 +350,12 @@ void ADC_Channel(uint32_t adc_ch)
  * @brief     Get the UART value from DR register
  * @retval    uint32_t
  **********************************************************/
+#ifndef ROV
 uint32_t Get_UART_Data()
 {
   return (huart.Instance->RDR);
 }
+#endif
 
 /**
   * @}  end STSPIN32F0_SIP 

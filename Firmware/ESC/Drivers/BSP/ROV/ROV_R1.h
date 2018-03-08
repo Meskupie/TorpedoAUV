@@ -1,11 +1,10 @@
 /**
  ******************************************************************************
- * @file    STEVAL-SPIN3202.h
- * @author  IPC Rennes
+ * @file    ROV_R1.h
+ * @author  Alex Bondarenko
  * @version V1.0.0
- * @date    April 24th, 2017
- * @brief   This file provides a set of functions to manage the STEVAL-SPIN3202
- * board
+ * @date    Febuary 26th, 2018
+ * @brief   This file provides a set of functions to manage the ROV PCV
  ******************************************************************************
  * @attention
  *
@@ -37,8 +36,8 @@
  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STEVAL_SPIN3202_H
-#define __STEVAL_SPIN3202_H
+#ifndef __ROV_R1_H
+#define __ROV_R1_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "MC_SixStep_param_32F0.h"
@@ -117,7 +116,7 @@
 #ifndef VOLTAGE_MODE
 	//Current Control
 	#define BSP_BOARD_REFx_TIMx               TIM3
-	#define BSP_BOARD_REFx_CHANNEL            TIM_CHANNEL_1
+	#define BSP_BOARD_REFx_CHANNEL            TIM_CHANNEL_4 //Changed
 	#define BSP_BOARD_REFx_CCR                CCR1
 	#define BSP_BOARD_REFx_TS_ITR             TIM_TS_ITR1
 	#define BSP_BOARD_REFx_CLK_ENABLE()       __TIM3_CLK_ENABLE()
@@ -134,15 +133,17 @@
   */
 
 #ifdef POTENTIOMETER
-	#define ADC_CH_1              ADC_CHANNEL_3   /*SPEED*/
+	#error "NO POTENTIOMETER on this PCB"
+	//#define ADC_CH_1              ADC_CHANNEL_3   /*SPEED*/
 #endif
 
 #ifdef CURRENT_SENSE_ADC
-	#define ADC_CH_2              ADC_CHANNEL_4   /*CURRENT*/
+	#define ADC_CH_2              ADC_CHANNEL_3   /*CURRENT*/
 #endif
 
 #ifdef VBUS_SENSE_ADC
-	#define ADC_CH_3              ADC_CHANNEL_9   /*VBUS*/
+	#error "NO VBUS_SENSE_ADC PIN on this PCB"
+	//#define ADC_CH_3              ADC_CHANNEL_9   /*VBUS*/
 #endif
 
 #ifdef TEMP_SENSE_ADC
@@ -154,7 +155,8 @@
 #define ADC_Bemf_CH3          ADC_CHANNEL_2   /*BEMF3*/
 
 #ifdef POTENTIOMETER
-	#define ADC_CH_1_ST           ADC_SAMPLETIME_7CYCLES_5 /*SPEED sampling time*/
+	#error "NO POTENTIOMETER on this PCB"
+	//#define ADC_CH_1_ST           ADC_SAMPLETIME_7CYCLES_5 /*SPEED sampling time*/
 #endif
 
 #ifdef CURRENT_SENSE_ADC
@@ -162,7 +164,8 @@
 #endif
 
 #ifdef VBUS_SENSE_ADC
-	#define ADC_CH_3_ST           ADC_SAMPLETIME_1CYCLE_5 /*VBUS sampling time*/
+	#error "NO VBUS_SENSE_ADC PIN on this PCB"
+	//#define ADC_CH_3_ST           ADC_SAMPLETIME_1CYCLE_5 /*VBUS sampling time*/
 #endif
 
 #ifdef TEMP_SENSE_ADC
@@ -177,8 +180,9 @@
 	#define ADC_CH_INIT           ADC_Bemf_CH1
 	#define ADC_CH_INIT_ST        ADC_Bemf_CH1_ST
 #elif POTENTIOMETER
-	#define ADC_CH_INIT           ADC_CH_1
-	#define ADC_CH_INIT_ST        ADC_CH_1_ST
+	#error "NO VBUS_SENSE_ADC PIN on this PCB"
+//	#define ADC_CH_INIT           ADC_CH_1
+//	#define ADC_CH_INIT_ST        ADC_CH_1_ST
 #endif
 
 /**
@@ -190,41 +194,34 @@
   */
 
 #ifndef VOLTAGE_MODE
-	#define BSP_BOARD_REFx_PIN               (GPIO_PIN_6)
-	#define BSP_BOARD_REFx_PORT              (GPIOA)
+	#define BSP_BOARD_REFx_PIN               (GPIO_PIN_1)
+	#define BSP_BOARD_REFx_PORT              (GPIOB)
 	#define BSP_BOARD_REFx_AF                (GPIO_AF1_TIM3)
 #endif
 
 #ifndef HALL_SENSORS
-	#define BSP_BOARD_ADCx_GPIOA             (GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4)
+	#define BSP_BOARD_ADCx_GPIOA             (GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3)
 #else
-	#define BSP_BOARD_ADCx_GPIOA             (GPIO_PIN_3|GPIO_PIN_4)
+	#define BSP_BOARD_ADCx_GPIOA             (GPIO_PIN_3)
 	#define BSP_BOARD_LF_TIMx_HALL_PIN       (GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2)
 	#define BSP_BOARD_LF_TIMx_HALL_PORT      (GPIOA)
 	#define BSP_BOARD_LF_TIMx_HALL_AF        (GPIO_AF2_TIM2)
 #endif
-#define BSP_BOARD_ADCx_GPIOB             (GPIO_PIN_1)
+//#define BSP_BOARD_ADCx_GPIOB             ()
 
 #ifdef PWM_ON_BEMF_SENSING
-	#define GPIO_PORT_BEMF                   (GPIOA)       /*!< GPIO port name for TON/TOFF BEMF sensing method */
-	#define GPIO_CH_BEMF                     (GPIO_PIN_7)  /*!< GPIO pin name for TON/TOFF BEMF sensing method */
-	#define GPIO_PORT_ZCR_MODE               (GPIOA)       /*!< GPIO port name for echo of TON/TOFF BEMF sensing method */
-	#define GPIO_CH_ZCR_MODE                 (GPIO_PIN_5)  /*!< GPIO pin name for echo of TON/TOFF BEMF sensing method */
+	#define GPIO_PORT_BEMF                   (GPIOB)       /*!< GPIO port name for TON/TOFF BEMF sensing method */
+	#define GPIO_CH_BEMF                     (GPIO_PIN_6)  /*!< GPIO pin name for TON/TOFF BEMF sensing method */
+	#define GPIO_PORT_ZCR_MODE               (GPIOF)       /*!< GPIO port name for echo of TON/TOFF BEMF sensing method */
+	#define GPIO_CH_ZCR_MODE                 (GPIO_PIN_1)  /*!< GPIO pin name for echo of TON/TOFF BEMF sensing method */
 #endif
 
-#define GPIO_PORT_ZCR                    (GPIOA)       /*!< GPIO port name for zero crossing detection */
-#define GPIO_CH_ZCR                      (GPIO_PIN_5)  /*!< GPIO pin name for zero crossing detection */
-#define GPIO_PORT_COMM                   (GPIOA)       /*!< GPIO port name for 6Step commutation */
-#define GPIO_CH_COMM                     (GPIO_PIN_15) /*!< GPIO pin name for 6Step commutation */
+#define GPIO_PORT_ZCR                    (GPIOF)       /*!< GPIO port name for zero crossing detection */
+#define GPIO_CH_ZCR                      (GPIO_PIN_1)  /*!< GPIO pin name for zero crossing detection */
+#define GPIO_PORT_COMM                   (GPIOB)       /*!< GPIO port name for 6Step commutation */
+#define GPIO_CH_COMM                     (GPIO_PIN_7) /*!< GPIO pin name for 6Step commutation */
 
-#define BSP_BOARD_USER1_BUTTON_PIN       (GPIO_PIN_0)
-#define BSP_BOARD_USER1_BUTTON_PORT      (GPIOF)
-#define BSP_BOARD_USER2_BUTTON_PIN       (GPIO_PIN_1)
-#define BSP_BOARD_USER2_BUTTON_PORT      (GPIOF)
-#define BSP_BOARD_START_STOP_BUTTON_PIN  (BSP_BOARD_USER1_BUTTON_PIN)
-#define BSP_BOARD_START_STOP_BUTTON_PORT (BSP_BOARD_USER1_BUTTON_PORT)
-#define BSP_BOARD_FAULT_LED_PIN          (BSP_BOARD_USER2_BUTTON_PIN)
-#define BSP_BOARD_FAULT_LED_PORT         (BSP_BOARD_USER2_BUTTON_PORT)
+
 
 
 /**
@@ -300,4 +297,6 @@ void MC_SixStep_ADC_Channel(uint32_t);
   */
   
 #endif /* __STEVAL_SPIN3202_H */
+
+
 

@@ -4,7 +4,7 @@
  *      *** Do not modify ! ***
  *
  * Project: 'Project_ROV' 
- * Target:  'STSPIN32F0A' 
+ * Target:  'ROV' 
  */
 
 #ifndef RTE_COMPONENTS_H

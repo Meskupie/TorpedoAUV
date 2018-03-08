@@ -41,14 +41,18 @@
 #ifdef UART_COMM
 #include "UART_UI.h"
 #endif
+#ifdef ROV
+#include "SPI_UI.h"
+#endif
 
 /* External variables --------------------------------------------------------*/
 extern SIXSTEP_Base_InitTypeDef SIXSTEP_parameters; /*!< Main SixStep structure*/
 extern ADC_HandleTypeDef ADCx;
 extern TIM_HandleTypeDef HF_TIMx;
 extern TIM_HandleTypeDef LF_TIMx;
+#ifndef ROV
 extern UART_HandleTypeDef huart;
-
+#endif
 /******************************************************************************/
 /*            Cortex-M0 Processor Interruption and Exception Handlers         */ 
 /******************************************************************************/
@@ -92,9 +96,13 @@ void USART1_IRQHandler(void)
 /**
 * @brief This function handles DMA USART1 TX interrupt.
 */
+
 void DMA1_Channel2_3_IRQHandler(void)
 {
+	#ifndef ROV
+	
   HAL_DMA_IRQHandler(huart.hdmatx);
+	#endif
 }
 
 /**
@@ -119,8 +127,10 @@ void ADC1_IRQHandler(void)
 */
 void EXTI0_1_IRQHandler(void)
 {
+	#ifndef ROV
   HAL_GPIO_EXTI_IRQHandler(BSP_BOARD_USER1_BUTTON_PIN);
   HAL_GPIO_EXTI_IRQHandler(BSP_BOARD_USER2_BUTTON_PIN);
+	#endif
 }
 
 /**

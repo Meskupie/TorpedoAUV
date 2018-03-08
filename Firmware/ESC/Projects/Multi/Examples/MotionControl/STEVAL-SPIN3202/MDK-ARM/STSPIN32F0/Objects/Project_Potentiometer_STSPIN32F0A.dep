@@ -1,6 +1,6 @@
 Dependencies for Project 'Project_Potentiometer', Target 'STSPIN32F0A': (DO NOT MODIFY !)
 F (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.c)(0x5995C48C)(--c99 -c --cpu Cortex-M0 -D__EVAL -g -O3 --apcs=interwork --split_sections -I ..\..\Inc -I ..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc -I ..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202 -I ..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0 -I ..\..\..\..\..\..\..\Drivers\BSP\Components\Common -I ..\..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F0xx\Include -I ..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc-I.\RTE\_STSPIN32F0A-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F0xx_DFP\1.4.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F031 -DUSE_HAL_DRIVER -DSTM32F031x6 -DNO_PID -DNO_HALL_SENSORS -DNO_ALL_WINDINGS_ENERGIZATION -DNO_FIXED_HALL_DELAY -DNO_PWM_ON_BEMF_SENSING -DNO_MC_FAN_4PP_24V -DNO_MC_RS_57BL54 -DNO_MC_2036_U_024_B_K312 -DMC_BR2804_1700_KV_1 -DDELTA_6STEP_TABLE -DCOMPLEMENTARY_DRIVE -DVOLTAGE_MODE -DPOTENTIOMETER -DNO_CURRENT_SENSE_ADC -DNO_VBUS_SENSE_ADC -DNO_TEMP_SENSE_ADC -DSPEED_RAMP-o .\objects\stspin32f0.o --omf_browse .\objects\stspin32f0.crf --depend .\objects\stspin32f0.d)
-I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5A6966F9)
+I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5995C48C)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588C3A14)
 I (..\..\..\..\..\..\..\Drivers\BSP\Components\Common\MC_Common.h)(0x595EBCDE)
 I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal.h)(0x58093CA0)
@@ -33,9 +33,9 @@ I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal_uart.h)(0
 I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal_uart_ex.h)(0x5808E14E)
 F (..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202\STEVAL-SPIN3202.c)(0x5995C48C)(--c99 -c --cpu Cortex-M0 -D__EVAL -g -O3 --apcs=interwork --split_sections -I ..\..\Inc -I ..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc -I ..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202 -I ..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0 -I ..\..\..\..\..\..\..\Drivers\BSP\Components\Common -I ..\..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F0xx\Include -I ..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc-I.\RTE\_STSPIN32F0A-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F0xx_DFP\1.4.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F031 -DUSE_HAL_DRIVER -DSTM32F031x6 -DNO_PID -DNO_HALL_SENSORS -DNO_ALL_WINDINGS_ENERGIZATION -DNO_FIXED_HALL_DELAY -DNO_PWM_ON_BEMF_SENSING -DNO_MC_FAN_4PP_24V -DNO_MC_RS_57BL54 -DNO_MC_2036_U_024_B_K312 -DMC_BR2804_1700_KV_1 -DDELTA_6STEP_TABLE -DCOMPLEMENTARY_DRIVE -DVOLTAGE_MODE -DPOTENTIOMETER -DNO_CURRENT_SENSE_ADC -DNO_VBUS_SENSE_ADC -DNO_TEMP_SENSE_ADC -DSPEED_RAMP-o .\objects\steval-spin3202.o --omf_browse .\objects\steval-spin3202.crf --depend .\objects\steval-spin3202.d)
 I (..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202\STEVAL-SPIN3202.h)(0x5995C4B8)
-I (..\..\Inc\MC_SixStep_param_32F0.h)(0x5A694F72)
-I (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x5A6E9071)
-I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5A6966F9)
+I (..\..\Inc\MC_SixStep_param_32F0.h)(0x59A071D6)
+I (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x599614CE)
+I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5995C48C)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588C3A14)
 I (..\..\..\..\..\..\..\Drivers\BSP\Components\Common\MC_Common.h)(0x595EBCDE)
 I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal.h)(0x58093CA0)
@@ -516,12 +516,12 @@ I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal_tim.h)(0x
 I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal_tim_ex.h)(0x5808E14C)
 I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal_uart.h)(0x5808E14C)
 I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal_uart_ex.h)(0x5808E14E)
-F (..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Src\6Step_Lib.c)(0x5A93AE3F)(--c99 -c --cpu Cortex-M0 -D__EVAL -g -O3 --apcs=interwork --split_sections -I ..\..\Inc -I ..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc -I ..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202 -I ..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0 -I ..\..\..\..\..\..\..\Drivers\BSP\Components\Common -I ..\..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F0xx\Include -I ..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc-I.\RTE\_STSPIN32F0A-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F0xx_DFP\1.4.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F031 -DUSE_HAL_DRIVER -DSTM32F031x6 -DNO_PID -DNO_HALL_SENSORS -DNO_ALL_WINDINGS_ENERGIZATION -DNO_FIXED_HALL_DELAY -DNO_PWM_ON_BEMF_SENSING -DNO_MC_FAN_4PP_24V -DNO_MC_RS_57BL54 -DNO_MC_2036_U_024_B_K312 -DMC_BR2804_1700_KV_1 -DDELTA_6STEP_TABLE -DCOMPLEMENTARY_DRIVE -DVOLTAGE_MODE -DPOTENTIOMETER -DNO_CURRENT_SENSE_ADC -DNO_VBUS_SENSE_ADC -DNO_TEMP_SENSE_ADC -DSPEED_RAMP-o .\objects\6step_lib.o --omf_browse .\objects\6step_lib.crf --depend .\objects\6step_lib.d)
+F (..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Src\6Step_Lib.c)(0x597971CA)(--c99 -c --cpu Cortex-M0 -D__EVAL -g -O3 --apcs=interwork --split_sections -I ..\..\Inc -I ..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc -I ..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202 -I ..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0 -I ..\..\..\..\..\..\..\Drivers\BSP\Components\Common -I ..\..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F0xx\Include -I ..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc-I.\RTE\_STSPIN32F0A-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F0xx_DFP\1.4.0\Device\Include-D__UVISION_VERSION="524" -D_RTE_ -DSTM32F031 -DUSE_HAL_DRIVER -DSTM32F031x6 -DNO_PID -DNO_HALL_SENSORS -DNO_ALL_WINDINGS_ENERGIZATION -DNO_FIXED_HALL_DELAY -DNO_PWM_ON_BEMF_SENSING -DNO_MC_FAN_4PP_24V -DNO_MC_RS_57BL54 -DNO_MC_2036_U_024_B_K312 -DMC_BR2804_1700_KV_1 -DDELTA_6STEP_TABLE -DCOMPLEMENTARY_DRIVE -DVOLTAGE_MODE -DPOTENTIOMETER -DNO_CURRENT_SENSE_ADC -DNO_VBUS_SENSE_ADC -DNO_TEMP_SENSE_ADC -DSPEED_RAMP-o .\objects\6step_lib.o --omf_browse .\objects\6step_lib.crf --depend .\objects\6step_lib.d)
 I (..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc\6Step_Lib.h)(0x59601C42)
 I (..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202\STEVAL-SPIN3202.h)(0x5995C4B8)
-I (..\..\Inc\MC_SixStep_param_32F0.h)(0x5A694F72)
-I (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x5A6E9071)
-I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5A6966F9)
+I (..\..\Inc\MC_SixStep_param_32F0.h)(0x59A071D6)
+I (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x599614CE)
+I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5995C48C)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588C3A14)
 I (..\..\..\..\..\..\..\Drivers\BSP\Components\Common\MC_Common.h)(0x595EBCDE)
 I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal.h)(0x58093CA0)
@@ -560,9 +560,9 @@ F (..\..\Src\main_32F0.c)(0x5997414E)(--c99 -c --cpu Cortex-M0 -D__EVAL -g -O3 -
 I (..\..\Inc\main_32F0.h)(0x59790996)
 I (..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc\6Step_Lib.h)(0x59601C42)
 I (..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202\STEVAL-SPIN3202.h)(0x5995C4B8)
-I (..\..\Inc\MC_SixStep_param_32F0.h)(0x5A694F72)
-I (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x5A6E9071)
-I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5A6966F9)
+I (..\..\Inc\MC_SixStep_param_32F0.h)(0x59A071D6)
+I (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x599614CE)
+I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5995C48C)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588C3A14)
 I (..\..\..\..\..\..\..\Drivers\BSP\Components\Common\MC_Common.h)(0x595EBCDE)
 I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal.h)(0x58093CA0)
@@ -600,9 +600,9 @@ F (..\..\Src\stspin32f0_hal_msp.c)(0x59790996)(--c99 -c --cpu Cortex-M0 -D__EVAL
 I (..\..\Inc\main_32F0.h)(0x59790996)
 I (..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc\6Step_Lib.h)(0x59601C42)
 I (..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202\STEVAL-SPIN3202.h)(0x5995C4B8)
-I (..\..\Inc\MC_SixStep_param_32F0.h)(0x5A694F72)
-I (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x5A6E9071)
-I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5A6966F9)
+I (..\..\Inc\MC_SixStep_param_32F0.h)(0x59A071D6)
+I (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x599614CE)
+I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5995C48C)
 I (C:\Keil_v5\ARM\ARMCC\include\stdint.h)(0x588C3A14)
 I (..\..\..\..\..\..\..\Drivers\BSP\Components\Common\MC_Common.h)(0x595EBCDE)
 I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal.h)(0x58093CA0)
@@ -669,16 +669,16 @@ I (..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc\stm32f0xx_hal_uart_ex.h
 I (..\..\Inc\stspin32f0_it.h)(0x59790996)
 I (..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc\6Step_Lib.h)(0x59601C42)
 I (..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202\STEVAL-SPIN3202.h)(0x5995C4B8)
-I (..\..\Inc\MC_SixStep_param_32F0.h)(0x5A694F72)
-I (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x5A6E9071)
-I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5A6966F9)
+I (..\..\Inc\MC_SixStep_param_32F0.h)(0x59A071D6)
+I (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x599614CE)
+I (..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0\stspin32f0.h)(0x5995C48C)
 I (..\..\..\..\..\..\..\Drivers\BSP\Components\Common\MC_Common.h)(0x595EBCDE)
 I (C:\Keil_v5\ARM\ARMCC\include\math.h)(0x588C3A14)
 I (C:\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x588C3A14)
 I (C:\Keil_v5\ARM\ARMCC\include\stdio.h)(0x588C3A14)
-F (..\..\Inc\MC_SixStep_param_32F0.h)(0x5A694F72)()
+F (..\..\Inc\MC_SixStep_param_32F0.h)(0x59A071D6)()
 F (..\..\Inc\MC_SixStep_param_2036_U_024_B_K312.h)(0x597A6EB4)()
-F (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x5A6E9071)()
+F (..\..\Inc\MC_SixStep_param_BR2804_1700_KV_1.h)(0x599614CE)()
 F (..\..\Inc\MC_SixStep_param_FAN_4PP_24V.h)(0x59A071D4)()
 F (..\..\Inc\MC_SixStep_param_RS_57BL54.h)(0x597A6EB4)()
 F (RTE\Device\STM32F031C6\startup_stm32f031.s)(0x548F4FEE)(--cpu Cortex-M0 --pd "__EVAL SETA 1" -g --apcs=interwork -I.\RTE\_STSPIN32F0A-IC:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include-IC:\Keil_v5\ARM\PACK\Keil\STM32F0xx_DFP\1.4.0\Device\Include--pd "__UVISION_VERSION SETA 524" --pd "_RTE_ SETA 1" --pd "STM32F031 SETA 1"--list .\listings\startup_stm32f031.lst --xref -o .\objects\startup_stm32f031.o --depend .\objects\startup_stm32f031.d)
