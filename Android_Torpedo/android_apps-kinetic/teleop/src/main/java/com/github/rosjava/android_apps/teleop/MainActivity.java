@@ -89,7 +89,6 @@ public class MainActivity extends RosAppActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
-
 		setDashboardResource(R.id.top_bar);
 		setMainWindowResource(R.layout.main);
 		super.onCreate(savedInstanceState);
@@ -261,7 +260,8 @@ public class MainActivity extends RosAppActivity {
 					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
 			nodeMainExecutor.execute(communication_node,
 					nodeConfiguration.setNodeName("rov/communication_node"));
-		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+		} catch (IOException e) {
+        	System.out.println("Socket error: " + e.getMessage());}
 
 		// Start Localization Node
 		try {
