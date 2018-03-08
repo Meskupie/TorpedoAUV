@@ -50,11 +50,7 @@ public class CommunicationNode extends AbstractNodeMain {
     }
 
     @Override
-    public GraphName getDefaultNodeName() {
-
-        Log.d("DEBUG_MSG","hi: in");
-        return GraphName.of("CommunicationNode");
-    }
+    public GraphName getDefaultNodeName() {return GraphName.of("CommunicationNode");}
 
     @Override
     public void onStart(final ConnectedNode connectedNode) {

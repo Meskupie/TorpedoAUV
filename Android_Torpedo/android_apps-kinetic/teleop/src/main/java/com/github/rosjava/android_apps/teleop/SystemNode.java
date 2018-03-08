@@ -25,12 +25,14 @@ public class SystemNode extends AbstractNodeMain {
     private Duration timeout_state_transition_leeway= new Duration(0.04);
 
     private Time time_status_communication;
+    private Time time_status_cameras;
     private Time time_status_embedded;
     private Time time_status_localization;
     private Time time_status_planner;
     private Time time_status_controller;
     private Time time_status_parameters;
     private Duration timeout_status_communication = new Duration(0.04);
+    private Duration timeout_status_cameras = new Duration(0.1);
     private Duration timeout_status_embedded = new Duration(0.04);
     private Duration timeout_status_localization = new Duration(0.04);
     private Duration timeout_status_planner = new Duration(0.04);
@@ -38,6 +40,7 @@ public class SystemNode extends AbstractNodeMain {
     private Duration timeout_status_parameters = new Duration(2);
     private int status_communication;
     private int status_embedded;
+    private int status_cameras;
     private int status_localization;
     private int status_planner;
     private int status_controller;
@@ -58,6 +61,7 @@ public class SystemNode extends AbstractNodeMain {
         // Node verification
         final Subscriber<std_msgs.Int32> status_communication_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_embedded_sub = connectedNode.newSubscriber("status_embedded", Int32._TYPE);
+        final Subscriber<std_msgs.Int32> status_cameras_sub = connectedNode.newSubscriber("status_cameras", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_localization_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_planner_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_controller_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
@@ -72,6 +76,7 @@ public class SystemNode extends AbstractNodeMain {
                 time_state_transition = connectedNode.getCurrentTime();
                 time_status_communication = connectedNode.getCurrentTime();
                 time_status_embedded = connectedNode.getCurrentTime();
+                time_status_cameras = connectedNode.getCurrentTime();
                 time_status_localization = connectedNode.getCurrentTime();
                 time_status_planner = connectedNode.getCurrentTime();
                 time_status_controller = connectedNode.getCurrentTime();
@@ -93,22 +98,26 @@ public class SystemNode extends AbstractNodeMain {
                     Log.e("ROV_ERROR", "System node: Embedded node timeout");
                     status_timeouts |= 2;
                 } else { status_timeouts &= ~2;}
-                if(time_current.compareTo(time_status_localization.add(timeout_status_localization)) == 1){
-                    Log.e("ROV_ERROR", "System node: Localization node timeout");
+                if(time_current.compareTo(time_status_cameras.add(timeout_status_cameras)) == 1){
+                    Log.e("ROV_ERROR", "System node: Camera node timeout");
                     status_timeouts |= 4;
                 } else { status_timeouts &= ~4;}
-                if(time_current.compareTo(time_status_planner.add(timeout_status_planner)) == 1){
-                    Log.e("ROV_ERROR", "System node: Planner node timeout");
+                if(time_current.compareTo(time_status_localization.add(timeout_status_localization)) == 1){
+                    Log.e("ROV_ERROR", "System node: Localization node timeout");
                     status_timeouts |= 8;
                 } else { status_timeouts &= ~8;}
-                if(time_current.compareTo(time_status_controller.add(timeout_status_controller)) == 1){
-                    Log.e("ROV_ERROR", "System node: Controller node timeout");
+                if(time_current.compareTo(time_status_planner.add(timeout_status_planner)) == 1){
+                    Log.e("ROV_ERROR", "System node: Planner node timeout");
                     status_timeouts |= 16;
                 } else { status_timeouts &= ~16;}
-                if(time_current.compareTo(time_status_parameters.add(timeout_status_parameters)) == 1){
-                    Log.e("ROV_ERROR", "System node: Parameters node timeout");
+                if(time_current.compareTo(time_status_controller.add(timeout_status_controller)) == 1){
+                    Log.e("ROV_ERROR", "System node: Controller node timeout");
                     status_timeouts |= 32;
                 } else { status_timeouts &= ~32;}
+                if(time_current.compareTo(time_status_parameters.add(timeout_status_parameters)) == 1){
+                    Log.e("ROV_ERROR", "System node: Parameters node timeout");
+                    status_timeouts |= 64;
+                } else { status_timeouts &= ~64;}
 
                 // Verify status of all nodes
 
@@ -160,6 +169,16 @@ public class SystemNode extends AbstractNodeMain {
             @Override public void onNewMessage(Int32 status_communication_msg) {
                 time_status_communication = connectedNode.getCurrentTime();
                 status_communication = status_communication_msg.getData();}});
+
+        status_embedded_sub.addMessageListener(new MessageListener<Int32>() {
+            @Override public void onNewMessage(Int32 status_embedded_msg) {
+                time_status_embedded = connectedNode.getCurrentTime();
+                status_embedded = status_embedded_msg.getData();}});
+
+        status_cameras_sub.addMessageListener(new MessageListener<Int32>() {
+            @Override public void onNewMessage(Int32 status_cameras_msg) {
+                time_status_cameras = connectedNode.getCurrentTime();
+                status_cameras = status_cameras_msg.getData();}});
 
         status_localization_sub.addMessageListener(new MessageListener<Int32>() {
             @Override public void onNewMessage(Int32 status_localization_msg) {
