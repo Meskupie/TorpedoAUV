@@ -1,62 +1,41 @@
 package com.github.rosjava.android_apps.teleop;
 
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbDeviceConnection;
-import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.felhr.usbserial.UsbSerialDevice;
-import com.felhr.usbserial.UsbSerialInterface;
 import com.github.rosjava.android_remocons.common_tools.apps.RosAppActivity;
 import com.physicaloid.lib.Physicaloid;
-import com.physicaloid.lib.usb.driver.uart.ReadLisener;
 
-import org.ros.android.BitmapFromCompressedImage;
-import org.ros.android.view.RosImageView;
 import org.ros.android.view.VirtualJoystickView;
-import org.ros.message.MessageListener;
 import org.ros.namespace.NameResolver;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
-import org.ros.node.topic.Subscriber;
-import org.ros.rosjava_geometry.Quaternion;
-import org.ros.rosjava_geometry.Transform;
-import org.ros.rosjava_geometry.Vector3;
-import org.w3c.dom.NodeList;
-import org.xbill.DNS.Serial;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Iterator;
 
-import Communication.ArduinoManager;
 import Communication.JSONFromatter;
 import Util.MotorOutputs;
-import geometry_msgs.Twist;
-import me.aflak.arduino.Arduino;
-import me.aflak.arduino.ArduinoListener;
-import sensor_msgs.Joy;
 
 public class MainActivity extends RosAppActivity {
 	private VirtualJoystickView virtualJoystickView;
 	private Button backButton;
-	private MapTalker mapTalker;
+
+	private SystemNode system_node;
+	private CommunicationNode communication_node;
+	private LocalizationNode localization_node;
+	private PlannerNode planner_node;
+	private ControllerNode controller_node;
+	private ParametersNode parameters_node;
+
 
 	private TextView text;
 
@@ -146,6 +125,14 @@ public class MainActivity extends RosAppActivity {
         });
 		doRoutine();
 
+
+        // Setup nodes
+		system_node = new SystemNode();
+		communication_node = new CommunicationNode();
+		localization_node = new LocalizationNode();
+		planner_node = new PlannerNode();
+        controller_node = new ControllerNode();
+        parameters_node = new ParametersNode();
 	}
 
 	private void delayedCallToSetMotors(int millis, final MotorOutputs outputs) {
@@ -226,16 +213,7 @@ public class MainActivity extends RosAppActivity {
 	public void onStart(){
 		super.onStart();
 
-		Transform test_start = new Transform(new Vector3(0,0,0),new Quaternion(0,0,0.383,0.924));
-		Transform test_delta = new Transform(new Vector3(1,0,0),new Quaternion(0,0,0,1));
-		Transform test_finish = test_start.multiply(test_delta);
-
-		Log.d("DEBUG_MSG", "x:"+test_finish.getTranslation().getX()+", y:"+test_finish.getTranslation().getY()+", z:"+test_finish.getTranslation().getZ());
-		Log.d("DEBUG_MSG","x:"+test_finish.getRotationAndScale().getX()+", y:"+test_finish.getRotationAndScale().getY()+", z:"+test_finish.getRotationAndScale().getZ()+", w:"+test_finish.getRotationAndScale().getW());
-	}
-
-
-
+		}
 
 	@Override
 	protected void init(NodeMainExecutor nodeMainExecutor) {
@@ -247,31 +225,91 @@ public class MainActivity extends RosAppActivity {
             socket.close();
             NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
 
-            // MAP TOPIC
-			this.mapTalker = new MapTalker(this);
-			nodeMainExecutor.execute(this.mapTalker, nodeConfiguration.setNodeName("android/mapTalker"));
-
-            // JOYSTICK TOPIC
 			String joyTopic = remaps.get(getString(R.string.joystick_topic));
 
 			NameResolver appNameSpace = getMasterNameSpace();
 			joyTopic = appNameSpace.resolve(joyTopic).toString();
 
 			virtualJoystickView.setTopicName(joyTopic);
-			nodeMainExecutor.execute(virtualJoystickView, nodeConfiguration.setNodeName("android/virtual_joystick"));
 
-
-
-
-
-
+			nodeMainExecutor.execute(virtualJoystickView,
+					nodeConfiguration.setNodeName("android/virtual_joystick"));
 
 			System.out.println("Socket works");
 
         } catch (IOException e) {
-           System.out.println("Socket error: " + e.getMessage());
-
+        	System.out.println("Socket error: " + e.getMessage());
         }
+
+		// Start System Node
+		try {
+			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
+			java.net.InetAddress local_network_address = socket.getLocalAddress();
+			socket.close();
+			NodeConfiguration nodeConfiguration =
+					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+			nodeMainExecutor.execute(system_node,
+					nodeConfiguration.setNodeName("rov/system_node"));
+		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+
+		// Start Communication Node
+		try {
+			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
+			java.net.InetAddress local_network_address = socket.getLocalAddress();
+			socket.close();
+			NodeConfiguration nodeConfiguration =
+					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+			nodeMainExecutor.execute(communication_node,
+					nodeConfiguration.setNodeName("rov/communication_node"));
+		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+
+		// Start Localization Node
+		try {
+			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
+			java.net.InetAddress local_network_address = socket.getLocalAddress();
+			socket.close();
+			NodeConfiguration nodeConfiguration =
+					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+			nodeMainExecutor.execute(localization_node,
+					nodeConfiguration.setNodeName("rov/localization_node"));
+		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+
+		// Start Planner Node
+		try {
+			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
+			java.net.InetAddress local_network_address = socket.getLocalAddress();
+			socket.close();
+			NodeConfiguration nodeConfiguration =
+					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+			nodeMainExecutor.execute(planner_node,
+					nodeConfiguration.setNodeName("rov/planner_node"));
+		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+
+		// Start Controller Node
+		try {
+			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
+			java.net.InetAddress local_network_address = socket.getLocalAddress();
+			socket.close();
+			NodeConfiguration nodeConfiguration =
+					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+			nodeMainExecutor.execute(controller_node,
+					nodeConfiguration.setNodeName("rov/controller_node"));
+		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+
+		// Start Parameters Node
+		try {
+			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
+			java.net.InetAddress local_network_address = socket.getLocalAddress();
+			socket.close();
+			NodeConfiguration nodeConfiguration =
+					NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+			nodeMainExecutor.execute(parameters_node,
+					nodeConfiguration.setNodeName("rov/parameters_node"));
+		} catch (IOException e) {System.out.println("Socket error: " + e.getMessage());}
+
+		// Set parameters
+		parameters_node.setDynamics("rough_controller_data.txt");
+
 	}
 	
 	@Override

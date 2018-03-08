@@ -26,13 +26,8 @@ apply plugin: 'catkin'
 
 allprojects {
     group 'com.github.rosjava.android_apps'
-    version = project.catkin.pkg.version
 
-    repositories {
-        jcenter()
-        maven { url "https://jitpack.io" }
-        maven { url "https://jitpack.io" }
-    }
+    version = project.catkin.pkg.version
 
 }
 
