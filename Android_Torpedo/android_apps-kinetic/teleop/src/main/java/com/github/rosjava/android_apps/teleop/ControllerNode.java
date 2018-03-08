@@ -55,6 +55,8 @@ public class ControllerNode extends AbstractNodeMain{
             Int32 status_controller_msg = status_controller_pub.newMessage();
 
             @Override protected void setup() {
+                time_state_r = connectedNode.getCurrentTime();
+                time_system_state = connectedNode.getCurrentTime();
                 system_state = 0;
             }
 
@@ -62,12 +64,11 @@ public class ControllerNode extends AbstractNodeMain{
             protected void loop() throws InterruptedException {
                 // Set variables
                 time_current = connectedNode.getCurrentTime();
-
                 // Check timeouts
                 if(time_current.compareTo(time_state_r.add(timeout_state_r)) == 1){
                     Log.e("ROV_ERROR", "Controller node: Timeout on state reference");
                     status_controller |= 2;
-                } else { status_controller &= ~2;}
+                } else {status_controller &= ~2;}
                 if(time_current.compareTo(time_system_state.add(timeout_system_state)) == 1){
                     Log.e("ROV_ERROR", "Controller node: Timeout on system state");
                     status_controller |= 2;

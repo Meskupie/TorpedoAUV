@@ -51,6 +51,8 @@ public class CommunicationNode extends AbstractNodeMain {
 
     @Override
     public GraphName getDefaultNodeName() {
+
+        Log.d("DEBUG_MSG","hi: in");
         return GraphName.of("CommunicationNode");
     }
 
@@ -64,7 +66,7 @@ public class CommunicationNode extends AbstractNodeMain {
         final ParameterTree param_tree = connectedNode.getParameterTree();
         // Sensors
         final Publisher<geometry_msgs.Quaternion> embedded_imu_pub = connectedNode.newPublisher("embedded_imu", geometry_msgs.Quaternion._TYPE);
-        final Publisher<Float64> embedded_temperature_pub = connectedNode.newPublisher("embedded_temperature", Float32._TYPE);
+        final Publisher<Float64> embedded_temperature_pub = connectedNode.newPublisher("embedded_temperature", Float64._TYPE);
         final Publisher<Float64MultiArray> embedded_thrust_pub = connectedNode.newPublisher("embedded_thrust",Float64MultiArray._TYPE);
         final Publisher<Int32MultiArray> embedded_controller_states_pub = connectedNode.newPublisher("embedded_controller_states",Int32MultiArray._TYPE);
         final Publisher<Int32> embedded_battery_soc_pub = connectedNode.newPublisher("embedded_battery_soc",Int32._TYPE);
@@ -85,12 +87,14 @@ public class CommunicationNode extends AbstractNodeMain {
             Int32 embedded_reed_switches_msg = embedded_reed_switches_pub.newMessage();
             PointCloud camera_targets = camera_targets_pub.newMessage();
 
-            @Override protected void setup(){}
+            @Override protected void setup(){
+                time_input_thrust = connectedNode.getCurrentTime();
+                time_system_state = connectedNode.getCurrentTime();
+            }
 
             @Override
             protected void loop() throws InterruptedException {
                 time_current = connectedNode.getCurrentTime();
-
                 // Check timeouts
                 if(time_current.compareTo(time_system_state.add(timeout_system_state)) == 1){
                     Log.e("ROV_ERROR", "Communication node: Timeout on system state");

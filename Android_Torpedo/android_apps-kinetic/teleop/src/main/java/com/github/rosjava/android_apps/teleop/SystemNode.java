@@ -70,6 +70,12 @@ public class SystemNode extends AbstractNodeMain {
             @Override
             protected void setup() {
                 time_state_transition = connectedNode.getCurrentTime();
+                time_status_communication = connectedNode.getCurrentTime();
+                time_status_embedded = connectedNode.getCurrentTime();
+                time_status_localization = connectedNode.getCurrentTime();
+                time_status_planner = connectedNode.getCurrentTime();
+                time_status_controller = connectedNode.getCurrentTime();
+                time_status_parameters = connectedNode.getCurrentTime();
                 system_state = 0;
                 system_state_prev = -1;
             }
