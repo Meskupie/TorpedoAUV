@@ -1,33 +1,65 @@
 package com.github.rosjava.android_apps.teleop;
 
 
-import org.ros.Topics;
-import org.ros.internal.node.server.NodeIdentifier;
+import android.content.Context;
+
+import org.ros.concurrent.CancellableLoop;
 import org.ros.namespace.GraphName;
+import org.ros.node.ConnectedNode;
 import org.ros.node.Node;
-import org.ros.node.NodeConfiguration;
-import org.ros.node.NodeFactory;
-import org.ros.node.NodeListener;
+import org.ros.node.NodeMain;
 import org.ros.node.topic.Publisher;
-import org.ros.node.topic.PublisherListener;
-import org.yaml.snakeyaml.nodes.NodeId;
-
-
-import java.util.Collection;
-import java.util.concurrent.TimeUnit;
-
-import geometry_msgs.Vector3;
-import visualization_msgs.Marker;
 
 /**
  * Created by isaiah on 07/02/18.
  */
 
-public class MapTalker {
+public class MapTalker implements NodeMain {
 
+    private MapGenerator mapGenerator;
 
-    public MapTalker() {
+    public MapTalker(Context context) {
+        this.mapGenerator = new MapGenerator(context);
     }
 
+    @Override
+    public GraphName getDefaultNodeName() {
+        return GraphName.of("MapTalker/aTalker");
+    }
+
+    @Override
+    public void onStart(ConnectedNode connectedNode) {
+        final Publisher<std_msgs.String> publisher = connectedNode.newPublisher("aMapValues", "std_msgs/String");
+        final String str = this.mapGenerator.toString();
+        final std_msgs.String string = publisher.newMessage();
+        string.setData(str);
+
+        final CancellableLoop aLoop = new CancellableLoop() {
+            @Override
+            protected void loop() throws InterruptedException {
+
+                publisher.publish(string);
+                Thread.sleep(100);
+            }
+        };
+
+        connectedNode.executeCancellableLoop(aLoop);
+
+    }
+
+    @Override
+    public void onShutdown(Node node) {
+
+    }
+
+    @Override
+    public void onShutdownComplete(Node node) {
+
+    }
+
+    @Override
+    public void onError(Node node, Throwable throwable) {
+
+    }
 }
 

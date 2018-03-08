@@ -10,7 +10,7 @@
         android:layout_width="fill_parent"
         android:layout_height="50dip"
         android:background="#ff404040"
-        android:orientation="horizontal" >
+        android:orientation="vertical" >
 
         <Button
             android:id="@+id/back_button"
@@ -25,47 +25,136 @@
             android:layout_height="wrap_content"
             android:background="#ff404040"
             android:gravity="right"
-            android:orientation="horizontal" />
+            android:orientation="vertical" />
     </LinearLayout>
 
     <LinearLayout
         android:id="@+id/main_layout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="horizontal" >
+        android:orientation="vertical" >
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:id="@+id/textTitle"/>
+        <TextView
+            android:id="@+id/textOut"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:textSize="8dp"
+            android:maxLines="1000"
+            android:scrollbars="vertical"/>
+
+       <Button
+            android:id="@+id/beginRoutine"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="begin routine"
+           android:onClick="beginRoutine"/>
+
+        <Button
+            android:id="@+id/arduinoWriteButton"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="write arduino"
+            android:onClick="onClickWrite"/>
+        <Button
+            android:id="@+id/arduinoResetButton"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:text="reset comms"
+            android:onClick="onClickReset"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Front Left"/>
+            <EditText
+                android:id="@+id/FL"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:inputType="none"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="100dp"
+                android:text="Front Right"/>
+
+            <EditText
+                android:id="@+id/FR"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:inputType="none"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Vert  Front"/>
+            <EditText
+                android:id="@+id/FV"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:inputType="none"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="100dp"
+                android:text="Vert Back"/>
+
+            <EditText
+                android:id="@+id/BV"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:inputType="none"/>
+        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Back  Left"/>
+            <EditText
+                android:id="@+id/BL"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:inputType="none"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="100dp"
+                android:text="Back Right"/>
+
+            <EditText
+                android:id="@+id/BR"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:inputType="none"/>
+        </LinearLayout>
+        <!--
         <org.ros.android.view.RosImageView
             android:id="@+id/image"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_height="10dp"
             android:layout_weight=".5"
-            android:src="@mipmap/icon" />
+            android:src="@mipmap/icon" />-->
 
-        <LinearLayout
-            android:id="@+id/side_layout"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:orientation="vertical" >
-
-            <View
-                android:layout_width="0dip"
-                android:layout_height="0dip"
-                android:layout_weight="1" />
-
-            <org.ros.android.view.VirtualJoystickView
-                android:id="@+id/virtual_joystick"
-                android:layout_width="wrap_content"
-                android:layout_height="0dip"
-                android:layout_gravity="center"
-                android:layout_weight="4"
-                android:adjustViewBounds="true" />
-
-            <View
-                android:layout_width="0dip"
-                android:layout_height="0dip"
-                android:layout_weight="1" />
-        </LinearLayout>
+       <org.ros.android.view.VirtualJoystickView
+            android:id="@+id/virtual_joystick"
+            android:layout_width="wrap_content"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:layout_weight=".5"
+            android:adjustViewBounds="true" />
     </LinearLayout>
 
 </LinearLayout>
