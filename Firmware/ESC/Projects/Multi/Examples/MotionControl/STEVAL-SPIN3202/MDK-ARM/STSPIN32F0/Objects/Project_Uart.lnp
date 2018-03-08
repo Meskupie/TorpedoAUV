@@ -16,6 +16,7 @@
 ".\objects\stm32f0xx_hal_uart_ex.o"
 ".\objects\stm32f0xx_hal_usart.o"
 ".\objects\stm32f0xx_hal_spi.o"
+".\objects\uart_ui.o"
 ".\objects\6step_lib.o"
 ".\objects\main_32f0.o"
 ".\objects\stspin32f0_hal_msp.o"

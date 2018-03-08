@@ -53,8 +53,9 @@ extern TIM_HandleTypeDef REFx;
 /// STEVAL-SPIN3202 adc handler
 extern ADC_HandleTypeDef ADCx;
 /// STEVAL-SPIN3202 uart handler
+#ifdef UART_COMM
 extern UART_HandleTypeDef huart;
-   
+#endif
 /** @addtogroup DRIVERS     DRIVERS 
   * @brief  Driver Layer
   * @{ 

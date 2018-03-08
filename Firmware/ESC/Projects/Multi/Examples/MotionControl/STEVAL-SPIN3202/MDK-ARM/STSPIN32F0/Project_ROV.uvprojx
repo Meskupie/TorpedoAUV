@@ -334,7 +334,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>NO_ROV,USE_HAL_DRIVER,STM32F031x6,UART_COMM,NO_PID,HALL_SENSORS,NO_ALL_WINDINGS_ENERGIZATION,FIXED_HALL_DELAY,NO_PWM_ON_BEMF_SENSING,NO_MC_FAN_4PP_24V,NO_MC_RS_57BL54,NO_MC_2036_U_024_B_K312,NO_MC_BR2804_1700_KV_1,MC_SUPPO_2217_9_950_KV,DELTA_6STEP_TABLE,COMPLEMENTARY_DRIVE,NO_VOLTAGE_MODE,NO_POTENTIOMETER,NO_CURRENT_SENSE_ADC,NO_VBUS_SENSE_ADC,NO_TEMP_SENSE_ADC,NO_BEMF_RECORDING,NO_SPEED_SENDING,SPEED_RAMP</Define>
+              <Define>USE_HAL_DRIVER,STM32F031x6,UART_COMM,NO_PID,HALL_SENSORS,ALL_WINDINGS_ENERGIZATION,NO_FIXED_HALL_DELAY,NO_PWM_ON_BEMF_SENSING,NO_MC_FAN_4PP_24V,NO_MC_RS_57BL54,NO_MC_2036_U_024_B_K312,NO_MC_BR2804_1700_KV_1,MC_SUPPO_2217_9_950_KV,DELTA_6STEP_TABLE,COMPLEMENTARY_DRIVE,NO_VOLTAGE_MODE,NO_POTENTIOMETER,NO_CURRENT_SENSE_ADC,NO_VBUS_SENSE_ADC,NO_TEMP_SENSE_ADC,NO_BEMF_RECORDING,NO_SPEED_SENDING,SPEED_RAMP</Define>
               <Undefine></Undefine>
               <IncludePath>..\..\Inc;..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc;..\..\..\..\..\..\..\Middlewares\ST\UART_serial_com\Inc;..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202;..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0;..\..\..\..\..\..\..\Drivers\BSP\Components\Common;..\..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F0xx\Include;..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc</IncludePath>
             </VariousControls>
@@ -484,6 +484,13 @@
         </Group>
         <Group>
           <GroupName>Middlewares/UART_serial_com</GroupName>
+          <Files>
+            <File>
+              <FileName>UART_UI.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\..\Middlewares\ST\UART_serial_com\Src\UART_UI.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>Middlewares/MC_6Step_Lib</GroupName>
@@ -552,56 +559,6 @@
               <FileName>ROV_R1.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\..\Drivers\BSP\ROV\ROV_R1.c</FilePath>
-              <FileOption>
-                <CommonProperty>
-                  <UseCPPCompiler>2</UseCPPCompiler>
-                  <RVCTCodeConst>0</RVCTCodeConst>
-                  <RVCTZI>0</RVCTZI>
-                  <RVCTOtherData>0</RVCTOtherData>
-                  <ModuleSelection>0</ModuleSelection>
-                  <IncludeInBuild>0</IncludeInBuild>
-                  <AlwaysBuild>2</AlwaysBuild>
-                  <GenerateAssemblyFile>2</GenerateAssemblyFile>
-                  <AssembleAssemblyFile>2</AssembleAssemblyFile>
-                  <PublicsOnly>2</PublicsOnly>
-                  <StopOnExitCode>11</StopOnExitCode>
-                  <CustomArgument></CustomArgument>
-                  <IncludeLibraryModules></IncludeLibraryModules>
-                  <ComprImg>1</ComprImg>
-                </CommonProperty>
-                <FileArmAds>
-                  <Cads>
-                    <interw>2</interw>
-                    <Optim>0</Optim>
-                    <oTime>2</oTime>
-                    <SplitLS>2</SplitLS>
-                    <OneElfS>2</OneElfS>
-                    <Strict>2</Strict>
-                    <EnumInt>2</EnumInt>
-                    <PlainCh>2</PlainCh>
-                    <Ropi>2</Ropi>
-                    <Rwpi>2</Rwpi>
-                    <wLevel>0</wLevel>
-                    <uThumb>2</uThumb>
-                    <uSurpInc>2</uSurpInc>
-                    <uC99>2</uC99>
-                    <useXO>2</useXO>
-                    <v6Lang>0</v6Lang>
-                    <v6LangP>0</v6LangP>
-                    <vShortEn>2</vShortEn>
-                    <vShortWch>2</vShortWch>
-                    <v6Lto>2</v6Lto>
-                    <v6WtE>2</v6WtE>
-                    <v6Rtti>2</v6Rtti>
-                    <VariousControls>
-                      <MiscControls></MiscControls>
-                      <Define></Define>
-                      <Undefine></Undefine>
-                      <IncludePath></IncludePath>
-                    </VariousControls>
-                  </Cads>
-                </FileArmAds>
-              </FileOption>
             </File>
           </Files>
         </Group>
@@ -941,9 +898,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>ROV,USE_HAL_DRIVER,STM32F031x6,NO_PID,HALL_SENSORS,NO_ALL_WINDINGS_ENERGIZATION,FIXED_HALL_DELAY,NO_PWM_ON_BEMF_SENSING,NO_MC_FAN_4PP_24V,NO_MC_RS_57BL54,NO_MC_2036_U_024_B_K312,NO_MC_BR2804_1700_KV_1,MC_SUPPO_2217_9_950_KV,DELTA_6STEP_TABLE,COMPLEMENTARY_DRIVE,TORQUE_LIMIT_MODE,NO_VOLTAGE_MODE,NO_CURRENT_SENSE_ADC,NO_TEMP_SENSE_ADC,SPEED_RAMP</Define>
+              <Define>ROV,USE_HAL_DRIVER,STM32F031x6,NO_UART_COMM,NO_PID,HALL_SENSORS,ALL_WINDINGS_ENERGIZATION,NO_FIXED_HALL_DELAY,NO_PWM_ON_BEMF_SENSING,NO_MC_FAN_4PP_24V,NO_MC_RS_57BL54,NO_MC_2036_U_024_B_K312,NO_MC_BR2804_1700_KV_1,MC_SUPPO_2217_9_950_KV,DELTA_6STEP_TABLE,COMPLEMENTARY_DRIVE,NO_VOLTAGE_MODE,NO_POTENTIOMETER,NO_CURRENT_SENSE_ADC,NO_VBUS_SENSE_ADC,NO_TEMP_SENSE_ADC,NO_BEMF_RECORDING,NO_SPEED_SENDING,SPEED_RAMP</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Inc;..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc;..\..\..\..\..\..\..\Middlewares\ST\UART_serial_com\Inc;..\..\..\..\..\..\..\Drivers\BSP\ROV;..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0;..\..\..\..\..\..\..\Drivers\BSP\Components\Common;..\..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F0xx\Include;..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc</IncludePath>
+              <IncludePath>..\..\Inc;..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc;..\..\..\..\..\..\..\Middlewares\ST\UART_serial_com\Inc;..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202;..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0;..\..\..\..\..\..\..\Drivers\BSP\Components\Common;..\..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F0xx\Include;..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc;..\..\..\..\..\..\..\Drivers\BSP\ROV;..\..\Src</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1009,7 +966,7 @@
                   <RVCTOtherData>0</RVCTOtherData>
                   <ModuleSelection>0</ModuleSelection>
                   <IncludeInBuild>0</IncludeInBuild>
-                  <AlwaysBuild>2</AlwaysBuild>
+                  <AlwaysBuild>0</AlwaysBuild>
                   <GenerateAssemblyFile>2</GenerateAssemblyFile>
                   <AssembleAssemblyFile>2</AssembleAssemblyFile>
                   <PublicsOnly>2</PublicsOnly>
@@ -1141,6 +1098,13 @@
         </Group>
         <Group>
           <GroupName>Middlewares/UART_serial_com</GroupName>
+          <Files>
+            <File>
+              <FileName>UART_UI.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\..\..\Middlewares\ST\UART_serial_com\Src\UART_UI.c</FilePath>
+            </File>
+          </Files>
         </Group>
         <Group>
           <GroupName>Middlewares/MC_6Step_Lib</GroupName>
@@ -1209,56 +1173,6 @@
               <FileName>ROV_R1.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\..\..\Drivers\BSP\ROV\ROV_R1.c</FilePath>
-              <FileOption>
-                <CommonProperty>
-                  <UseCPPCompiler>2</UseCPPCompiler>
-                  <RVCTCodeConst>0</RVCTCodeConst>
-                  <RVCTZI>0</RVCTZI>
-                  <RVCTOtherData>0</RVCTOtherData>
-                  <ModuleSelection>0</ModuleSelection>
-                  <IncludeInBuild>1</IncludeInBuild>
-                  <AlwaysBuild>2</AlwaysBuild>
-                  <GenerateAssemblyFile>2</GenerateAssemblyFile>
-                  <AssembleAssemblyFile>2</AssembleAssemblyFile>
-                  <PublicsOnly>2</PublicsOnly>
-                  <StopOnExitCode>11</StopOnExitCode>
-                  <CustomArgument></CustomArgument>
-                  <IncludeLibraryModules></IncludeLibraryModules>
-                  <ComprImg>1</ComprImg>
-                </CommonProperty>
-                <FileArmAds>
-                  <Cads>
-                    <interw>2</interw>
-                    <Optim>0</Optim>
-                    <oTime>2</oTime>
-                    <SplitLS>2</SplitLS>
-                    <OneElfS>2</OneElfS>
-                    <Strict>2</Strict>
-                    <EnumInt>2</EnumInt>
-                    <PlainCh>2</PlainCh>
-                    <Ropi>2</Ropi>
-                    <Rwpi>2</Rwpi>
-                    <wLevel>0</wLevel>
-                    <uThumb>2</uThumb>
-                    <uSurpInc>2</uSurpInc>
-                    <uC99>2</uC99>
-                    <useXO>2</useXO>
-                    <v6Lang>0</v6Lang>
-                    <v6LangP>0</v6LangP>
-                    <vShortEn>2</vShortEn>
-                    <vShortWch>2</vShortWch>
-                    <v6Lto>2</v6Lto>
-                    <v6WtE>2</v6WtE>
-                    <v6Rtti>2</v6Rtti>
-                    <VariousControls>
-                      <MiscControls></MiscControls>
-                      <Define></Define>
-                      <Undefine></Undefine>
-                      <IncludePath></IncludePath>
-                    </VariousControls>
-                  </Cads>
-                </FileArmAds>
-              </FileOption>
             </File>
           </Files>
         </Group>
