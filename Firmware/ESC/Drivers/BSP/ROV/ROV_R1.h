@@ -221,6 +221,9 @@
 #define GPIO_PORT_COMM                   (GPIOB)       /*!< GPIO port name for 6Step commutation */
 #define GPIO_CH_COMM                     (GPIO_PIN_7) /*!< GPIO pin name for 6Step commutation */
 
+#define GPIO_PORT_DEBUG 								 (GPIOF) 
+#define GPIO_PIN_DEBUG 									 (GPIO_PIN_0) 
+
 
 
 

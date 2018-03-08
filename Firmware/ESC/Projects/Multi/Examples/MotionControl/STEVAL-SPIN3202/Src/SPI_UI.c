@@ -41,6 +41,7 @@
 #ifdef ROV
 
 extern SPI_HandleTypeDef hspi1;
+
 extern SIXSTEP_Base_InitTypeDef SIXSTEP_parameters;      /*!< Main SixStep structure*/
 extern SIXSTEP_PI_PARAM_InitTypeDef_t PI_parameters;     /*!< SixStep PI regulator structure*/
 extern void CMD_Parser(char* pCommandString);
