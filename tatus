@@ -1,0 +1,135 @@
+[33mcommit f2e48f9cb1df9f40aa445d9f2cc446f232650a79[m
+Author: Michael Skupien <meskupie@gmail.com>
+Date:   Wed Mar 7 02:46:01 2018 -0500
+
+    Structured all nodes in project, added timeouts to controller
+
+[33mcommit a327ec4240a73869ef98a6db449297439562df77[m
+Author: Michael Skupien <meskupie@gmail.com>
+Date:   Wed Mar 7 00:01:43 2018 -0500
+
+    Parameter server working and passing data to controller
+
+[33mcommit 0ed159204b29cb9127f0b4f1228e6b2a990d1075[m
+Author: meskupie <meskupie@gmail.com>
+Date:   Tue Mar 6 22:12:43 2018 -0500
+
+    Added parameter structure, fixing parameter server
+
+[33mcommit e45b1bb349a353247203577843a718cc58881179[m
+Merge: 7d56b76 bca5ef4
+Author: meskupie <meskupie@gmail.com>
+Date:   Tue Mar 6 19:51:51 2018 -0500
+
+    Merge branch 'master' of https://github.com/Meskupie/TorpedoAUV
+
+[33mcommit 7d56b76e5639eaf134000daf42fb7097cf270f0c[m
+Author: meskupie <meskupie@gmail.com>
+Date:   Tue Mar 6 19:51:44 2018 -0500
+
+    modify controller based on closer thrust data
+
+[33mcommit bca5ef4eda78103a4ef741a450f5c280dfebbe39[m
+Author: Michael Skupien <meskupie@gmail.com>
+Date:   Tue Mar 6 19:40:12 2018 -0500
+
+    added controller to teleop
+
+[33mcommit b06e912b0f8e7edcc16412cfc83f2026441ac407[m
+Merge: 4f8866b cc559c2
+Author: Michael Skupien <meskupie@gmail.com>
+Date:   Sat Feb 17 10:17:27 2018 -0500
+
+    Merge branch 'master' of github.com:Meskupie/TorpedoAUV
+
+[33mcommit 4f8866b7a218844b7af1595de9d5b49c38e86038[m
+Author: Michael Skupien <meskupie@gmail.com>
+Date:   Sat Feb 17 10:16:56 2018 -0500
+
+    merging with last commit
+
+[33mcommit cc559c2449da9f34233e39b4ca9013fc6ad942fb[m
+Author: = <Isaiah.Erb@gmail.com>
+Date:   Thu Feb 8 22:08:09 2018 -0500
+
+    added LinAlg library, testing publishing
+
+[33mcommit 98507717f1977f6b5820d319572d21d73142aa39[m
+Author: = <Isaiah.Erb@gmail.com>
+Date:   Wed Feb 7 20:43:48 2018 -0500
+
+    Added almost blank ros android package
+
+[33mcommit 72ca96c9f3b1933c5878b60367d0267eece116be[m
+Author: meskupie <meskupie@gmail.com>
+Date:   Tue Feb 6 16:22:23 2018 -0500
+
+    Test ICP algorithm in Matlab prior to ROS implimentation
+
+[33mcommit af9b9323b2388e8457a86995cb86ee90845c9066[m
+Merge: 2010761 376745a
+Author: meskupie <meskupie@gmail.com>
+Date:   Tue Feb 6 16:21:22 2018 -0500
+
+    Merge branch 'master' of https://github.com/Meskupie/TorpedoAUV
+
+[33mcommit 376745a0da7dc520dc4ae94ffc5262ed1ddaad66[m
+Author: Michael Skupien <meskupie@gmail.com>
+Date:   Thu Feb 1 17:04:03 2018 -0500
+
+    add controller file reading
+
+[33mcommit 2010761558a93033421ca2f77c3451241e05d310[m
+Merge: 23a09b9 1b9f3c0
+Author: meskupie <meskupie@gmail.com>
+Date:   Thu Feb 1 16:36:03 2018 -0500
+
+    merging
+
+[33mcommit 23a09b91d51b68f85f8d2085012f58ee7a7be50d[m
+Author: meskupie <meskupie@gmail.com>
+Date:   Thu Feb 1 16:34:03 2018 -0500
+
+    Add file generation to the LQR controller code. This will be used to pass the controller into ROS
+
+[33mcommit c5d2cbc723be2f1aa5fa88ec10082a21e10f171f[m
+Author: Michael Skupien <meskupie@gmail.com>
+Date:   Thu Feb 1 14:46:10 2018 -0500
+
+    arange parameter functions into a parameter class
+
+[33mcommit 830b808035d10dc24e0439f102d4050c8602dced[m
+Author: Michael Skupien <meskupie@gmail.com>
+Date:   Thu Feb 1 13:45:38 2018 -0500
+
+    add resource retriever package, publish rough course targets
+
+[33mcommit 1b9f3c00d3984eec7050a3597597aea58ea5f0a5[m
+Author: Michael Skupien <meskupie@gmail.com>
+Date:   Thu Feb 1 00:05:35 2018 -0500
+
+    built map.txt reading function
+
+[33mcommit c6e4a8011fec53ffffd3545b947f468880814007[m
+Author: Michael Skupien <meskupie@gmail.com>
+Date:   Mon Jan 29 17:00:30 2018 -0500
+
+    Add ros packages
+
+[33mcommit 4f22c253eef9d46fecd01f87004b599080fed6e6[m
+Author: meskupie <meskupie@gmail.com>
+Date:   Mon Jan 29 13:40:10 2018 -0500
+
+    update LQR gains to use all thruster potential without oscillations
+
+[33mcommit 416054c41d36dc4248aa9ac0d292ba8fbf899b78[m
+Author: meskupie <meskupie@gmail.com>
+Date:   Mon Jan 29 01:12:08 2018 -0500
+
+    First commit. LQR controller built
+
+[33mcommit a31e52a6598356beb202ba0a3b3b388fec259edb[m
+Author: Michael Skupien <Meskupie@gmail.com>
+Date:   Mon Jan 29 00:36:32 2018 -0500
+
+    Initial commit

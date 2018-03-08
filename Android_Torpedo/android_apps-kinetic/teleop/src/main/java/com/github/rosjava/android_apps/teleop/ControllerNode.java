@@ -25,17 +25,14 @@ import std_msgs.Int32;
 import std_msgs.Int8;
 import std_msgs.UInt8;
 
-/**
- * Created by meskupie on 05/03/18.
- */
-
 public class ControllerNode extends AbstractNodeMain{
     private Controller rov_controller = new Controller();
     private int status_controller;
     private int system_state;
+
+    private Time time_current;
     private Time time_state_r;
     private Time time_system_state;
-    private Time time_current;
     private Duration timeout_state_r = new Duration(0.1);
     private Duration timeout_system_state= new Duration(0.1);
 
@@ -47,15 +44,15 @@ public class ControllerNode extends AbstractNodeMain{
     @Override
     public void onStart(final ConnectedNode connectedNode) {
         // Define ROS connections
-        final Publisher<Float64MultiArray> input_thrust_pub = connectedNode.newPublisher("input_thrust",Float64MultiArray._TYPE);
         final Publisher<Int32> status_controller_pub = connectedNode.newPublisher("status_controller", Int32._TYPE);
+        final Publisher<Float64MultiArray> input_thrust_pub = connectedNode.newPublisher("input_thrust",Float64MultiArray._TYPE);
         final Subscriber<Float64MultiArray> state_reference_sub = connectedNode.newSubscriber("state_reference", Float64MultiArray._TYPE);
         final Subscriber<Int32> system_state_sub = connectedNode.newSubscriber("system_state", Int32._TYPE);
         final ParameterTree param_tree = connectedNode.getParameterTree();
 
-        // Main cancelable loop
+        // Main loop
         connectedNode.executeCancellableLoop(new CancellableLoop() {
-            std_msgs.Int32 status_controller_msg = status_controller_pub.newMessage();
+            Int32 status_controller_msg = status_controller_pub.newMessage();
 
             @Override protected void setup() {
                 system_state = 0;
@@ -68,11 +65,11 @@ public class ControllerNode extends AbstractNodeMain{
 
                 // Check timeouts
                 if(time_current.compareTo(time_state_r.add(timeout_state_r)) == 1){
-                    Log.e("ROV_ERROR", "Controller node timeout on state reference");
+                    Log.e("ROV_ERROR", "Controller node: Timeout on state reference");
                     status_controller |= 2;
                 } else { status_controller &= ~2;}
                 if(time_current.compareTo(time_system_state.add(timeout_system_state)) == 1){
-                    Log.e("ROV_ERROR", "Controller node timeout on system state");
+                    Log.e("ROV_ERROR", "Controller node: Timeout on system state");
                     status_controller |= 2;
                 } else { status_controller &= ~2;}
 
