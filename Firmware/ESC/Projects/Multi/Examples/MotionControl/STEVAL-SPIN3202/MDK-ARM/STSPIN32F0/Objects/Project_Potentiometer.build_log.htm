@@ -1,0 +1,90 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Tool Versions:</h2>
+IDE-Version: µVision V5.24.2.0
+Copyright (C) 2017 ARM Ltd and ARM Germany GmbH. All rights reserved.
+License Information: Alex Bondarenko, uwaterloo, LIC=----
+ 
+Tool Versions:
+Toolchain:       MDK-Lite  Version: 5.24.1
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
+C Compiler:      Armcc.exe V5.06 update 5 (build 528)
+Assembler:       Armasm.exe V5.06 update 5 (build 528)
+Linker/Locator:  ArmLink.exe V5.06 update 5 (build 528)
+Library Manager: ArmAr.exe V5.06 update 5 (build 528)
+Hex Converter:   FromElf.exe V5.06 update 5 (build 528)
+CPU DLL:         SARMCM3.DLL V5.24.1
+Dialog DLL:      DARMCM1.DLL V1.18.0.0
+Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V3.0.1.0
+Dialog DLL:      TARMCM1.DLL V1.13.0.0
+ 
+<h2>Project:</h2>
+\\Mac\Home\Documents\Waterloo\3B\380\project\firmware\ESC\Demo 2\stm32_cube\Projects\Multi\Examples\MotionControl\STEVAL-SPIN3202\MDK-ARM\STSPIN32F0\Project_Potentiometer.uvprojx
+Project File Date:  01/24/2018
+
+<h2>Output:</h2>
+*** Using Compiler 'V5.06 update 5 (build 528)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Rebuild target 'STSPIN32F0A'
+compiling stm32f0xx_hal.c...
+compiling STEVAL-SPIN3202.c...
+compiling stspin32f0.c...
+compiling stm32f0xx_hal_cortex.c...
+compiling stm32f0xx_hal_adc_ex.c...
+compiling stm32f0xx_hal_adc.c...
+compiling stm32f0xx_hal_flash_ex.c...
+compiling stm32f0xx_hal_flash.c...
+compiling stm32f0xx_hal_dma.c...
+compiling stm32f0xx_hal_rcc_ex.c...
+compiling stm32f0xx_hal_gpio.c...
+compiling stm32f0xx_hal_rcc.c...
+compiling stm32f0xx_hal_uart.c...
+compiling stm32f0xx_hal_tim_ex.c...
+compiling stm32f0xx_hal_tim.c...
+compiling stm32f0xx_hal_uart_ex.c...
+compiling stm32f0xx_hal_usart.c...
+compiling 6Step_Lib.c...
+compiling main_32F0.c...
+compiling stspin32f0_hal_msp.c...
+assembling startup_stm32f031.s...
+compiling stspin32f0_it.c...
+compiling system_stm32f0xx.c...
+linking...
+Program Size: Code=12900 RO-data=256 RW-data=180 ZI-data=2372  
+After Build - User command #1: C:\Keil_v5\\ARM\ARMCC\bin\fromelf.exe --bin --output=\\Mac\Home\Documents\Waterloo\3B\380\project\firmware\ESC\Demo 2\stm32_cube\Projects\Multi\Examples\MotionControl\STEVAL-SPIN3202\MDK-ARM\STSPIN32F0\Objects\Project_Potentiometer.bin .\Objects\Project_Potentiometer.axf
+Error: Q0466E: An output file can only be specified if there is a single input file
+Finished: 0 information, 0 warning and 1 error messages.
+".\Objects\Project_Potentiometer.axf" - 0 Error(s), 0 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.5.0.1.pack
+                ARM.CMSIS.5.0.1
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 5.0.1
+
+Package Vendor: Keil
+                http://www.keil.com/pack/Keil.STM32F0xx_DFP.1.4.0.pack
+                Keil.STM32F0xx_DFP.1.4.0
+                STMicroelectronics STM32F0 Series Device Support and Examples
+   * Component: Startup Version: 1.5.0
+
+<h2>Collection of Component include folders:</h2>
+  .\RTE\_STSPIN32F0A
+  C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.1\CMSIS\Include
+  C:\Keil_v5\ARM\PACK\Keil\STM32F0xx_DFP\1.4.0\Device\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: Keil::Device:Startup:1.5.0
+      Source file:   Device\Source\ARM\startup_stm32f031.s
+      Source file:   Device\Source\system_stm32f0xx.c
+      Source file:   Device\Source\ARM\STM32F0xx_OPT.s
+
+   * Component: ARM::CMSIS:CORE:5.0.1
+Build Time Elapsed:  00:00:08
+</pre>
+</body>
+</html>
