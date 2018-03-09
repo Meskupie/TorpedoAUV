@@ -15,8 +15,8 @@ import org.ros.node.topic.Subscriber;
 import std_msgs.Int32;
 
 public class SystemNode extends AbstractNodeMain {
-    private int system_state;
-    private int system_state_prev;
+    private int status_system;
+    private int status_system_prev;
 
     private Time time_current;
     private int status_timeouts;
@@ -55,7 +55,7 @@ public class SystemNode extends AbstractNodeMain {
     @Override
     public void onStart(final ConnectedNode connectedNode) {
         // Define system connections
-        final Publisher<std_msgs.Int32> system_state_pub = connectedNode.newPublisher("system_state",std_msgs.Int32._TYPE);
+        final Publisher<std_msgs.Int32> status_system_pub = connectedNode.newPublisher("status_system",std_msgs.Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_communication_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_embedded_sub = connectedNode.newSubscriber("status_embedded", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_cameras_sub = connectedNode.newSubscriber("status_cameras", Int32._TYPE);
@@ -68,7 +68,7 @@ public class SystemNode extends AbstractNodeMain {
 
         // Main cancelable loop
         connectedNode.executeCancellableLoop(new CancellableLoop() {
-            std_msgs.Int32 system_state_msg = system_state_pub.newMessage();
+            std_msgs.Int32 status_system_msg = status_system_pub.newMessage();
 
             @Override
             protected void setup() {
@@ -80,8 +80,8 @@ public class SystemNode extends AbstractNodeMain {
                 time_status_planner = connectedNode.getCurrentTime();
                 time_status_controller = connectedNode.getCurrentTime();
                 time_status_parameters = connectedNode.getCurrentTime();
-                system_state = 0;
-                system_state_prev = -1;
+                status_system = 0;
+                status_system_prev = -1;
             }
 
             @Override
@@ -90,31 +90,31 @@ public class SystemNode extends AbstractNodeMain {
 
                 // Verify timeouts of all nodes
                 if(time_current.compareTo(time_status_communication.add(timeout_status_communication)) == 1){
-                    Log.e("ROV_ERROR", "System node: Communication node timeout");
+                    Log.e("ROV_ERROR", "System node: Timeout node communication");
                     status_timeouts |= 1;
                 } else { status_timeouts &= ~1;}
                 if(time_current.compareTo(time_status_embedded.add(timeout_status_embedded)) == 1){
-                    Log.e("ROV_ERROR", "System node: Embedded node timeout");
+                    Log.e("ROV_ERROR", "System node: Timeout node embedded");
                     status_timeouts |= 2;
                 } else { status_timeouts &= ~2;}
                 if(time_current.compareTo(time_status_cameras.add(timeout_status_cameras)) == 1){
-                    Log.e("ROV_ERROR", "System node: Camera node timeout");
+                    Log.e("ROV_ERROR", "System node: Timeout node camera");
                     status_timeouts |= 4;
                 } else { status_timeouts &= ~4;}
                 if(time_current.compareTo(time_status_localization.add(timeout_status_localization)) == 1){
-                    Log.e("ROV_ERROR", "System node: Localization node timeout");
+                    Log.e("ROV_ERROR", "System node: Timeout node localization");
                     status_timeouts |= 8;
                 } else { status_timeouts &= ~8;}
                 if(time_current.compareTo(time_status_planner.add(timeout_status_planner)) == 1){
-                    Log.e("ROV_ERROR", "System node: Planner node timeout");
+                    Log.e("ROV_ERROR", "System node: Timeout node planner");
                     status_timeouts |= 16;
                 } else { status_timeouts &= ~16;}
                 if(time_current.compareTo(time_status_controller.add(timeout_status_controller)) == 1){
-                    Log.e("ROV_ERROR", "System node: Controller node timeout");
+                    Log.e("ROV_ERROR", "System node: Timeout node controller");
                     status_timeouts |= 32;
                 } else { status_timeouts &= ~32;}
                 if(time_current.compareTo(time_status_parameters.add(timeout_status_parameters)) == 1){
-                    Log.e("ROV_ERROR", "System node: Parameters node timeout");
+                    Log.e("ROV_ERROR", "System node: Timeout node parameters");
                     status_timeouts |= 64;
                 } else { status_timeouts &= ~64;}
 
@@ -123,15 +123,15 @@ public class SystemNode extends AbstractNodeMain {
 
 
                 // State machine
-                switch (system_state){
+                switch (status_system){
                     case 0:
                         // On entry
-                        if(system_state != system_state_prev){
+                        if(status_system != status_system_prev){
 
                         }
 
                         // On exit
-                        if(system_state != 0){
+                        if(status_system != 0){
 
                         }
                         break;
@@ -157,8 +157,8 @@ public class SystemNode extends AbstractNodeMain {
 
 
                 // Publish system state
-                system_state_msg.setData(system_state);
-                system_state_pub.publish(system_state_msg);
+                status_system_msg.setData(status_system);
+                status_system_pub.publish(status_system_msg);
                 Thread.sleep(20);
             }
         });
@@ -201,8 +201,10 @@ public class SystemNode extends AbstractNodeMain {
     }
 }
 
-// system_state topic enumeration:
-// 0: Error/Startup (any node or embedded system down/reporting problems)
+// status_system topic enumeration:
+// -1: Error
+//
+// 0: Startup
 //      All nodes and embedded frozen but passing messages if possible
 //      Communication: Publishing embedded messages. Sending requests to embedded
 //      Localization:  Idle
@@ -247,4 +249,5 @@ public class SystemNode extends AbstractNodeMain {
 // bit 0: In Idle (based on system state)
 // bit 1: Timeout in node
 // bit 2: Missing data
-// bit 3: Not ready for next state
+// bit 3: Error
+// bit 7: Not ready for next state
