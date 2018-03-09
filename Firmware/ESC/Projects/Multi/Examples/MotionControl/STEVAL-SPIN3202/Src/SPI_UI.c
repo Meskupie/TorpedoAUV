@@ -125,7 +125,7 @@ void SPI_Communication_Task()
                 case ESC_CMD_SetCurrent:
                     new16BitValue = SPI_Receive_Buffer[1];
                     new16BitValue = new16BitValue<<8;
-                    new16BitValue = new16BitValue | SPI_Receive_Buffer[2];
+                    new16BitValue = new16BitValue | SPI_Receive_Buffer[2]; 
                     break;
 								
                 case ESC_CMD_SetDirection:

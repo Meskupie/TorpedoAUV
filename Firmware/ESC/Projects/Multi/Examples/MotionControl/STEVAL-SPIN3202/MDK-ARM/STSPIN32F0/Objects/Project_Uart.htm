@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\Project_Uart.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\Project_Uart.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Fri Mar 09 01:31:37 2018
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Fri Mar 09 01:35:23 2018
 <BR><P>
 <H3>Maximum Stack Usage =        196 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -893,14 +893,12 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_Task_Speed
 </UL>
 
-<P><STRONG><a name="[98]"></a>MC_Set_PI_param</STRONG> (Thumb, 82 bytes, Stack size 8 bytes, 6step_lib.o(i.MC_Set_PI_param))
-<BR><BR>[Stack]<UL><LI>Max Depth = 8<LI>Call Chain = MC_Set_PI_param
-</UL>
-<BR>[Called By]<UL><LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_SixStep_RESET
+<P><STRONG><a name="[98]"></a>MC_Set_PI_param</STRONG> (Thumb, 52 bytes, Stack size 0 bytes, 6step_lib.o(i.MC_Set_PI_param))
+<BR><BR>[Called By]<UL><LI><a href="#[90]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_SixStep_RESET
 <LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_Communication_Task
 </UL>
 
-<P><STRONG><a name="[ad]"></a>MC_Set_Speed</STRONG> (Thumb, 26 bytes, Stack size 0 bytes, 6step_lib.o(i.MC_Set_Speed))
+<P><STRONG><a name="[ad]"></a>MC_Set_Speed</STRONG> (Thumb, 22 bytes, Stack size 0 bytes, 6step_lib.o(i.MC_Set_Speed))
 <BR><BR>[Called By]<UL><LI><a href="#[ac]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_Communication_Task
 </UL>
 
@@ -1100,8 +1098,8 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[6f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IC_CaptureCallback
 </UL>
 
-<P><STRONG><a name="[a2]"></a>MC_Task_Speed</STRONG> (Thumb, 88 bytes, Stack size 16 bytes, 6step_lib.o(i.MC_Task_Speed))
-<BR><BR>[Stack]<UL><LI>Max Depth = 28<LI>Call Chain = MC_Task_Speed &rArr; MC_PI_Controller
+<P><STRONG><a name="[a2]"></a>MC_Task_Speed</STRONG> (Thumb, 28 bytes, Stack size 8 bytes, 6step_lib.o(i.MC_Task_Speed))
+<BR><BR>[Stack]<UL><LI>Max Depth = 20<LI>Call Chain = MC_Task_Speed &rArr; MC_PI_Controller
 </UL>
 <BR>[Calls]<UL><LI><a href="#[97]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_SixStep_Current_Reference_Setvalue
 <LI><a href="#[a4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_PI_Controller
