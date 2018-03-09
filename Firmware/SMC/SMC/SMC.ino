@@ -138,12 +138,12 @@ typedef struct
     int16_t imu_y : 16;
     int16_t imu_z : 16;
     int16_t imu_w : 16;
-    uint16_t motorThrust0_mN : 16;
-    uint16_t motorThrust1_mN : 16;
-    uint16_t motorThrust2_mN : 16;
-    uint16_t motorThrust3_mN : 16;
-    uint16_t motorThrust4_mN : 16;
-    uint16_t motorThrust5_mN : 16;
+    int16_t motorThrust0_mN : 16;
+    int16_t motorThrust1_mN : 16;
+    int16_t motorThrust2_mN : 16;
+    int16_t motorThrust3_mN : 16;
+    int16_t motorThrust4_mN : 16;
+    int16_t motorThrust5_mN : 16;
     uint8_t battSOC :8;
     uint8_t battSOP :8;
     int16_t battCurrent_mA :16;
