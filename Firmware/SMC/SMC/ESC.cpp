@@ -52,6 +52,13 @@ unsigned int ESC_init_all()
     ESC_init(&ESC[ESC_INDEX_RR],ESC_PIN_RR);
     ESC_init(&ESC[ESC_INDEX_RC],ESC_PIN_RC);
 }
+unsigned int ESC_Status_update_all()
+{
+    for(int i = 0; i< 6; i++)
+    {
+        ESCGetStatusStruct(&ESC[i]);
+    }
+}
 
 unsigned int ESC_init(ESC_Struct* ESC_hande,int pin)
 {
@@ -194,7 +201,6 @@ unsigned int ESCGetStatus(ESC_Struct* ESC_hande )
     delayMicroseconds(SPI_COMMS_DELAY_MICROSECONDS);
     int id = SPI.transfer(0);
     digitalWrite(ESC_hande->pin, HIGH);
-    
     return id;
 }
 ESC_StatusStruct ESCGetStatusStruct(ESC_Struct* ESC_hande )
@@ -210,7 +216,11 @@ ESC_StatusStruct ESCGetStatusStruct(ESC_Struct* ESC_hande )
         newData.stuctRaw[i] = SPI.transfer(0);
     }
     digitalWrite(ESC_hande->pin, HIGH);
-    
+    ESC_hande->currentMeasured = newData.statusStruct.currentMeasured;
+    ESC_hande->runState = newData.statusStruct.runState;
+    ESC_hande->speedSetPoint = newData.statusStruct.speedSetPoint;
+    ESC_hande->direction = newData.statusStruct.direction;
+    ESC_hande->speedMeasured = newData.statusStruct.speedMeasured;
     return newData.statusStruct;
 }
 

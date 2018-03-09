@@ -150,7 +150,7 @@ typedef union
 
 
 
-
+unsigned int ESC_Status_update_all();
 unsigned int ESC_init(ESC_Struct* ESC_hande,int pin);
 unsigned int ESC_init_all(void);
 unsigned int ESCStart(ESC_Struct* ESC_hande);

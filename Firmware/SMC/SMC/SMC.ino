@@ -112,8 +112,6 @@ BQ34110 gasGauge = BQ34110();
 int currChar = 0;
 
 
-String constantlySend = "";
-
 
 // Prototypes
 // !!! Help: http://bit.ly/2l0ZhTa
@@ -123,61 +121,16 @@ String constantlySend = "";
 #define PIN_REED_SW_REAR    5
 
 
-typedef enum
-{
-    System_Idle,                               /* 0 */
-    System_Startup,                            /* 1 */
-    System_Fault
-} SystemRunState;
 
-typedef struct
-{
-    uint16_t battVoltage_mV:16;
-    uint16_t depth_m : 16;
-    int16_t imu_x : 16;
-    int16_t imu_y : 16;
-    int16_t imu_z : 16;
-    int16_t imu_w : 16;
-    int16_t motorThrust0_mN : 16;
-    int16_t motorThrust1_mN : 16;
-    int16_t motorThrust2_mN : 16;
-    int16_t motorThrust3_mN : 16;
-    int16_t motorThrust4_mN : 16;
-    int16_t motorThrust5_mN : 16;
-    uint8_t battSOC :8;
-    uint8_t battSOP :8;
-    int16_t battCurrent_mA :16;
-    uint8_t ambientTemperature_C:8;
-    ESC_RUN_STATE motorStatus0 : 4;
-    ESC_RUN_STATE motorStatus1 : 4;
-    ESC_RUN_STATE motorStatus2 : 4;
-    ESC_RUN_STATE motorStatus3 : 4;
-    ESC_RUN_STATE motorStatus4 : 4;
-    ESC_RUN_STATE motorStatus5 : 4;
-    SystemRunState SMC_Status : 3;
-    uint8_t swStateFront : 1;
-    uint8_t swStateCenter : 1;
-    uint8_t swStateRear : 1;
-    uint8_t _filler:2;
-}HostUpdateStruct_transmit; //length 33 bytes
-
-typedef struct
-{
-    int16_t motorThrust0_mN : 16;
-    int16_t motorThrust1_mN : 16;
-    int16_t motorThrust2_mN : 16;
-    int16_t motorThrust3_mN : 16;
-    int16_t motorThrust4_mN : 16;
-    int16_t motorThrust5_mN : 16;
-    uint8_t count            : 4;
-    uint8_t checkSum         : 4;
-}HostUpdateStruct_recive; //length 31 bytes
 
 
 // Utilities
 debounce swFront;
 debounce swCenter;
 debounce swRear;
+
+
+
 
 
 // Functions
@@ -275,30 +228,6 @@ void loop()
         }
     }
 #else
-    if(Serial.available() > 0) {
-        currChar = Serial.read();
-
-        if(currChar == frontDelimiter) {
-            byte length = Serial.readBytesUntil(endDelimiter, jsonData, sizeof(jsonData));
-
-            char sub[length+1];
-            memcpy( sub, &jsonData[0], length);
-            sub[length] = '\0';
-            StaticJsonBuffer<200> jsonBuffer;
-            JsonObject& root = jsonBuffer.parseObject(jsonData);
-            if (!root.success()) {
-                return;
-            }
-            thrusterSpeed[0]= root["motorValues"]["FL"];
-            thrusterSpeed[1]= root["motorValues"]["FR"];
-            thrusterSpeed[2]= root["motorValues"]["FV"];
-            thrusterSpeed[3]= root["motorValues"]["BL"];
-            thrusterSpeed[4]= root["motorValues"]["BR"];
-            thrusterSpeed[5]= root["motorValues"]["BV"];
-            lastTime = millis();
-        }
-    }
-    
     
     for (int i = 0; i<5;i++)
     {
