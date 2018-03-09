@@ -1496,7 +1496,8 @@ void MC_Set_Speed(uint16_t speed_value)
   SIXSTEP_parameters.speed_target = PI_parameters.Reference;
 #endif
 }
-void MC_Set_Thrust(int16_t thrust_mN)
+
+int16_t thrustToSpeed(int16_t thrust_mN)
 {
 	uint16_t speed_value;
 	if (thrust_mN >10)
@@ -1511,8 +1512,24 @@ void MC_Set_Thrust(int16_t thrust_mN)
 	{
 		speed_value = 0;
 	}
-	PI_parameters.Reference = speed_value;
-	SIXSTEP_parameters.speed_target = PI_parameters.Reference;
+	return speed_value;
+}
+
+/** @defgroup MC_Set_Thrust    MC_Set_Thrust
+  *  @{
+    * @brief Set the new motor speed Thrust
+    * @param  thrust_mN:  set new thrust in mili newtons
+    * @retval None
+*/
+void MC_Set_Thrust(int16_t thrust_mN)
+{
+#ifdef SPEED_RAMP  
+  PI_parameters.ReferenceToBeUpdated++;
+  SIXSTEP_parameters.speed_target = thrustToSpeed(thrust_mN);
+#else  
+  PI_parameters.Reference = thrustToSpeed(thrust_mN);
+  SIXSTEP_parameters.speed_target = PI_parameters.Reference;
+#endif
 }
 
 /**
