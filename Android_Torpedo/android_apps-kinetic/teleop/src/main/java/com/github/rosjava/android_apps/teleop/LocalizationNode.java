@@ -158,19 +158,19 @@ public class LocalizationNode extends AbstractNodeMain{
                 // Check timeouts
                 time_current = connectedNode.getCurrentTime();
                 if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
-                    if(status_system <= 0){Log.e("ROV_ERROR", "Localization node: Timeout on system state");}
+                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on system state");}
                     status_localization |= 2;
                 } else {status_localization &= ~2;}
                 if(time_current.compareTo(time_embedded_thrust.add(timeout_embedded_thrust)) == 1){
-                    if(status_system <= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded thrust");}
+                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded thrust");}
                     status_localization |= 2;
                 } else { status_localization &= ~2;}
                 if(time_current.compareTo(time_embedded_imu.add(timeout_embedded_imu)) == 1){
-                    if(status_system <= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded imu");}
+                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded imu");}
                     status_localization |= 2;
                 } else { status_localization &= ~2;}
                 if(time_current.compareTo(time_embedded_thrust.add(timeout_embedded_depth)) == 1){
-                    if(status_system <= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded depth");}
+                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded depth");}
                     status_localization |= 2;
                 } else { status_localization &= ~2;}
                 //TODO: Uncomment when cameras are ready

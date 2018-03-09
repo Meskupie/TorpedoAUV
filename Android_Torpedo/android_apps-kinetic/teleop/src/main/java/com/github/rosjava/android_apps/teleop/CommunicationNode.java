@@ -23,14 +23,14 @@ import std_msgs.Int32MultiArray;
 
 public class CommunicationNode extends AbstractNodeMain {
 
-    private int system_state;
+    private int status_system;
     private int status_communication;
 
     private Time time_current;
     private Time time_input_thrust;
-    private Time time_system_state;
+    private Time time_status_system;
     private Duration timeout_input_thrust = new Duration(0.1);
-    private Duration timeout_system_state= new Duration(0.1);
+    private Duration timeout_status_system= new Duration(0.1);
 
 
     // Accessible data
@@ -46,7 +46,7 @@ public class CommunicationNode extends AbstractNodeMain {
 
 
     public CommunicationNode(){
-        system_state = 0;
+        status_system = 0;
     }
 
     @Override
@@ -58,7 +58,7 @@ public class CommunicationNode extends AbstractNodeMain {
         final Publisher<Int32> status_communication_pub = connectedNode.newPublisher("status_communication", Int32._TYPE);
         final Publisher<Int32> status_embedded_pub = connectedNode.newPublisher("status_embedded", Int32._TYPE);
         final Publisher<Int32> status_cameras_pub = connectedNode.newPublisher("status_cameras", Int32._TYPE);
-        final Subscriber<Int32> system_state_sub = connectedNode.newSubscriber("system_state", Int32._TYPE);
+        final Subscriber<Int32> status_system_sub = connectedNode.newSubscriber("status_system", Int32._TYPE);
         final Subscriber<Float64MultiArray> input_thrust_sub = connectedNode.newSubscriber("input_thrust",Float64MultiArray._TYPE);
         final ParameterTree param_tree = connectedNode.getParameterTree();
 
@@ -88,19 +88,19 @@ public class CommunicationNode extends AbstractNodeMain {
 
             @Override protected void setup(){
                 time_input_thrust = connectedNode.getCurrentTime();
-                time_system_state = connectedNode.getCurrentTime();
+                time_status_system = connectedNode.getCurrentTime();
             }
 
             @Override
             protected void loop() throws InterruptedException {
                 time_current = connectedNode.getCurrentTime();
                 // Check timeouts
-                if(time_current.compareTo(time_system_state.add(timeout_system_state)) == 1){
-                    Log.e("ROV_ERROR", "Communication node: Timeout on system state");
+                if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
+                    if(status_system >= 0){Log.e("ROV_ERROR", "Communication node: Timeout on system state");}
                     status_communication |= 2;
                 } else { status_communication &= ~2;}
                 if(time_current.compareTo(time_input_thrust.add(timeout_input_thrust)) == 1){
-                    Log.e("ROV_ERROR", "Communication node: Timeout on input thrust");
+                    if(status_system >= 0){Log.e("ROV_ERROR", "Communication node: Timeout on input thrust");}
                     status_communication |= 2;
                 } else { status_communication &= ~2;}
 
@@ -111,10 +111,10 @@ public class CommunicationNode extends AbstractNodeMain {
             }
         });
 
-        system_state_sub.addMessageListener(new MessageListener<Int32>() {
-            @Override public void onNewMessage(Int32 system_state_msg) {
-                time_system_state = connectedNode.getCurrentTime();
-                system_state = system_state_msg.getData();
+        status_system_sub.addMessageListener(new MessageListener<Int32>() {
+            @Override public void onNewMessage(Int32 status_system_msg) {
+                time_status_system = connectedNode.getCurrentTime();
+                status_system = status_system_msg.getData();
 
                 // TODO: Add streaming of sensor request messages for Pis and Embedded
             }
@@ -125,7 +125,7 @@ public class CommunicationNode extends AbstractNodeMain {
                 time_input_thrust = connectedNode.getCurrentTime();
                 input_thrust = input_thrust_msg.getData();
 
-                if(system_state >= 3){
+                if(status_system >= 3){
                     // TODO: Add streaming of thrust commands over USB
                 }
             }
