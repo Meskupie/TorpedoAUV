@@ -146,6 +146,7 @@ typedef struct
     uint16_t motorThrust5_mN : 16;
     uint8_t battSOC :8;
     uint8_t battSOP :8;
+    int16_t battCurrent_mA :16;
     uint8_t ambientTemperature_C:8;
     ESC_RUN_STATE motorStatus0 : 4;
     ESC_RUN_STATE motorStatus1 : 4;
@@ -158,7 +159,10 @@ typedef struct
     uint8_t swStateCenter : 1;
     uint8_t swStateRear : 1;
     uint8_t _filler:2;
-}HostUpdateStruct_transmit; //length 31 bytes
+}HostUpdateStruct_transmit; //length 33 bytes
+
+
+
 
 // Utilities
 debounce swFront;
