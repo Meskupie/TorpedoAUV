@@ -1,5 +1,13 @@
 package com.github.rosjava.android_apps.teleop;
 
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.method.ScrollingMovementMethod;
@@ -12,6 +20,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.felhr.usbserial.UsbSerialDevice;
+import com.felhr.usbserial.UsbSerialInterface;
 import com.github.rosjava.android_remocons.common_tools.apps.RosAppActivity;
 import com.physicaloid.lib.Physicaloid;
 
@@ -21,11 +31,19 @@ import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 
 import Communication.JSONFromatter;
 import Util.MotorOutputs;
 
 public class MainActivity extends RosAppActivity {
+	public static final String TAG = "Torpedo Debug";
+
+	public static final String ACTION_USB_ATTACHED = "android.hardware.usb.action.USB_DEVICE_ATTACHED";
+	public static final String ACTION_USB_DETACHED = "android.hardware.usb.action.USB_DEVICE_DETACHED";
+	public static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
+
 	private VirtualJoystickView virtualJoystickView;
 	private Button backButton;
 
@@ -36,7 +54,23 @@ public class MainActivity extends RosAppActivity {
 	private ControllerNode controller_node;
 	private ParametersNode parameters_node;
 
+	private UsbDevice arduino;
+	private UsbManager usbManager;
+	private BroadcastReceiver mUsbReceiver;
+	private UsbDeviceConnection usbConnection;
+	private UsbSerialDevice serial;
+
 	private TextView text;
+
+	private void tvAppend(TextView tv, CharSequence text) {
+		final TextView ftv = tv;
+		final CharSequence ftext = text;
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				ftv.append(ftext); }
+		});
+	}
+
 
 	public MainActivity() {
 		// The RosActivity constructor configures the notification title and ticker messages.
@@ -71,7 +105,84 @@ public class MainActivity extends RosAppActivity {
 		planner_node = new PlannerNode();
         controller_node = new ControllerNode();
         parameters_node = new ParametersNode();
+
+        this.initializeArduino();
 	}
+
+	private void initializeArduino() {
+		// Attempt to Find arduino by vendor and product id
+		this.usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+
+		HashMap<String, UsbDevice> deviceList = this.usbManager.getDeviceList();
+
+		for (String key: deviceList.keySet()){
+			UsbDevice device = deviceList.get(key);
+			if(device.getVendorId() == 4292 && device.getProductId() == 60000) {
+				this.arduino = device;
+				Toast.makeText(this, "Recognized Arduino Device", Toast.LENGTH_SHORT).show();
+				break;
+			}
+		}
+
+		// setup broadcast receiver for user permission granting
+		this.mUsbReceiver = new BroadcastReceiver() {
+			public void onReceive(Context context, Intent intent) {
+				String action = intent.getAction();
+				if (ACTION_USB_PERMISSION.equals(action)) {
+					synchronized (this) {
+						usbConnection = usbManager.openDevice(arduino);
+						serial = UsbSerialDevice.createUsbSerialDevice(arduino, usbConnection);
+						if (serial != null) {
+							if (serial.open()) { //Set Serial Connection Parameters.
+								serial.setBaudRate(115200);
+								serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
+								serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
+								serial.setParity(UsbSerialInterface.PARITY_NONE);
+								serial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
+								serial.read(mCallback); //
+							} else {
+								text.append("Serial Port not open!" + '\n');
+							}
+						} else {
+							text.append("Serial Port is null" + '\n');
+						}
+						if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+							if(arduino != null){
+								//call method to set up device communication
+							}
+						}
+						else {
+							text.append("Permission denied for arduino!" + '\n');
+						}
+					}
+				}
+			}
+		};
+
+		// request permission from the user on create
+		if(this.arduino != null) {
+			PendingIntent mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+			IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+			this.registerReceiver(mUsbReceiver, filter);
+			this.usbManager.requestPermission(this.arduino,mPermissionIntent);
+		} else {
+			Toast.makeText(this, "Could not find arduino on Startup Arduino Device", Toast.LENGTH_SHORT).show();
+		}
+	}
+
+	public UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() {
+		//Defining a Callback which triggers whenever data is read.
+		@Override
+		public void onReceivedData(byte[] arg0) {
+			String data = null;
+			try {
+				data = new String(arg0, "UTF-8");
+				tvAppend(text, "data read: " + data + '\n');
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
+	};
 
 	public void onClickButton1(View v) {
 
@@ -175,6 +286,25 @@ public class MainActivity extends RosAppActivity {
 			  break;
 		}
 		return true;
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+
+		if(this.mUsbReceiver != null) {
+			try {
+				unregisterReceiver(this.mUsbReceiver);
+				textAppend("Unregistered usb receiver");
+
+			} catch (Exception e) {
+				textAppend("Caught exception: " + e.getMessage());
+			}
+		}
+	}
+
+	public void textAppend(String str) {
+		text.append(str + '\n');
 	}
 
 }
