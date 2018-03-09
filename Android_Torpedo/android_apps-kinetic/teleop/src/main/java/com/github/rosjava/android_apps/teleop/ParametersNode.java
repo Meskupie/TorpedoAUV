@@ -78,19 +78,4 @@ public class ParametersNode extends AbstractNodeMain {
         });
 
     }
-
-    @Override
-    public void onShutdown(org.ros.node.Node node) {
-
-    }
-
-    @Override
-    public void onShutdownComplete(org.ros.node.Node node) {
-
-    }
-
-    @Override
-    public void onError(org.ros.node.Node node, Throwable throwable) {
-
-    }
 }
