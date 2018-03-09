@@ -163,12 +163,12 @@ typedef struct
 
 typedef struct
 {
-    uint16_t motorThrust0_mN : 16;
-    uint16_t motorThrust1_mN : 16;
-    uint16_t motorThrust2_mN : 16;
-    uint16_t motorThrust3_mN : 16;
-    uint16_t motorThrust4_mN : 16;
-    uint16_t motorThrust5_mN : 16;
+    int16_t motorThrust0_mN : 16;
+    int16_t motorThrust1_mN : 16;
+    int16_t motorThrust2_mN : 16;
+    int16_t motorThrust3_mN : 16;
+    int16_t motorThrust4_mN : 16;
+    int16_t motorThrust5_mN : 16;
     uint8_t count            : 4;
     uint8_t checkSum         : 4;
 }HostUpdateStruct_recive; //length 31 bytes
