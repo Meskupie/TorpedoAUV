@@ -47,114 +47,26 @@
             android:scrollbars="vertical"/>
 
        <Button
-            android:id="@+id/beginRoutine"
+            android:id="@+id/button1"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:text="begin routine"
-           android:onClick="beginRoutine"/>
+           android:text="button 1"
+           android:onClick="onClickButton1"/>
 
         <Button
-            android:id="@+id/arduinoWriteButton"
+            android:id="@+id/button2"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:text="write arduino"
-            android:onClick="onClickWrite"/>
+            android:text="button 2"
+
+            android:onClick="onClickButton2"/>
         <Button
-            android:id="@+id/arduinoResetButton"
+            android:id="@+id/button3"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:text="reset comms"
-            android:onClick="onClickReset"/>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="Front Left"/>
-            <EditText
-                android:id="@+id/FL"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:inputType="none"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginLeft="100dp"
-                android:text="Front Right"/>
+            android:text="button 3"
 
-            <EditText
-                android:id="@+id/FR"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:inputType="none"/>
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="Vert  Front"/>
-            <EditText
-                android:id="@+id/FV"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:inputType="none"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginLeft="100dp"
-                android:text="Vert Back"/>
-
-            <EditText
-                android:id="@+id/BV"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:inputType="none"/>
-        </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:text="Back  Left"/>
-            <EditText
-                android:id="@+id/BL"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:inputType="none"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_marginLeft="100dp"
-                android:text="Back Right"/>
-
-            <EditText
-                android:id="@+id/BR"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:inputType="none"/>
-        </LinearLayout>
-        <!--
-        <org.ros.android.view.RosImageView
-            android:id="@+id/image"
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            android:layout_weight=".5"
-            android:src="@mipmap/icon" />-->
-
-       <org.ros.android.view.VirtualJoystickView
-            android:id="@+id/virtual_joystick"
-            android:layout_width="wrap_content"
-            android:layout_height="100dp"
-            android:layout_gravity="center"
-            android:layout_weight=".5"
-            android:adjustViewBounds="true" />
+            android:onClick="onClickButton3"/>
     </LinearLayout>
 
 </LinearLayout>

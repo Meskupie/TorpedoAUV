@@ -36,49 +36,7 @@ public class MainActivity extends RosAppActivity {
 	private ControllerNode controller_node;
 	private ParametersNode parameters_node;
 
-
 	private TextView text;
-
-	private EditText FL;
-	private EditText FR;
-	private EditText FV;
-	private EditText BL;
-	private EditText BR;
-	private EditText BV;
-
-	private Physicaloid physicaloid;
-
-	Handler mHandler = new Handler();
-	Handler mHandler2 = new Handler();
-
-	private void tvAppend(TextView tv, String text, boolean fromAndroid) {
-		final TextView ftv = tv;
-		String append  = fromAndroid ? "Android: " : "Atmega";
-
-		//final CharSequence ftext = append + text + '\n';
-		final CharSequence ftext = (fromAndroid?'\n':"") + text;
-
-		mHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				ftv.append(ftext); 	// add text to Text view
-			}
-		});
-	}
-
-	private void tvClear(TextView tv) {
-		final TextView ftv = tv;
-		mHandler2.post(new Runnable() {
-			@Override
-			public void run() {
-				ftv.setText(""); // clear text
-			}
-		});
-	}
-
-	final Handler timeDelayHandler = new Handler();
-
-
 
 	public MainActivity() {
 		// The RosActivity constructor configures the notification title and ticker messages.
@@ -94,26 +52,8 @@ public class MainActivity extends RosAppActivity {
 		super.onCreate(savedInstanceState);
 
 
-		try {
-
-			physicaloid = new Physicaloid(this);
-			physicaloid.setBaudrate(9600);
-
-		} catch (Exception e) {
-			Log.d("IO EXCEPTION", "there was a serial exception");
-		}
-
-		FL = (EditText) findViewById(R.id.FL);
-		FR = (EditText) findViewById(R.id.FR);
-		FV = (EditText) findViewById(R.id.FV);
-		BL = (EditText) findViewById(R.id.BL);
-		BR = (EditText) findViewById(R.id.BR);
-		BV = (EditText) findViewById(R.id.BV);
-
 		text = (TextView) findViewById(R.id.textOut);
 		text.setMovementMethod(new ScrollingMovementMethod());
-
-		virtualJoystickView = (VirtualJoystickView) findViewById(R.id.virtual_joystick);
 
         backButton = (Button) findViewById(R.id.back_button);
         backButton.setOnClickListener(new View.OnClickListener() {
@@ -122,7 +62,6 @@ public class MainActivity extends RosAppActivity {
                 onBackPressed();
             }
         });
-		doRoutine();
 
 
         // Setup nodes
@@ -134,112 +73,22 @@ public class MainActivity extends RosAppActivity {
         parameters_node = new ParametersNode();
 	}
 
-	private void delayedCallToSetMotors(int millis, final MotorOutputs outputs) {
-		timeDelayHandler.postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				updateMotorDisplay(outputs);
-				setOutputsToMotors(outputs);
-			}
-		}, millis);
+	public void onClickButton1(View v) {
+
 	}
 
+	public void onClickButton2(View v) {
 
-	public void beginRoutine(View v) {
-		doRoutine();
 	}
 
-	public void doRoutine() {
-		delayedCallToSetMotors(0000, getMotorOutputs(0.1, 0.1));
-		delayedCallToSetMotors(5000, getMotorOutputs(-0.0, 0.1));
-		delayedCallToSetMotors(12000, getMotorOutputs(0.1, 0.1));
-		delayedCallToSetMotors(16000, getMotorOutputs(0.0, -0.1));
-		delayedCallToSetMotors(20000, getMotorOutputs(-0.1, -0.1));
+	public void onClickButton3(View v) {
+
 	}
-
-	public MotorOutputs getMotorOutputs(double x, double y){
-		return new MotorOutputs(new double[]{-x+y, -x+y, 0, x+y, x+y, 0});
-	}
-
-	public void updateMotors(double x, double y) {
-		MotorOutputs outputs = new MotorOutputs(new double[]{-x+y, -x+y, 0, x+y, x+y, 0});
-		updateMotorDisplay(outputs);
-		setOutputsToMotors(outputs);
-	}
-	public void updateMotorDisplay(MotorOutputs outputs) {
-
-		FL.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.FL)));
-		FR.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.FR)));
-		FV.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.FV)));
-		BL.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.BL)));
-		BR.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.BR)));
-		BV.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.BV)));
-	}
-
-	public void setOutputsToMotors(MotorOutputs outputs) {
-		physicaloid.close();
-		if(physicaloid.open()) {
-
-			JSONFromatter formatter = new JSONFromatter();
-			String jsonOutput = formatter.formatMotorOutputs(outputs);
-
-			this.updateMotorDisplay(outputs);
-
-			byte[] buf = jsonOutput.getBytes();
-
-			tvAppend(text, "Write: " + new String(buf), true);
-			physicaloid.write(buf, buf.length);
-
-		} else {
-			//Error while connecting
-			Toast.makeText(MainActivity.this, "Cannot open for Write", Toast.LENGTH_SHORT).show();
-		}
-	}
-
-
-	public void onClickWrite(View v) {
-		MotorOutputs outs = new MotorOutputs(new double[]{1, 1, 1, 1, 1, 1});
-		setOutputsToMotors(outs);
-	}
-
-
-	public void onClickReset(View v) {
-		tvClear(text);
-		physicaloid.close();
-	}
-
-	@Override
-	public void onStart(){
-		super.onStart();
-
-		}
 
 	@Override
 	protected void init(NodeMainExecutor nodeMainExecutor) {
 		
 		super.init(nodeMainExecutor);
-        try {
-            java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-            java.net.InetAddress local_network_address = socket.getLocalAddress();
-            socket.close();
-            NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-
-			String joyTopic = remaps.get(getString(R.string.joystick_topic));
-
-			NameResolver appNameSpace = getMasterNameSpace();
-			joyTopic = appNameSpace.resolve(joyTopic).toString();
-
-			virtualJoystickView.setTopicName(joyTopic);
-
-			nodeMainExecutor.execute(virtualJoystickView,
-					nodeConfiguration.setNodeName("android/virtual_joystick"));
-
-			System.out.println("Socket works");
-
-        } catch (IOException e) {
-        	System.out.println("Socket error: " + e.getMessage());
-        }
-
 		// Start System Node
 		try {
 			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
@@ -328,8 +177,4 @@ public class MainActivity extends RosAppActivity {
 		return true;
 	}
 
-	@Override
-	public void onDestroy() {
-		super.onDestroy();
-	}
 }
