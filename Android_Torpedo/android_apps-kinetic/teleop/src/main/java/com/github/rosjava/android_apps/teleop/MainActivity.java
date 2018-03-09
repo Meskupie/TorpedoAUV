@@ -34,7 +34,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
+import Communication.AsyncArduinoWrite;
 import Communication.JSONFromatter;
+import Util.EmbeddedManager;
 import Util.MotorOutputs;
 
 public class MainActivity extends RosAppActivity {
@@ -81,10 +83,13 @@ public class MainActivity extends RosAppActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
+
 		setDashboardResource(R.id.top_bar);
 		setMainWindowResource(R.layout.main);
 		super.onCreate(savedInstanceState);
 
+		EmbeddedManager manager = new EmbeddedManager(null);
+		EmbeddedManager.Message message = manager.parseBitSet();
 
 		text = (TextView) findViewById(R.id.textOut);
 		text.setMovementMethod(new ScrollingMovementMethod());
@@ -150,8 +155,7 @@ public class MainActivity extends RosAppActivity {
 							if(arduino != null){
 								//call method to set up device communication
 							}
-						}
-						else {
+						} else {
 							text.append("Permission denied for arduino!" + '\n');
 						}
 					}
@@ -185,15 +189,13 @@ public class MainActivity extends RosAppActivity {
 	};
 
 	public void onClickButton1(View v) {
-
+		new AsyncArduinoWrite().execute(new Object[]{serial});
 	}
 
 	public void onClickButton2(View v) {
-
 	}
 
 	public void onClickButton3(View v) {
-
 	}
 
 	@Override
