@@ -1496,7 +1496,12 @@ void MC_Set_Speed(uint16_t speed_value)
   SIXSTEP_parameters.speed_target = PI_parameters.Reference;
 #endif
 }
-
+/** @defgroup thrustToSpeed    thrustToSpeed
+  *  @{
+    * @brief convert a thrust request to a speed setpoint
+    * @param  thrust_mN:  thrust in mili newtons
+    * @retval speed in RPM
+*/
 int16_t thrustToSpeed(int16_t thrust_mN)
 {
 	uint16_t speed_value;
@@ -1532,9 +1537,7 @@ void MC_Set_Thrust(int16_t thrust_mN)
 #endif
 }
 
-/**
-  * @} 
-  */
+
 
 /** @defgroup MC_StartMotor    MC_StartMotor
   *  @{

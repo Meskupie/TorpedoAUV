@@ -77,6 +77,7 @@ typedef enum
 
 typedef struct
 {
+    
     uint16_t battVoltage_mV:16;
     uint16_t depth_m : 16;
     int16_t imu_x : 16;

@@ -321,7 +321,9 @@ void readSerialCommand() {
                     ESCSetThrust(&ESC[5], rxUnion.motorStruct.motorThrust5_mN);
                 }
                 break;
-
+            case '\n': // Set Motor
+                // do nothing
+                break;
             default:
                 Serial.println("Invalid Command");
                 break;

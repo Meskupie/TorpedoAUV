@@ -68,7 +68,7 @@
  ============================================================================== 
 **************************************************************************** */
 /*!< ********************* Open loop control *********************************/
-#define STARTUP_DUTY_CYCLE                  195     /*!< Tenths of percentage of PWM on time */
+#define STARTUP_DUTY_CYCLE                  95     /*!< Tenths of percentage of PWM on time */
 
 /*!< ********************* Closed Loop control *********************************/
 #ifndef PID
@@ -112,7 +112,7 @@
 #define KD_GAIN                            295     /*!< Kd parameter for PID regulator */
 #endif
 #define K_GAIN_SCALING                      14     /*!< Kp, Ki, (Kd) scaling for PI(D) regulator */
-#define LOWER_OUT_LIMIT                     30     /*!< Low Out value of PI regulator */
+#define LOWER_OUT_LIMIT                     0     /*!< Low Out value of PI regulator */
 #define UPPER_OUT_SHIFT                     12     /*!< Integer value no greater than 16 */
 #define UPPER_OUT_LIMIT   (1<<UPPER_OUT_SHIFT)     /*!< High Out value of PI regulator */
 #define MAX_POT_SPEED                    10000     /*!< Maximum Speed regulated by potentiometer */
@@ -142,18 +142,18 @@
 #if defined(HALL_SENSORS)
 #define START_COUNTER_STEPS_DECREMENTATION   10
 #define NUMBER_OF_STARTS                     3
-#define HALL_KO_SUCCESSIVE_MAX              200
+#define HALL_KO_SUCCESSIVE_MAX              60
 #define MAX_SPEED                        20000      /*!< Motor rated max speed */
-#define STEP_DURATION_MINIMUM ((SYSCLOCK_FREQUENCY*10/((LF_TIMX_PSC+1)*NUM_POLE_PAIRS*MAX_SPEED))>>1)
+#define STEP_DURATION_MINIMUM 					((SYSCLOCK_FREQUENCY*10/((LF_TIMX_PSC+1)*NUM_POLE_PAIRS*MAX_SPEED))>>1)
 #if defined(FIXED_HALL_DELAY)
-#define COMMUTATION_DELAY                   0
+#define COMMUTATION_DELAY                  0
 #endif
 #endif
 
 /*!< ********************* Open loop control *********************************/
 #define ACC                              1000     /*!< Mechanical acceleration rate (setting available in manual mode, LOAD_TYPE = 0) */
 #define MINIMUM_ACC                        500     /*!< Mechanical acceleration rate for BIG load application */
-#define NUMBER_OF_STEPS                  2000     /*!< Number of elements for motor start-UP (max value 65535)*/
+#define NUMBER_OF_STEPS                  200     /*!< Number of elements for motor start-UP (max value 65535)*/
 #define TIME_FOR_ALIGN                     100     /*!< Time for alignment (msec)*/
 #define BUTTON_DELAY                      1000     /*!< Delay time to enable push button for new command (1 = 1msec)*/
 #define NUMBER_ZCR                          8     /*!< Number of zero crossing event during the startup for closed loop control begin */
