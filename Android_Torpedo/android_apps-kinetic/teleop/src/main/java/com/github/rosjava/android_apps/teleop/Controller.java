@@ -18,16 +18,16 @@ public class Controller {
     private final int SIZE_INPUTS = 6;
 
     private SimpleMatrix lqr_K_mat;
-    private SimpleMatrix state_r_mat;
-    private SimpleMatrix input_t_mat;
+    private SimpleMatrix state_reference_mat;
+    private SimpleMatrix input_thrust_mat;
 
     private boolean ready;
 
     public Controller() {
         // Set variables to initial values
         lqr_K_mat = new SimpleMatrix(SIZE_INPUTS,SIZE_STATES);
-        state_r_mat = new SimpleMatrix(SIZE_STATES,1);
-        input_t_mat = new SimpleMatrix(SIZE_INPUTS,1);
+        state_reference_mat = new SimpleMatrix(SIZE_STATES,1);
+        input_thrust_mat = new SimpleMatrix(SIZE_INPUTS,1);
         ready = false;
     }
 

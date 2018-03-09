@@ -54,11 +54,8 @@ public class SystemNode extends AbstractNodeMain {
 
     @Override
     public void onStart(final ConnectedNode connectedNode) {
-        // Define ROS connections
+        // Define system connections
         final Publisher<std_msgs.Int32> system_state_pub = connectedNode.newPublisher("system_state",std_msgs.Int32._TYPE);
-        //final Subscriber<>
-
-        // Node verification
         final Subscriber<std_msgs.Int32> status_communication_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_embedded_sub = connectedNode.newSubscriber("status_embedded", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_cameras_sub = connectedNode.newSubscriber("status_cameras", Int32._TYPE);
@@ -66,6 +63,8 @@ public class SystemNode extends AbstractNodeMain {
         final Subscriber<std_msgs.Int32> status_planner_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_controller_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_parameters_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
+        // Define data connections
+
 
         // Main cancelable loop
         connectedNode.executeCancellableLoop(new CancellableLoop() {

@@ -54,13 +54,15 @@ public class CommunicationNode extends AbstractNodeMain {
 
     @Override
     public void onStart(final ConnectedNode connectedNode) {
-        // System connections
+        // Define system connections
         final Publisher<Int32> status_communication_pub = connectedNode.newPublisher("status_communication", Int32._TYPE);
         final Publisher<Int32> status_embedded_pub = connectedNode.newPublisher("status_embedded", Int32._TYPE);
+        final Publisher<Int32> status_cameras_pub = connectedNode.newPublisher("status_cameras", Int32._TYPE);
         final Subscriber<Int32> system_state_sub = connectedNode.newSubscriber("system_state", Int32._TYPE);
         final Subscriber<Float64MultiArray> input_thrust_sub = connectedNode.newSubscriber("input_thrust",Float64MultiArray._TYPE);
         final ParameterTree param_tree = connectedNode.getParameterTree();
-        // Sensors
+
+        // Define data connections
         final Publisher<geometry_msgs.Quaternion> embedded_imu_pub = connectedNode.newPublisher("embedded_imu", geometry_msgs.Quaternion._TYPE);
         final Publisher<Float64> embedded_temperature_pub = connectedNode.newPublisher("embedded_temperature", Float64._TYPE);
         final Publisher<Float64MultiArray> embedded_thrust_pub = connectedNode.newPublisher("embedded_thrust",Float64MultiArray._TYPE);
@@ -74,6 +76,7 @@ public class CommunicationNode extends AbstractNodeMain {
             // Define publishing messages
             Int32 status_communication_msg = status_communication_pub.newMessage();
             Int32 status_embedded_msg = status_embedded_pub.newMessage();
+            Int32 status_cameras_msg = status_cameras_pub.newMessage();
             geometry_msgs.Quaternion embedded_imu_msg = embedded_imu_pub.newMessage();
             Float64 embedded_temperature_msg = embedded_temperature_pub.newMessage();
             Float64MultiArray embedded_thrust_msg = embedded_thrust_pub.newMessage();

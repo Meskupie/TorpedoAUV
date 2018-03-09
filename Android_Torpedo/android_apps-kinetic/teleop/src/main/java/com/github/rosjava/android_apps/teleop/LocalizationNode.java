@@ -19,6 +19,7 @@ import org.ros.rosjava_geometry.Quaternion;
 import java.util.ArrayList;
 
 import sensor_msgs.PointCloud;
+import std_msgs.Float64;
 import std_msgs.Float64MultiArray;
 import std_msgs.Int32;
 
@@ -28,13 +29,15 @@ public class LocalizationNode extends AbstractNodeMain{
     private int system_state;
 
     private Time time_system_state;
-    private Time time_embedded_imu;
     private Time time_embedded_thrust;
+    private Time time_embedded_imu;
+    private Time time_embedded_depth;
     private Time time_camera_targets;
 
     private Duration timeout_system_state;
-    private Duration timeout_embedded_imu;
     private Duration timeout_embedded_thrust;
+    private Duration timeout_embedded_imu;
+    private Duration timeout_embedded_depth;
     private Duration timeout_camera_targets;
 
     @Override
@@ -44,14 +47,15 @@ public class LocalizationNode extends AbstractNodeMain{
 
     @Override
     public void onStart(final ConnectedNode connectedNode) {
-        final Publisher<geometry_msgs.Transform> state_x_pub = connectedNode.newPublisher("state_x", geometry_msgs.Transform._TYPE);
-
-        // Subscribers
+        // Define system connections
+        final Publisher<geometry_msgs.Transform> state_pose_pub = connectedNode.newPublisher("state_pose", geometry_msgs.Transform._TYPE);
         final Subscriber<Int32> system_state_sub = connectedNode.newSubscriber("system_state", Int32._TYPE);
-        final Subscriber<geometry_msgs.Quaternion> embedded_imu_sub = connectedNode.newSubscriber("embedded_imu", geometry_msgs.Quaternion._TYPE);
-        final Subscriber<Float64MultiArray> embedded_thrust_sub = connectedNode.newSubscriber("embedded_thrust", Float64MultiArray._TYPE);
-        final Subscriber<PointCloud> camera_targets_sub = connectedNode.newSubscriber("camera_targets", PointCloud._TYPE);
         final ParameterTree param_tree = connectedNode.getParameterTree();
+        // Define data connections
+        final Subscriber<Float64MultiArray> embedded_thrust_sub = connectedNode.newSubscriber("embedded_thrust", Float64MultiArray._TYPE);
+        final Subscriber<geometry_msgs.Quaternion> embedded_imu_sub = connectedNode.newSubscriber("embedded_imu", geometry_msgs.Quaternion._TYPE);
+        final Subscriber<Float64> embedded_depth_sub = connectedNode.newSubscriber("embedded_depth", Float64._TYPE);
+        final Subscriber<PointCloud> camera_targets_sub = connectedNode.newSubscriber("camera_targets", PointCloud._TYPE);
 
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
