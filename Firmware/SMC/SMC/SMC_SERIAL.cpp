@@ -25,6 +25,12 @@
 #define SERIAL_READ Serial.read
 #define SERIAL_AVAILABLE Serial.available
 #define STOP_ALL_MOTORS for (int i = 0; i<6;i++) ESCStop(&ESC[i]);
+
+hostUpdateStruct_transmit_union txUnion;
+hostUpdateStruct_receive_union rxUnion;
+imu::Quaternion quat;
+
+
 char queryType = 'X';
 int motor = 0;
 long speed = 0;
@@ -88,7 +94,7 @@ void printESCState(int state)
 
 void printStatusStruct(ESC_StatusStruct printStruct)
 {
-    
+
     Serial.print("speed Set Point: ");
     Serial.println(printStruct.speedSetPoint);
     Serial.print("speed Measured: ");
@@ -273,6 +279,48 @@ void readSerialCommand() {
                 Serial.print("Current: ");
                 Serial.println(gasGauge.getCurrent());
                 break;
+                
+            case 'q': // get system Update Struct
+                txUnion.statusStruct.battVoltage_mV = gasGauge.getVoltage();
+                txUnion.statusStruct.battCurrent_mA = gasGauge.getCurrent();
+                txUnion.statusStruct.ambientTemperature_C = IMU.getTemp();
+                quat = IMU.getQuat();
+                txUnion.statusStruct.imu_x = castQuatToUint16(quat.x());
+                txUnion.statusStruct.imu_y = castQuatToUint16(quat.y());
+                txUnion.statusStruct.imu_z = castQuatToUint16(quat.z());
+                txUnion.statusStruct.imu_w = castQuatToUint16(quat.w());
+                txUnion.statusStruct.swStateFront = swFront.updateButton();
+                txUnion.statusStruct.swStateCenter = swCenter.updateButton();
+                txUnion.statusStruct.swStateRear = swRear.updateButton();
+                ESC_Status_update_all();
+                txUnion.statusStruct.motorStatus0 = ESC[0].runState;
+                txUnion.statusStruct.motorStatus1 = ESC[1].runState;
+                txUnion.statusStruct.motorStatus2 = ESC[2].runState;
+                txUnion.statusStruct.motorStatus3 = ESC[3].runState;
+                txUnion.statusStruct.motorStatus4 = ESC[4].runState;
+                txUnion.statusStruct.motorStatus5 = ESC[5].runState;
+                 //TODO: find how to map current to thrust
+                txUnion.statusStruct.motorThrust0_mN = ESC[0].currentMeasured;
+                txUnion.statusStruct.motorThrust1_mN = ESC[1].currentMeasured;
+                txUnion.statusStruct.motorThrust2_mN = ESC[2].currentMeasured;
+                txUnion.statusStruct.motorThrust3_mN = ESC[3].currentMeasured;
+                txUnion.statusStruct.motorThrust4_mN = ESC[4].currentMeasured;
+                txUnion.statusStruct.motorThrust5_mN = ESC[5].currentMeasured;
+                Serial.write(txUnion.stuctRaw, sizeof(txUnion));
+                break;
+                
+            case 'Q': // Set Motor
+                Serial.readBytes(rxUnion.stuctRaw, sizeof(rxUnion));
+                if (rxCheckSum(rxUnion))
+                {
+                    ESCSetSpeed(&ESC[0], rxUnion.motorStruct.motorThrust0_mN);
+                    ESCSetSpeed(&ESC[1], rxUnion.motorStruct.motorThrust1_mN);
+                    ESCSetSpeed(&ESC[2], rxUnion.motorStruct.motorThrust2_mN);
+                    ESCSetSpeed(&ESC[3], rxUnion.motorStruct.motorThrust3_mN);
+                    ESCSetSpeed(&ESC[4], rxUnion.motorStruct.motorThrust4_mN);
+                    ESCSetSpeed(&ESC[5], rxUnion.motorStruct.motorThrust5_mN);
+                }
+                break;
 
             default:
                 Serial.println("Invalid Command");
@@ -280,6 +328,21 @@ void readSerialCommand() {
                 
         }
     }
+}
+//TODO: implement checksum
+bool rxCheckSum(hostUpdateStruct_receive_union input)
+{
+    int16_t sum =0;
+    for (int i = 0; i<(sizeof(input)-1); i++) {
+        sum = sum+input.stuctRaw[i];
+    }
+    sum = sum + input.motorStruct.count;
+    if ((sum%16) == input.motorStruct.checkSum) return true;
+    return false;
+}
+int16_t castQuatToUint16(float quatVector)
+{
+    return (int16_t) (quatVector*__INT16_MAX__);
 }
 void readValueSerial(char *data, byte size) {
     byte index = 0;

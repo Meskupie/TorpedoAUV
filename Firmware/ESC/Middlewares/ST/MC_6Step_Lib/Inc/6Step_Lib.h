@@ -21,7 +21,6 @@
  *   3. Neither the name of STMicroelectronics nor the names of its contributors
  *      may be used to endorse or promote products derived from this software
  *      without specific prior written permission.
- *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -226,6 +225,7 @@ void MC_SixStep_RESET(void);
 void MC_StartMotor(void);
 void MC_StopMotor(void);
 void MC_Set_Speed(uint16_t);
+void MC_Set_Thrust(int16_t);
 void MC_EXT_button_SixStep(void);
 /**
   * @} 

@@ -84,6 +84,7 @@
 #include "Adafruit_BNO055.h"
 #include <utility/imumaths.h>
 #include "BQ34110.h"
+#include "debounce.h"
 
 
 
@@ -102,43 +103,70 @@ extern ESC_Struct ESC[];
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 
 
-Adafruit_BNO055 bno = Adafruit_BNO055();
+
+
+Adafruit_BNO055 IMU = Adafruit_BNO055();
 BQ34110 gasGauge = BQ34110();
 
 // Define variables and constants
 int currChar = 0;
 
-String constantlySend = "";
 
 
 // Prototypes
 // !!! Help: http://bit.ly/2l0ZhTa
 
+#define PIN_REED_SW_FRONT   9
+#define PIN_REED_SW_CENTER  10
+#define PIN_REED_SW_REAR    5
+
+
+
+
 
 // Utilities
+debounce swFront;
+debounce swCenter;
+debounce swRear;
+
+
+
 
 
 // Functions
-
+void reedSwitchInit()
+{
+    swFront.initButton(PIN_REED_SW_FRONT,INPUT_PULLUP);
+    swCenter.initButton(PIN_REED_SW_CENTER,INPUT_PULLUP);
+    swRear.initButton(PIN_REED_SW_REAR,INPUT_PULLUP);
+}
 
 
 // Add setup code
 
 void setup()
 {
+    // ESC Init
     ESC_init_all();
-    bno.begin();
-    bno.setExtCrystalUse(true);
-//    bno.setMode()
+    // IMU Init
+    IMU.begin();
+    IMU.setExtCrystalUse(true);
+    // Gas Guage init
+    gasGauge.begin();
+    
+    // serial init
     Serial.begin(BAUD_RATE);
     Serial.println("Hello!");
-    gasGauge.begin();
- 
+    // reed swich Init
+    reedSwitchInit();
     
 }
+
 ESC_RUN_STATE lastState = STOP;
 ESC_RUN_STATE newState =STOP;
 ESC_Struct* testEsc = &ESC[0];
+
+
 // Add loop code
 
 int loopCount = 0;
@@ -155,8 +183,9 @@ void loop()
     
 
 
-//    printESCState(ESCGetStatus(&ESC[0]));
-    printStatusStruct(ESCGetStatusStruct(&ESC[3]));
+////    printESCState(ESCGetStatus(&ESC[0]));
+    
+    printStatusStruct(ESCGetStatusStruct(&ESC[0]));
     
 //    Serial.print("ver: ");
 //    Serial.println(gasGauge.testDataWriteToFlash());
@@ -199,30 +228,6 @@ void loop()
         }
     }
 #else
-    if(Serial.available() > 0) {
-        currChar = Serial.read();
-
-        if(currChar == frontDelimiter) {
-            byte length = Serial.readBytesUntil(endDelimiter, jsonData, sizeof(jsonData));
-
-            char sub[length+1];
-            memcpy( sub, &jsonData[0], length);
-            sub[length] = '\0';
-            StaticJsonBuffer<200> jsonBuffer;
-            JsonObject& root = jsonBuffer.parseObject(jsonData);
-            if (!root.success()) {
-                return;
-            }
-            thrusterSpeed[0]= root["motorValues"]["FL"];
-            thrusterSpeed[1]= root["motorValues"]["FR"];
-            thrusterSpeed[2]= root["motorValues"]["FV"];
-            thrusterSpeed[3]= root["motorValues"]["BL"];
-            thrusterSpeed[4]= root["motorValues"]["BR"];
-            thrusterSpeed[5]= root["motorValues"]["BV"];
-            lastTime = millis();
-        }
-    }
-    
     
     for (int i = 0; i<5;i++)
     {

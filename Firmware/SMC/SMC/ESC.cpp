@@ -19,7 +19,7 @@
 
 #define CW 0
 #define CCW 1
-#define SPI_COMMS_DELAY_MICROSECONDS 10
+#define SPI_COMMS_DELAY_MICROSECONDS 1000
 
 #define MINIMUM_SPEED (500)
 
@@ -45,12 +45,19 @@ unsigned int ESC_init_all()
     SPI.begin();
     SPI.setBitOrder(MSBFIRST);
     SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
-    ESC_init(&ESC[0],ESC_PIN_FL);
-    ESC_init(&ESC[1],ESC_PIN_FR);
-    ESC_init(&ESC[2],ESC_PIN_FC);
-    ESC_init(&ESC[3],ESC_PIN_RL);
-    ESC_init(&ESC[4],ESC_PIN_RR);
-    ESC_init(&ESC[5],ESC_PIN_RC);
+    ESC_init(&ESC[ESC_INDEX_FL],ESC_PIN_FL);
+    ESC_init(&ESC[ESC_INDEX_FR],ESC_PIN_FR);
+    ESC_init(&ESC[ESC_INDEX_FC],ESC_PIN_FC);
+    ESC_init(&ESC[ESC_INDEX_RL],ESC_PIN_RL);
+    ESC_init(&ESC[ESC_INDEX_RR],ESC_PIN_RR);
+    ESC_init(&ESC[ESC_INDEX_RC],ESC_PIN_RC);
+}
+unsigned int ESC_Status_update_all()
+{
+    for(int i = 0; i< 6; i++)
+    {
+        ESCGetStatusStruct(&ESC[i]);
+    }
 }
 
 unsigned int ESC_init(ESC_Struct* ESC_hande,int pin)
@@ -194,7 +201,6 @@ unsigned int ESCGetStatus(ESC_Struct* ESC_hande )
     delayMicroseconds(SPI_COMMS_DELAY_MICROSECONDS);
     int id = SPI.transfer(0);
     digitalWrite(ESC_hande->pin, HIGH);
-    
     return id;
 }
 ESC_StatusStruct ESCGetStatusStruct(ESC_Struct* ESC_hande )
@@ -210,7 +216,11 @@ ESC_StatusStruct ESCGetStatusStruct(ESC_Struct* ESC_hande )
         newData.stuctRaw[i] = SPI.transfer(0);
     }
     digitalWrite(ESC_hande->pin, HIGH);
-    
+    ESC_hande->currentMeasured = newData.statusStruct.currentMeasured;
+    ESC_hande->runState = newData.statusStruct.runState;
+    ESC_hande->speedSetPoint = newData.statusStruct.speedSetPoint;
+    ESC_hande->direction = newData.statusStruct.direction;
+    ESC_hande->speedMeasured = newData.statusStruct.speedMeasured;
     return newData.statusStruct;
 }
 

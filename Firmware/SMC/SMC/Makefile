@@ -44,7 +44,7 @@ USER_LIBS_LIST = ArduinoJSON Adafruit_BNO055 Adafruit_Sensor
 # !!! Help: http://bit.ly/2juEP91
 # default = empty = all
 #
-LOCAL_LIBS_LIST = ESC SMC_SERIAL BQ34110
+LOCAL_LIBS_LIST = ESC SMC_SERIAL BQ34110 debounce
 
 # List core, application and user's libraries to be excluded
 # !!! Help: http://bit.ly/2AijUOI

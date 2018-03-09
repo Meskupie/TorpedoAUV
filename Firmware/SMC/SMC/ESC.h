@@ -64,19 +64,22 @@
 
 #include "SPI.h"
 
-#define ESC_PIN_FL A5
-#define ESC_PIN_FR A4
-#define ESC_PIN_FC A3
-#define ESC_PIN_RL A1
-#define ESC_PIN_RR A0
-#define ESC_PIN_RC A2
 
-#define ESC_INDEX_FL 0
-#define ESC_INDEX_FR 1
+#define ESC_PIN_FR A5
+#define ESC_PIN_RR A4
+#define ESC_PIN_FC A3
+#define ESC_PIN_RC A2
+#define ESC_PIN_FL A1
+#define ESC_PIN_RL A0
+
+#define ESC_INDEX_FR 0
+#define ESC_INDEX_RR 1
 #define ESC_INDEX_FC 2
-#define ESC_INDEX_RL 3
-#define ESC_INDEX_RR 4
-#define ESC_INDEX_RC 5
+#define ESC_INDEX_RC 3
+#define ESC_INDEX_FL 4
+#define ESC_INDEX_RL 5
+
+
 
 
 
@@ -147,7 +150,7 @@ typedef union
 
 
 
-
+unsigned int ESC_Status_update_all();
 unsigned int ESC_init(ESC_Struct* ESC_hande,int pin);
 unsigned int ESC_init_all(void);
 unsigned int ESCStart(ESC_Struct* ESC_hande);

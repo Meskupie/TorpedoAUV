@@ -83,7 +83,9 @@ typedef enum
     ESC_CMD_SetKI,
     ESC_CMD_SetKD,
 		ESC_CMD_RESET,
-    ESC_CMD_GetStatusStruct
+    ESC_CMD_GetStatusStruct,
+		ESC_CMD_GetThrust,
+		ESC_CMD_SetThrust
 } ESC_COMMAND;
 typedef struct
 {

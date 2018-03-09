@@ -741,6 +741,7 @@
 		AA2A180228174807AA0003BD /* ClickEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAAA180228174807AA0003BD /* ClickEncoder.cpp */; };
 		AA2A180228174807AA0003BE /* ClickEncoder.h in Sources */ = {isa = PBXBuildFile; fileRef = AAAA180228174807AA0003BE /* ClickEncoder.h */; };
 		BE25E7B72047691A0077EB2E /* SMC.ino in Sources */ = {isa = PBXBuildFile; fileRef = BE95E7B72047691A0077EB2E /* SMC.ino */; };
+		BE45BFD920520A420075F0CF /* debounce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE45BFD720520A420075F0CF /* debounce.cpp */; };
 		BE70D82A204FB81700CDD9B6 /* BQ34110.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE70D828204FB81600CDD9B6 /* BQ34110.cpp */; };
 		BE95E7892047691A0077EB2E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE95E7882047691A0077EB2E /* main.cpp */; };
 		BE95E7EC20476B3F0077EB2E /* ESC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE95E7EA20476B3F0077EB2E /* ESC.cpp */; };
@@ -1481,6 +1482,8 @@
 		AAAA180228174807AA0003BB /* TimerOne.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimerOne.h; sourceTree = "<group>"; };
 		AAAA180228174807AA0003BD /* ClickEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ClickEncoder.cpp; sourceTree = "<group>"; };
 		AAAA180228174807AA0003BE /* ClickEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClickEncoder.h; sourceTree = "<group>"; };
+		BE45BFD720520A420075F0CF /* debounce.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = debounce.cpp; sourceTree = "<group>"; };
+		BE45BFD820520A420075F0CF /* debounce.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = debounce.h; sourceTree = "<group>"; };
 		BE70D809204FA0E600CDD9B6 /* ISSUE_TEMPLATE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ISSUE_TEMPLATE.md; sourceTree = "<group>"; };
 		BE70D80A204FA0E600CDD9B6 /* PULL_REQUEST_TEMPLATE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = PULL_REQUEST_TEMPLATE.md; sourceTree = "<group>"; };
 		BE70D80B204FA0E600CDD9B6 /* Adafruit_BNO055.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Adafruit_BNO055.cpp; sourceTree = "<group>"; };
@@ -3908,10 +3911,12 @@
 				BE95E78C2047691A0077EB2E /* Doxyfile */,
 				BE95E78D2047691A0077EB2E /* ReadMe.txt */,
 				BE95E7B72047691A0077EB2E /* SMC.ino */,
-				BE95E7EA20476B3F0077EB2E /* ESC.cpp */,
-				BE95E7ED2048EDB00077EB2E /* SMC_SERIAL.cpp */,
+				BE45BFD820520A420075F0CF /* debounce.h */,
+				BE45BFD720520A420075F0CF /* debounce.cpp */,
 				BE95E7EE2048EDB00077EB2E /* SMC_SERIAL.h */,
+				BE95E7ED2048EDB00077EB2E /* SMC_SERIAL.cpp */,
 				BE95E7EB20476B3F0077EB2E /* ESC.h */,
+				BE95E7EA20476B3F0077EB2E /* ESC.cpp */,
 				AAAA180228174807AA000000 /* Resources */,
 				BE95E78E2047691A0077EB2E /* Configurations */,
 			);
@@ -4992,6 +4997,7 @@
 				AA2A180228174807AA000375 /* mrepeat.h in Sources */,
 				AA2A180228174807AA000376 /* preprocessor.h in Sources */,
 				AA2A180228174807AA000377 /* stringz.h in Sources */,
+				BE45BFD920520A420075F0CF /* debounce.cpp in Sources */,
 				AA2A180228174807AA000378 /* tpaste.h in Sources */,
 				AA2A180228174807AA00037B /* compiler.h in Sources */,
 				AA2A180228174807AA00037C /* conf_isp.h in Sources */,

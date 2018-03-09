@@ -41,12 +41,14 @@
 #ifdef ROV
 
 extern SPI_HandleTypeDef hspi1;
+
 extern SIXSTEP_Base_InitTypeDef SIXSTEP_parameters;      /*!< Main SixStep structure*/
 extern SIXSTEP_PI_PARAM_InitTypeDef_t PI_parameters;     /*!< SixStep PI regulator structure*/
 extern void CMD_Parser(char* pCommandString);
 extern void MC_Set_PI_param(SIXSTEP_PI_PARAM_InitTypeDef_t *);
 extern void MC_StartMotor(void);
 extern void MC_StopMotor(void);
+
 
 uint8_t SPI_Receive_Buffer[RX_BUFFER_SIZE];
 uint16_t new16BitValue;
@@ -66,6 +68,15 @@ void SPI_Send_16BIT(uint16_t data)
     txData[0] = (uint8_t)(data>>8);
     txData[1] = (uint8_t)data& 0x0f;
     HAL_SPI_TransmitReceive(&hspi1,(uint8_t*)txData,SPI_Recived_DUMP,2,100);
+}
+int16_t speedToThrust(int16_t speed)
+{
+	int16_t thrust;
+	double speedDub = speed;
+	speedDub *= 0.00096416;
+	speedDub *= speedDub;
+	thrust =  (int16_t)(0.0928 * (speedDub));
+	return thrust;
 }
 
 void SPI_Communication_Task()
@@ -101,14 +112,22 @@ void SPI_Communication_Task()
                     new16BitValue = new16BitValue<<8;
                     new16BitValue = new16BitValue | SPI_Receive_Buffer[2];
                     MC_Set_Speed(new16BitValue);
-                    
+                    break;
+							  case ESC_CMD_SetThrust:
+                    new16BitValue = SPI_Receive_Buffer[1];
+                    new16BitValue = new16BitValue<<8;
+                    new16BitValue = new16BitValue | SPI_Receive_Buffer[2];
+                    MC_Set_Thrust(new16BitValue);
+                    break;
+								case ESC_CMD_GetThrust:
+                    SPI_Send_16BIT(speedToThrust(SIXSTEP_parameters.speed_fdbk_filtered));
                     break;
                 case ESC_CMD_SetCurrent:
                     new16BitValue = SPI_Receive_Buffer[1];
                     new16BitValue = new16BitValue<<8;
-                    new16BitValue = new16BitValue | SPI_Receive_Buffer[2];
-                    
+                    new16BitValue = new16BitValue | SPI_Receive_Buffer[2]; 
                     break;
+								
                 case ESC_CMD_SetDirection:
                     SIXSTEP_parameters.CW_CCW = SPI_Receive_Buffer[1];
                     
