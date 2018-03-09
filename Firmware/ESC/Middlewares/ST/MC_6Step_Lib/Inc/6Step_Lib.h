@@ -225,6 +225,7 @@ void MC_SixStep_RESET(void);
 void MC_StartMotor(void);
 void MC_StopMotor(void);
 void MC_Set_Speed(uint16_t);
+void MC_Set_Thrust(int16_t);
 void MC_EXT_button_SixStep(void);
 /**
   * @} 

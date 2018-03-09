@@ -1496,6 +1496,24 @@ void MC_Set_Speed(uint16_t speed_value)
   SIXSTEP_parameters.speed_target = PI_parameters.Reference;
 #endif
 }
+void MC_Set_Thrust(int16_t thrust_mN)
+{
+	uint16_t speed_value;
+	if (thrust_mN >10)
+	{
+		speed_value =  (int16_t)(10933 * sqrt(((double)thrust_mN)*0.1186));
+	}
+	else if (thrust_mN <-10)
+	{
+		speed_value =  (int16_t)(-10933 * sqrt(((double)-thrust_mN)*0.1186));
+	}
+	else
+	{
+		speed_value = 0;
+	}
+	PI_parameters.Reference = speed_value;
+	SIXSTEP_parameters.speed_target = PI_parameters.Reference;
+}
 
 /**
   * @} 
