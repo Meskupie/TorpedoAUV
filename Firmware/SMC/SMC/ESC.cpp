@@ -136,8 +136,33 @@ unsigned int ESCSetSpeed(ESC_Struct* ESC_hande,int16_t newSpeedSetPoint)
         ESCStop(ESC_hande);
     }
     
-
+    
     return 0;
+}
+unsigned int ESCSetThrust(ESC_Struct* ESC_hande,int16_t thrustSetPoint_mN)
+{
+    digitalWrite(ESC_hande->pin, LOW);
+    SPI.transfer(ESC_CMD_SetThrust);
+    SPI.transfer(thrustSetPoint_mN>>8);
+    SPI.transfer(thrustSetPoint_mN & 0xff);
+    digitalWrite(ESC_hande->pin, HIGH);
+    ESC_hande->thrustSetPoint_mN =thrustSetPoint_mN;
+    return 0;
+}
+int16_t ESCGetThrust(ESC_Struct* ESC_hande)
+{
+    int16_t thrustMeasured_mN = 0;
+    digitalWrite(ESC_hande->pin, LOW);
+    SPI.transfer(ESC_CMD_GetThrust);
+    SPI.transfer(0);
+    SPI.transfer(0);
+    delayMicroseconds(SPI_COMMS_DELAY_MICROSECONDS);
+    thrustMeasured_mN = SPI.transfer(0);
+    thrustMeasured_mN = thrustMeasured_mN<<8;
+    thrustMeasured_mN = thrustMeasured_mN | SPI.transfer(0);
+    digitalWrite(ESC_hande->pin, HIGH);
+    ESC_hande->thrustMeasured_mN = thrustMeasured_mN;
+    return thrustMeasured_mN;
 }
 uint16_t ESCGetSpeed(ESC_Struct* ESC_hande)
 {

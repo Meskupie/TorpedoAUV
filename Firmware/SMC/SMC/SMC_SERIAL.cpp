@@ -313,12 +313,12 @@ void readSerialCommand() {
                 Serial.readBytes(rxUnion.stuctRaw, sizeof(rxUnion));
                 if (rxCheckSum(rxUnion))
                 {
-                    ESCSetSpeed(&ESC[0], rxUnion.motorStruct.motorThrust0_mN);
-                    ESCSetSpeed(&ESC[1], rxUnion.motorStruct.motorThrust1_mN);
-                    ESCSetSpeed(&ESC[2], rxUnion.motorStruct.motorThrust2_mN);
-                    ESCSetSpeed(&ESC[3], rxUnion.motorStruct.motorThrust3_mN);
-                    ESCSetSpeed(&ESC[4], rxUnion.motorStruct.motorThrust4_mN);
-                    ESCSetSpeed(&ESC[5], rxUnion.motorStruct.motorThrust5_mN);
+                    ESCSetThrust(&ESC[0], rxUnion.motorStruct.motorThrust0_mN);
+                    ESCSetThrust(&ESC[1], rxUnion.motorStruct.motorThrust1_mN);
+                    ESCSetThrust(&ESC[2], rxUnion.motorStruct.motorThrust2_mN);
+                    ESCSetThrust(&ESC[3], rxUnion.motorStruct.motorThrust3_mN);
+                    ESCSetThrust(&ESC[4], rxUnion.motorStruct.motorThrust4_mN);
+                    ESCSetThrust(&ESC[5], rxUnion.motorStruct.motorThrust5_mN);
                 }
                 break;
 
