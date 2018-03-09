@@ -898,7 +898,7 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>ROV,USE_HAL_DRIVER,STM32F031x6,NO_UART_COMM,NO_PID,HALL_SENSORS,ALL_WINDINGS_ENERGIZATION,FIXED_HALL_DELAY,NO_PWM_ON_BEMF_SENSING,NO_MC_FAN_4PP_24V,NO_MC_RS_57BL54,NO_MC_2036_U_024_B_K312,NO_MC_BR2804_1700_KV_1,MC_SUPPO_2217_9_950_KV,DELTA_6STEP_TABLE,COMPLEMENTARY_DRIVE,NO_VOLTAGE_MODE,NO_POTENTIOMETER,NO_CURRENT_SENSE_ADC,NO_VBUS_SENSE_ADC,NO_TEMP_SENSE_ADC,NO_BEMF_RECORDING,NO_SPEED_SENDING,SPEED_RAMP</Define>
+              <Define>ROV,USE_HAL_DRIVER,STM32F031x6,NO_UART_COMM,NO_PID,HALL_SENSORS,ALL_WINDINGS_ENERGIZATION,FIXED_HALL_DELAY,NO_PWM_ON_BEMF_SENSING,NO_MC_FAN_4PP_24V,NO_MC_RS_57BL54,NO_MC_2036_U_024_B_K312,NO_MC_BR2804_1700_KV_1,MC_SUPPO_2217_9_950_KV,DELTA_6STEP_TABLE,COMPLEMENTARY_DRIVE,VOLTAGE_MODE,NO_POTENTIOMETER,NO_CURRENT_SENSE_ADC,NO_VBUS_SENSE_ADC,NO_TEMP_SENSE_ADC,NO_BEMF_RECORDING,NO_SPEED_SENDING,SPEED_RAMP</Define>
               <Undefine></Undefine>
               <IncludePath>..\..\Inc;..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Inc;..\..\..\..\..\..\..\Middlewares\ST\UART_serial_com\Inc;..\..\..\..\..\..\..\Drivers\BSP\STEVAL-SPIN3202;..\..\..\..\..\..\..\Drivers\BSP\Components\stspin32f0;..\..\..\..\..\..\..\Drivers\BSP\Components\Common;..\..\..\..\..\..\..\Drivers\CMSIS\Device\ST\STM32F0xx\Include;..\..\..\..\..\..\..\Drivers\STM32F0xx_HAL_Driver\Inc;..\..\..\..\..\..\..\Drivers\BSP\ROV;..\..\Src</IncludePath>
             </VariousControls>
