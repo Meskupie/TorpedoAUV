@@ -80,7 +80,7 @@ public class SystemNode extends AbstractNodeMain {
                 time_status_planner = connectedNode.getCurrentTime();
                 time_status_controller = connectedNode.getCurrentTime();
                 time_status_parameters = connectedNode.getCurrentTime();
-                status_system = 0;
+                status_system = -1;
                 status_system_prev = -1;
             }
 
@@ -90,31 +90,31 @@ public class SystemNode extends AbstractNodeMain {
 
                 // Verify timeouts of all nodes
                 if(time_current.compareTo(time_status_communication.add(timeout_status_communication)) == 1){
-                    Log.e("ROV_ERROR", "System node: Timeout node communication");
+                    //Log.e("ROV_ERROR", "System node: Timeout node communication");
                     status_timeouts |= 1;
                 } else { status_timeouts &= ~1;}
                 if(time_current.compareTo(time_status_embedded.add(timeout_status_embedded)) == 1){
-                    Log.e("ROV_ERROR", "System node: Timeout node embedded");
+                    //Log.e("ROV_ERROR", "System node: Timeout node embedded");
                     status_timeouts |= 2;
                 } else { status_timeouts &= ~2;}
                 if(time_current.compareTo(time_status_cameras.add(timeout_status_cameras)) == 1){
-                    Log.e("ROV_ERROR", "System node: Timeout node camera");
+                    //Log.e("ROV_ERROR", "System node: Timeout node camera");
                     status_timeouts |= 4;
                 } else { status_timeouts &= ~4;}
                 if(time_current.compareTo(time_status_localization.add(timeout_status_localization)) == 1){
-                    Log.e("ROV_ERROR", "System node: Timeout node localization");
+                    //Log.e("ROV_ERROR", "System node: Timeout node localization");
                     status_timeouts |= 8;
                 } else { status_timeouts &= ~8;}
                 if(time_current.compareTo(time_status_planner.add(timeout_status_planner)) == 1){
-                    Log.e("ROV_ERROR", "System node: Timeout node planner");
+                    //Log.e("ROV_ERROR", "System node: Timeout node planner");
                     status_timeouts |= 16;
                 } else { status_timeouts &= ~16;}
                 if(time_current.compareTo(time_status_controller.add(timeout_status_controller)) == 1){
-                    Log.e("ROV_ERROR", "System node: Timeout node controller");
+                    //Log.e("ROV_ERROR", "System node: Timeout node controller");
                     status_timeouts |= 32;
                 } else { status_timeouts &= ~32;}
                 if(time_current.compareTo(time_status_parameters.add(timeout_status_parameters)) == 1){
-                    Log.e("ROV_ERROR", "System node: Timeout node parameters");
+                    //Log.e("ROV_ERROR", "System node: Timeout node parameters");
                     status_timeouts |= 64;
                 } else { status_timeouts &= ~64;}
 
