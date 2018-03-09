@@ -84,6 +84,7 @@
 #include "Adafruit_BNO055.h"
 #include <utility/imumaths.h>
 #include "BQ34110.h"
+#include "debounce.h"
 
 
 
@@ -102,11 +103,14 @@ extern ESC_Struct ESC[];
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 
 
-Adafruit_BNO055 bno = Adafruit_BNO055();
+
+
+Adafruit_BNO055 IMU = Adafruit_BNO055();
 BQ34110 gasGauge = BQ34110();
 
 // Define variables and constants
 int currChar = 0;
+
 
 String constantlySend = "";
 
@@ -114,31 +118,88 @@ String constantlySend = "";
 // Prototypes
 // !!! Help: http://bit.ly/2l0ZhTa
 
+#define PIN_REED_SW_FRONT   9
+#define PIN_REED_SW_CENTER  10
+#define PIN_REED_SW_REAR    5
+
+
+typedef enum
+{
+    System_Idle,                               /* 0 */
+    System_Startup,                            /* 1 */
+    System_Fault
+} SystemRunState;
+
+typedef struct
+{
+    uint16_t battVoltage_mV:16;
+    uint16_t depth_m : 16;
+    int16_t imu_x : 16;
+    int16_t imu_y : 16;
+    int16_t imu_z : 16;
+    int16_t imu_w : 16;
+    uint16_t motorThrust0_mN : 16;
+    uint16_t motorThrust1_mN : 16;
+    uint16_t motorThrust2_mN : 16;
+    uint16_t motorThrust3_mN : 16;
+    uint16_t motorThrust4_mN : 16;
+    uint16_t motorThrust5_mN : 16;
+    uint8_t battSOC :8;
+    uint8_t battSOP :8;
+    uint8_t ambientTemperature_C:8;
+    ESC_RUN_STATE motorStatus0 : 4;
+    ESC_RUN_STATE motorStatus1 : 4;
+    ESC_RUN_STATE motorStatus2 : 4;
+    ESC_RUN_STATE motorStatus3 : 4;
+    ESC_RUN_STATE motorStatus4 : 4;
+    ESC_RUN_STATE motorStatus5 : 4;
+    SystemRunState SMC_Status : 3;
+    uint8_t swStateFront : 1;
+    uint8_t swStateCenter : 1;
+    uint8_t swStateRear : 1;
+    uint8_t _filler:2;
+}HostUpdateStruct_transmit; //length 31 bytes
 
 // Utilities
+debounce swFront;
+debounce swCenter;
+debounce swRear;
 
 
 // Functions
-
+void reedSwitchInit()
+{
+    swFront.initButton(PIN_REED_SW_FRONT,INPUT_PULLUP);
+    swCenter.initButton(PIN_REED_SW_CENTER,INPUT_PULLUP);
+    swRear.initButton(PIN_REED_SW_REAR,INPUT_PULLUP);
+}
 
 
 // Add setup code
 
 void setup()
 {
+    // ESC Init
     ESC_init_all();
-    bno.begin();
-    bno.setExtCrystalUse(true);
-//    bno.setMode()
+    // IMU Init
+    IMU.begin();
+    IMU.setExtCrystalUse(true);
+    // Gas Guage init
+    gasGauge.begin();
+    
+    // serial init
     Serial.begin(BAUD_RATE);
     Serial.println("Hello!");
-    gasGauge.begin();
- 
+    // reed swich Init
+    reedSwitchInit();
     
 }
+
 ESC_RUN_STATE lastState = STOP;
 ESC_RUN_STATE newState =STOP;
 ESC_Struct* testEsc = &ESC[0];
+
+
 // Add loop code
 
 int loopCount = 0;
@@ -156,6 +217,7 @@ void loop()
 
 
 ////    printESCState(ESCGetStatus(&ESC[0]));
+    
     printStatusStruct(ESCGetStatusStruct(&ESC[0]));
     
 //    Serial.print("ver: ");
