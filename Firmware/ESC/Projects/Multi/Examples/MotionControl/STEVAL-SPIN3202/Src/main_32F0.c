@@ -409,12 +409,24 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BSP_BOARD_FAULT_LED_PORT, &GPIO_InitStruct);
   BSP_BOARD_FAULT_LED_OFF();
+	
+		//GPIO DEBUG
+  GPIO_InitStruct.Pin = GPIO_CH_ZCR;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+  HAL_GPIO_Init(GPIO_PORT_ZCR, &GPIO_InitStruct);
+	HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+	
 	#else
 	// hack for bodged pin
   GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+	
+	
 	#endif
   
   /*Configure overcurrent threshold GPIO pins */

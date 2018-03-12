@@ -185,7 +185,7 @@ void loop()
 
 ////    printESCState(ESCGetStatus(&ESC[0]));
     
-    printStatusStruct(ESCGetStatusStruct(&ESC[0]));
+    printStatusStruct(ESCGetStatusStruct(&ESC[3 ]));
     
 //    Serial.print("ver: ");
 //    Serial.println(gasGauge.testDataWriteToFlash());

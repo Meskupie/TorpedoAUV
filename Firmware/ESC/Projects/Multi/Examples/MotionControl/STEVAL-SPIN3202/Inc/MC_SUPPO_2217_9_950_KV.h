@@ -58,7 +58,7 @@
 **************************************************************************** */   
 #define NUM_POLE_PAIRS                       7      /*!< Number of Motor Pole pairs */
 #define DIRECTION                            1      /*!< Set motor direction CW = 0 and CCW = 1*/
-#define TARGET_SPEED_OPEN_LOOP            700      /*!< Target speed in open loop control */
+#define TARGET_SPEED_OPEN_LOOP            600      /*!< Target speed in open loop control */
 #define TARGET_SPEED                      1000      /*!< Target speed in closed loop control */
 //#define FIXED_HALL_DELAY
 #ifdef VOLTAGE_MODE
@@ -68,12 +68,13 @@
  ============================================================================== 
 **************************************************************************** */
 /*!< ********************* Open loop control *********************************/
-#define STARTUP_DUTY_CYCLE                  95     /*!< Tenths of percentage of PWM on time */
+#define STARTUP_DUTY_CYCLE                  90     /*!< Tenths of percentage of PWM on time */
 
 /*!< ********************* Closed Loop control *********************************/
 #ifndef PID
 #define KP_GAIN                            512     /*!< Kp parameter for PI regulator */
 #define KI_GAIN                            484     /*!< Ki parameter for PI regulator */
+
 #else
 #define KP_GAIN                            512     /*!< Kp parameter for PID regulator */
 #define KI_GAIN                            400     /*!< Ki parameter for PID regulator */
@@ -91,10 +92,10 @@
  ============================================================================== 
 **************************************************************************** */
 /*!< ********************* Open loop control *********************************/
-#define STARTUP_PEAK_CURRENT               350     /*!< mA, Startup Peak Current */
+#define STARTUP_PEAK_CURRENT               1000     /*!< mA, Startup Peak Current */
 #define SENSE_RESISTOR                      10     /*!< mOhms, (RS) */
 #define SENSE_RESISTOR_VOLTAGE      (STARTUP_PEAK_CURRENT*SENSE_RESISTOR)/1000  /*!< mV */
-#define SENSE_GAIN                        5600     /*!< Thousandths, (RF/RB) */
+#define SENSE_GAIN                        6600     /*!< Thousandths, (RF/RB) */
 #define SENSE_AMPLIFIED_VOLTAGE     (SENSE_RESISTOR_VOLTAGE*SENSE_GAIN)/1000    /*!< mV */
 #define REFERENCE_PWM_HIGH_VOLTAGE        3300     /*!< mV, (VDD) */
 #define REFERENCE_PWM_DIVIDER_RATIO       3200     /*!< Thousandths, ((RD+RLP)/RD) */
@@ -104,15 +105,18 @@
 
 /*!< ********************* Closed Loop control *********************************/
 #ifndef PID
-#define KP_GAIN                           2048     /*!< Kp parameter for PI regulator */
-#define KI_GAIN                           1960     /*!< Ki parameter for PI regulator */
+//#define KP_GAIN                           2048     /*!< Kp parameter for PI regulator */
+//#define KI_GAIN                           1960     /*!< Ki parameter for PI regulator */
+
+#define KP_GAIN                            2048     /*!< Kp parameter for PI regulator */
+#define KI_GAIN                            1960     /*!< Ki parameter for PI regulator */
 #else
 #define KP_GAIN                           2730     /*!< Kp parameter for PID regulator */
 #define KI_GAIN                           1180     /*!< Ki parameter for PID regulator */
 #define KD_GAIN                            295     /*!< Kd parameter for PID regulator */
 #endif
 #define K_GAIN_SCALING                      14     /*!< Kp, Ki, (Kd) scaling for PI(D) regulator */
-#define LOWER_OUT_LIMIT                     0     /*!< Low Out value of PI regulator */
+#define LOWER_OUT_LIMIT                     30     /*!< Low Out value of PI regulator */
 #define UPPER_OUT_SHIFT                     12     /*!< Integer value no greater than 16 */
 #define UPPER_OUT_LIMIT   (1<<UPPER_OUT_SHIFT)     /*!< High Out value of PI regulator */
 #define MAX_POT_SPEED                    10000     /*!< Maximum Speed regulated by potentiometer */
@@ -140,23 +144,24 @@
 
 /*!< ********************* Hall sensors **************************************/
 #if defined(HALL_SENSORS)
-#define START_COUNTER_STEPS_DECREMENTATION   10
+#define START_COUNTER_STEPS_DECREMENTATION   8
 #define NUMBER_OF_STARTS                     3
 #define HALL_KO_SUCCESSIVE_MAX              60
 #define MAX_SPEED                        20000      /*!< Motor rated max speed */
 #define STEP_DURATION_MINIMUM 					((SYSCLOCK_FREQUENCY*10/((LF_TIMX_PSC+1)*NUM_POLE_PAIRS*MAX_SPEED))>>1)
 #if defined(FIXED_HALL_DELAY)
-#define COMMUTATION_DELAY                  0
+#define COMMUTATION_DELAY                  40
 #endif
 #endif
 
 /*!< ********************* Open loop control *********************************/
-#define ACC                              1000     /*!< Mechanical acceleration rate (setting available in manual mode, LOAD_TYPE = 0) */
+#define ACC                              20000     /*!< Mechanical acceleration rate (setting available in manual mode, LOAD_TYPE = 0) */
 #define MINIMUM_ACC                        500     /*!< Mechanical acceleration rate for BIG load application */
-#define NUMBER_OF_STEPS                  200     /*!< Number of elements for motor start-UP (max value 65535)*/
-#define TIME_FOR_ALIGN                     100     /*!< Time for alignment (msec)*/
+//#define NUMBER_OF_STEPS                  20000    /*!< Number of elements for motor start-UP (max value 65535)*///
+#define NUMBER_OF_STEPS                  1    /*!< Number of elements for motor start-UP (max value 65535)*/
+#define TIME_FOR_ALIGN                     500     /*!< Time for alignment (msec)*/
 #define BUTTON_DELAY                      1000     /*!< Delay time to enable push button for new command (1 = 1msec)*/
-#define NUMBER_ZCR                          8     /*!< Number of zero crossing event during the startup for closed loop control begin */
+#define NUMBER_ZCR                          12     /*!< Number of zero crossing event during the startup for closed loop control begin */
 
 /*!< ********************* Closed Loop control *******************************/
 /*!< Zero Crossing parameters */
@@ -187,10 +192,10 @@
 
 /*!< ********************* Debug *********************************************/
 /*!< Debug pin */
-#define GPIO_ZERO_CROSS                      1     /*!< Enable (1) the GPIO toggling for zero crossing detection */
-#define GPIO_COMM                            1     /*!< Enable (1) the GPIO toggling for commutation */
+#define GPIO_ZERO_CROSS                      0     /*!< Enable (1) the GPIO toggling for zero crossing detection */
+#define GPIO_COMM                            0     /*!< Enable (1) the GPIO toggling for commutation */
 #ifdef PWM_ON_BEMF_SENSING
-#define GPIO_ZCR_MODE                        0     /*!< Enable (1) the GPIO echo of TON/TOFF BEMF sensing method */
+#define GPIO_ZCR_MODE                        1     /*!< Enable (1) the GPIO echo of TON/TOFF BEMF sensing method */
 #endif
 
 /*!< ********************* Demo **********************************************/

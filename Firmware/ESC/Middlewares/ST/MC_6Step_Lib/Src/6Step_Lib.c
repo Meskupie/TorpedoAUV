@@ -79,9 +79,7 @@ TIM_OC_InitTypeDef sConfig;
 extern TIM_HandleTypeDef HF_TIMx;
 extern TIM_HandleTypeDef LF_TIMx;
 extern ADC_HandleTypeDef ADCx;
-#ifdef TEST
-uint8_t stop = 0;
-#endif
+
 #ifdef HALL_SENSORS
 uint16_t H1, H2, H3;
 uint8_t hallStatus;
@@ -1073,6 +1071,7 @@ void MC_SixStep_ARR_step()
 #ifdef HALL_SENSORS
 void MC_TIMx_SixStep_CommutationEvent()
 { 
+	HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);         
   SIXSTEP_parameters.hall_capture = __HAL_TIM_GetCompare(&LF_TIMx,TIM_CHANNEL_1);
   SIXSTEP_parameters.hall_ok = 1;
   if (SIXSTEP_parameters.start_cnt <= 0)
