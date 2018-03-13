@@ -1071,7 +1071,7 @@ void MC_SixStep_ARR_step()
 #ifdef HALL_SENSORS
 void MC_TIMx_SixStep_CommutationEvent()
 { 
-	HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);         
+      
   SIXSTEP_parameters.hall_capture = __HAL_TIM_GetCompare(&LF_TIMx,TIM_CHANNEL_1);
   SIXSTEP_parameters.hall_ok = 1;
   if (SIXSTEP_parameters.start_cnt <= 0)
@@ -1087,7 +1087,22 @@ void MC_TIMx_SixStep_CommutationEvent()
 #endif
   }  
 #ifndef FIXED_HALL_DELAY
-  SIXSTEP_parameters.commutation_delay = SIXSTEP_parameters.hall_capture>>1;
+	H1 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0);
+  H2 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_1);
+  H3 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2);    
+  hallStatus = (H1 << 2) | (H2 << 1) | H3; 
+
+		if (hallStatus == 3||hallStatus == 5||hallStatus == 6)
+		{
+				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);   			
+			SIXSTEP_parameters.commutation_delay = (SIXSTEP_parameters.hall_capture>>1) - COMMUTATION_DELAY_RISE_TIME_STEP;    
+		}
+		else 
+		{
+			SIXSTEP_parameters.commutation_delay = (SIXSTEP_parameters.hall_capture>>1)  - COMMUTATION_DELAY_FALL_TIME_STEP;
+		}
+
 #endif
   __HAL_TIM_SetCompare(&LF_TIMx,TIM_CHANNEL_2,SIXSTEP_parameters.commutation_delay);
 }
@@ -1503,20 +1518,22 @@ void MC_Set_Speed(uint16_t speed_value)
 */
 int16_t thrustToSpeed(int16_t thrust_mN)
 {
-	uint16_t speed_value;
-	if (thrust_mN >10)
-	{
-		speed_value =  (int16_t)(10933 * sqrt(((double)thrust_mN)*0.1186));
-	}
-	else if (thrust_mN <-10)
-	{
-		speed_value =  (int16_t)(-10933 * sqrt(((double)-thrust_mN)*0.1186));
-	}
-	else
-	{
-		speed_value = 0;
-	}
-	return speed_value;
+    
+    uint16_t speed_value;
+    double thrust_N = thrust_mN/1000.0;
+    if (thrust_mN >10)
+    {
+        speed_value =  (int16_t)(10933 * sqrt((thrust_N)*0.1186));
+    }
+    else if (thrust_mN <-10)
+    {
+        speed_value =  (int16_t)(-10933 * sqrt((-thrust_N)*0.1186));
+    }
+    else
+    {
+        speed_value = 0;
+    }
+    return speed_value;
 }
 
 /** @defgroup MC_Set_Thrust    MC_Set_Thrust
