@@ -6,67 +6,63 @@
     android:orientation="vertical" >
 
     <LinearLayout
-        android:id="@+id/top_view"
-        android:layout_width="fill_parent"
-        android:layout_height="50dip"
-        android:background="#ff404040"
-        android:orientation="vertical" >
-
-        <Button
-            android:id="@+id/back_button"
-            android:layout_width="wrap_content"
-            android:layout_height="50dip"
-            android:onClick="back"
-            android:text="Back" />
-
-        <LinearLayout
-            android:id="@+id/top_bar"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:background="#ff404040"
-            android:gravity="right"
-            android:orientation="vertical" />
-    </LinearLayout>
-
-    <LinearLayout
         android:id="@+id/main_layout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="vertical" >
+        android:orientation="vertical">
 
         <TextView
+            android:id="@+id/textOut4"
+            android:layout_width="91dp"
+            android:layout_height="34dp"
+            android:maxLines="1000"
+            android:scrollbars="vertical"
+            android:textSize="8dp" />
+
+        <Button
+            android:id="@+id/button1"
             android:layout_width="wrap_content"
-            android:layout_height="30dp"
-            android:id="@+id/textTitle"/>
+            android:layout_height="75dp"
+            android:onClick="onClickButton1"
+            android:text="button 1" />
+
         <TextView
             android:id="@+id/textOut"
-            android:layout_width="match_parent"
-            android:layout_height="150dp"
-            android:textSize="8dp"
+            android:layout_width="90dp"
+            android:layout_height="120dp"
             android:maxLines="1000"
-            android:scrollbars="vertical"/>
-
-       <Button
-            android:id="@+id/button1"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-           android:text="button 1"
-           android:onClick="onClickButton1"/>
+            android:scrollbars="vertical"
+            android:textSize="8dp" />
 
         <Button
             android:id="@+id/button2"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:text="button 2"
+            android:onClick="onClickButton2"
 
-            android:onClick="onClickButton2"/>
+            android:text="button 2" />
+
+        <TextView
+            android:id="@+id/textOut2"
+            android:layout_width="90dp"
+            android:layout_height="144dp"
+            android:maxLines="1000"
+            android:scrollbars="vertical"
+            android:textSize="8dp" />
+
         <Button
             android:id="@+id/button3"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:text="button 3"
+            android:onClick="onClickButton3"
 
-            android:onClick="onClickButton3"/>
+            android:text="button 3" />
+
+        <TextView
+            android:id="@+id/textTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp" />
+
     </LinearLayout>
 
 </LinearLayout>

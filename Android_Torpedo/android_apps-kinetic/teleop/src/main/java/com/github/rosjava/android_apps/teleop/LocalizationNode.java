@@ -82,22 +82,23 @@ public class LocalizationNode extends AbstractNodeMain{
                     state_pose_msg.setRotation(state_pose_msg_quat);
                     state_pose_pub.publish(state_pose_msg);
 
-                    // Get and publish twist
-                    state_twist = rov_localization.getTwist();
-                    state_twist_msg_vect.setX(state_twist.getLinear().getX());
-                    state_twist_msg_vect.setY(state_twist.getLinear().getY());
-                    state_twist_msg_vect.setZ(state_twist.getLinear().getZ());
-                    state_twist_msg.setLinear(state_pose_msg_vect);
-                    state_twist_msg_vect.setX(state_twist.getAngular().getX());
-                    state_twist_msg_vect.setY(state_twist.getAngular().getY());
-                    state_twist_msg_vect.setZ(state_twist.getAngular().getZ());
-                    state_twist_msg.setAngular(state_pose_msg_vect);
-                    state_twist_pub.publish(state_twist_msg);
-
-                    // Get and publish fitness
-                    state_fitness = rov_localization.getFitness();
-                    state_fitness_msg.setData(state_fitness);
-                    state_fitness_pub.publish(state_fitness_msg);
+                    // TODO: add this back in
+//                    // Get and publish twist
+//                    state_twist = rov_localization.getTwist();
+//                    state_twist_msg_vect.setX(state_twist.getLinear().getX());
+//                    state_twist_msg_vect.setY(state_twist.getLinear().getY());
+//                    state_twist_msg_vect.setZ(state_twist.getLinear().getZ());
+//                    state_twist_msg.setLinear(state_pose_msg_vect);
+//                    state_twist_msg_vect.setX(state_twist.getAngular().getX());
+//                    state_twist_msg_vect.setY(state_twist.getAngular().getY());
+//                    state_twist_msg_vect.setZ(state_twist.getAngular().getZ());
+//                    state_twist_msg.setAngular(state_pose_msg_vect);
+//                    state_twist_pub.publish(state_twist_msg);
+//
+//                    // Get and publish fitness
+//                    state_fitness = rov_localization.getFitness();
+//                    state_fitness_msg.setData(state_fitness);
+//                    state_fitness_pub.publish(state_fitness_msg);
                 }
             }
         }
@@ -158,21 +159,21 @@ public class LocalizationNode extends AbstractNodeMain{
                 // Check timeouts
                 time_current = connectedNode.getCurrentTime();
                 if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on system state");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Localization node: Timeout on system state");}
                     status_localization |= 2;
-                } else {status_localization &= ~2;}
+                }else{status_localization &= ~2;}
                 if(time_current.compareTo(time_embedded_thrust.add(timeout_embedded_thrust)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded thrust");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded thrust");}
                     status_localization |= 2;
-                } else { status_localization &= ~2;}
+                }else{status_localization &= ~2;}
                 if(time_current.compareTo(time_embedded_imu.add(timeout_embedded_imu)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded imu");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded imu");}
                     status_localization |= 2;
-                } else { status_localization &= ~2;}
+                }else{status_localization &= ~2;}
                 if(time_current.compareTo(time_embedded_thrust.add(timeout_embedded_depth)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded depth");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded depth");}
                     status_localization |= 2;
-                } else { status_localization &= ~2;}
+                }else{ status_localization &= ~2;}
                 //TODO: Uncomment when cameras are ready
                 //if(time_current.compareTo(time_camera_targets.add(timeout_camera_targets)) == 1){
                 //    if(status_system != 0){Log.e("ROV_ERROR", "Localization node: Timeout on camera_targets");}
@@ -190,7 +191,9 @@ public class LocalizationNode extends AbstractNodeMain{
                 // NOT IMPLEMENTED: This would modify status_localization bit 3
 
                 // Check if the system is ready to proceed
-                // TODO: Add pose lock here
+                if(rov_localization.isLocked()){
+                    status_localization &= ~128;
+                }else{ status_localization |= 128;}
 
                 attemptLocalizationUpdate(connectedNode);
                 // Publish status

@@ -59,7 +59,6 @@ public class CommunicationNode extends AbstractNodeMain {
         final Publisher<Int32> status_embedded_pub = connectedNode.newPublisher("status_embedded", Int32._TYPE);
         final Publisher<Int32> status_cameras_pub = connectedNode.newPublisher("status_cameras", Int32._TYPE);
         final Subscriber<Int32> status_system_sub = connectedNode.newSubscriber("status_system", Int32._TYPE);
-        final Subscriber<Float64MultiArray> input_thrust_sub = connectedNode.newSubscriber("input_thrust",Float64MultiArray._TYPE);
         final ParameterTree param_tree = connectedNode.getParameterTree();
 
         // Define data connections
@@ -71,6 +70,7 @@ public class CommunicationNode extends AbstractNodeMain {
         final Publisher<Float64> embedded_battery_voltage_pub = connectedNode.newPublisher("embedded_battery_voltage",Float64._TYPE);
         final Publisher<Int32> embedded_reed_switches_pub = connectedNode.newPublisher("embedded_reed_switchs",Int32._TYPE);
         final Publisher<PointCloud> camera_targets_pub = connectedNode.newPublisher("camera_targets", PointCloud._TYPE);
+        final Subscriber<Float64MultiArray> input_thrust_sub = connectedNode.newSubscriber("input_thrust",Float64MultiArray._TYPE);
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
             // Define publishing messages
@@ -96,11 +96,11 @@ public class CommunicationNode extends AbstractNodeMain {
                 time_current = connectedNode.getCurrentTime();
                 // Check timeouts
                 if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Communication node: Timeout on system state");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Communication node: Timeout on system state");}
                     status_communication |= 2;
                 } else { status_communication &= ~2;}
                 if(time_current.compareTo(time_input_thrust.add(timeout_input_thrust)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Communication node: Timeout on input thrust");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Communication node: Timeout on input thrust");}
                     status_communication |= 2;
                 } else { status_communication &= ~2;}
 

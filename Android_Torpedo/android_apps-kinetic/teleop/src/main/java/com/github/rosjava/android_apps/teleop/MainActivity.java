@@ -84,23 +84,23 @@ public class MainActivity extends RosAppActivity {
 	public void onCreate(Bundle savedInstanceState) {
 
 
-		setDashboardResource(R.id.top_bar);
+		//setDashboardResource(R.id.top_bar);
 		setMainWindowResource(R.layout.main);
 		super.onCreate(savedInstanceState);
 
-		EmbeddedManager manager = new EmbeddedManager(null);
-		EmbeddedManager.Message message = manager.parseBitSet();
+		//EmbeddedManager manager = new EmbeddedManager(null);
+		//EmbeddedManager.Message message = manager.parseBitSet();
 
-		text = (TextView) findViewById(R.id.textOut);
-		text.setMovementMethod(new ScrollingMovementMethod());
+		//text = (TextView) findViewById(R.id.textOut);
+		//text.setMovementMethod(new ScrollingMovementMethod());
 
-        backButton = (Button) findViewById(R.id.back_button);
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onBackPressed();
-            }
-        });
+//        backButton = (Button) findViewById(R.id.back_button);
+//        backButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                onBackPressed();
+//            }
+//        });
 
 
         // Setup nodes

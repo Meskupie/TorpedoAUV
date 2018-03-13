@@ -62,7 +62,7 @@ public class Localization {
     private Twist pose_twist;
 
     // IMU transform
-    private boolean ready_initial_orientation = false;
+    private boolean ready_initial_pose = false;
     private int imu_data_count = 0;
     private double imu_initial_yaw;
     private Transform transform_imu = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1));
@@ -71,7 +71,7 @@ public class Localization {
     private boolean ready_localization;
     private boolean ready_A = false;
     private boolean ready_B = false;
-    private boolean ready_map = true; // TODO: change this
+    private boolean ready_map = true; // TODO: change this to false
 
     private boolean ready_thrust = false;
     private boolean ready_imu = false;
@@ -114,13 +114,13 @@ public class Localization {
             double imu_yaw = new MyQuaternion(data_imu).getYaw();
             if (imu_data_count == 0) {
                 imu_initial_yaw = imu_yaw;
-                ready_initial_orientation = false;
+                ready_initial_pose = false;
             } else {
                 imu_initial_yaw = ewma_rate * imu_yaw + (1 - ewma_rate) * imu_initial_yaw;
                 if (imu_data_count > 20) {
-                    ready_initial_orientation = true;
+                    ready_initial_pose = true;
                 } else {
-                    ready_initial_orientation = false;
+                    ready_initial_pose = false;
                 }
             }
             transform_imu = new Transform(new Vector3(0, 0, 0), MyQuaternion.createFromEuler(180, 0, imu_initial_yaw).invert());
@@ -134,8 +134,8 @@ public class Localization {
     public boolean resetInitialOrientation() {
         imu_initial_yaw = 0;
         imu_data_count = 0;
-        ready_initial_orientation = false;
-        return !ready_initial_orientation;
+        ready_initial_pose = false;
+        return !ready_initial_pose;
     }
 
     private boolean myIsReady(){return(ready_A && ready_B && ready_map);}
@@ -183,6 +183,7 @@ public class Localization {
 
     // Accessors
     public boolean isReady(){return ready_localization;}
+    public boolean isLocked(){return ready_initial_pose;}
     public Transform getPose() {return pose;}
     public double getFitness() {return pose_fitness;}
     public Twist getTwist() {return pose_twist;}

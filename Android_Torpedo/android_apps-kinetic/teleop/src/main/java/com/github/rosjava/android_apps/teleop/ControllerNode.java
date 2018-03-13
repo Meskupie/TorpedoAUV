@@ -74,11 +74,11 @@ public class ControllerNode extends AbstractNodeMain{
                 // Check timeouts
                 time_current = connectedNode.getCurrentTime();
                 if(time_current.compareTo(time_state_reference.add(timeout_state_reference)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Controller node: Timeout on state reference");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Controller node: Timeout on state reference");}
                     status_controller |= 2;
                 } else {status_controller &= ~2;}
                 if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Controller node: Timeout on system state");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Controller node: Timeout on system state");}
                     status_controller |= 2;
                 } else { status_controller &= ~2;}
 
