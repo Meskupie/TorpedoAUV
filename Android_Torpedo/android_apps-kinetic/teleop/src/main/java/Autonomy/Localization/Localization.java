@@ -1,16 +1,12 @@
-package com.github.rosjava.android_apps.teleop;
+package Autonomy.Localization;
 
-import android.util.Log;
-
-import org.ejml.dense.block.VectorOps_DDRB;
 import org.ejml.simple.SimpleMatrix;
 import org.ros.message.Time;
 import org.ros.rosjava_geometry.Quaternion;
 import org.ros.rosjava_geometry.Transform;
 import org.ros.rosjava_geometry.Vector3;
 
-import java.util.concurrent.ThreadLocalRandom;
-
+import Autonomy.MyQuaternion;
 import geometry_msgs.Twist;
 
 
@@ -19,34 +15,6 @@ import geometry_msgs.Twist;
  */
 
 public class Localization {
-
-    // Camera targets class
-    static class CameraTarget {
-        private String type;
-        private int id;
-
-        private double altitude;
-        private double azimuth;
-
-        private double x;
-        private double y;
-        private double z;
-
-        public CameraTarget(double _altitude, double _azimuth, int _id) {
-            type = "measurement";
-            altitude = _altitude;
-            azimuth = _azimuth;
-            id = _id;
-        }
-
-        public CameraTarget(double _x, double _y, double _z, int _id) {
-            type = "map";
-            x = _x;
-            y = _y;
-            z = _z;
-            id = _id;
-        }
-    }
 
     // Constants
     final private int SIZE_STATES = 12;
@@ -61,37 +29,39 @@ public class Localization {
     private double pose_fitness = 0;
     private Twist pose_twist;
 
-    // IMU transform
+    // Sensor transforms
     private boolean ready_initial_pose = false;
     private int imu_data_count = 0;
     private double imu_initial_yaw;
-    private Transform transform_imu = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1));
+    private Transform transform_imu = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 1, 0, 0));
+    private double camera_transform_x = 0.240;
+    private double camera_transform_z = 0.0043;
+    private Transform camera_transform_front = new Transform(new Vector3( camera_transform_x,0,camera_transform_z),new Quaternion(0,0,0,1));
+    private Transform camera_transform_rear  = new Transform(new Vector3(-camera_transform_x,0,camera_transform_z),new Quaternion(0,1,0,0));
 
     // State machine
     private boolean ready_localization;
     private boolean ready_A = false;
     private boolean ready_B = false;
-    private boolean ready_map = true; // TODO: change this to false
+    private boolean ready_map = false;
 
     private boolean ready_thrust = false;
     private boolean ready_imu = false;
     private boolean ready_depth = false;
-    private boolean ready_camera = false;
-
-    private Time time_thrust;
-    private Time time_imu;
-    private Time time_depth;
-    private Time time_camera;
+    private boolean ready_camera_front = false;
+    private boolean ready_camera_rear = false;
 
     // Data
     private SimpleMatrix data_thrust;
     private Quaternion data_imu;
     private double data_depth;
-    private CameraTarget[] data_camera_targets;
+    private CameraTarget[] data_camera_targets_front;
+    private CameraTarget[] data_camera_targets_rear;
+    private CameraTarget[] data_camera_targets_all;
 
     private SimpleMatrix param_A_mat = new SimpleMatrix(SIZE_STATES, SIZE_STATES);
     private SimpleMatrix param_B_mat = new SimpleMatrix(SIZE_STATES, SIZE_INPUTS);
-    private CameraTarget[] param_map;
+    private MapTarget[] param_map;
 
     public Localization() {}
 
@@ -107,6 +77,20 @@ public class Localization {
         }
         return false;
     }
+
+    public Boolean attmptUpdateTwo(Time call_time){
+
+        return true;
+    }
+
+
+    public void matchCorrespondences(Transform pose){
+        int size = data_camera_targets_all.length;
+        for(int i = 0; i < size; i++){
+
+        }
+    }
+
 
     public boolean setInitialOrientation() {
         if(ready_imu) {
@@ -141,27 +125,38 @@ public class Localization {
     private boolean myIsReady(){return(ready_A && ready_B && ready_map);}
 
     // Mutator
-    public boolean setImuData(Quaternion _data_imu, Time _time_imu) {
+    public boolean setImuData(Quaternion _data_imu) {
         data_imu = _data_imu;
-        time_imu = _time_imu;
         ready_imu = true;
         return ready_imu;
     }
 
-    public boolean setThrusterData(double[] _data_thrusters) {
-        // TODO: add thruster matrix
+    public boolean setDepthData(double _data_depth) {
+        data_depth = _data_depth;
+        ready_depth = true;
+        return ready_depth;
+    }
+
+    public boolean setThrusterData(SimpleMatrix _data_thrust) {
+        data_thrust = _data_thrust;
         ready_thrust = true;
         return ready_thrust;
     }
 
-    public boolean setCameraTargets(double[] _data_camera_targets) {
-        // TODO: add camera targets array
-        ready_camera = true;
-        return ready_camera;
+    public boolean setCameraTargetsFront(CameraTarget[] _data_camera_targets) {
+        data_camera_targets_front = _data_camera_targets;
+        ready_camera_front = true;
+        return ready_camera_front;
     }
 
-    public boolean setMapData(double[] _map) {
-        // TODO: add map array
+    public boolean setCameraTargetsRear(CameraTarget[] _data_camera_targets) {
+        data_camera_targets_front = _data_camera_targets;
+        ready_camera_rear = true;
+        return ready_camera_rear;
+    }
+
+    public boolean setMapData(MapTarget[] _data_map_targets) {
+        param_map = _data_map_targets;
         ready_map = true;
         ready_localization = myIsReady();
         return ready_map;

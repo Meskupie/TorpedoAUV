@@ -1,5 +1,6 @@
-package com.github.rosjava.android_apps.teleop;
+package Autonomy.Localization;
 
+import android.graphics.Camera;
 import android.util.Log;
 
 import org.ejml.simple.SimpleMatrix;
@@ -19,9 +20,7 @@ import org.ros.rosjava_geometry.Transform;
 
 import java.util.ArrayList;
 
-import geometry_msgs.Pose;
 import geometry_msgs.Twist;
-import geometry_msgs.Vector3;
 import sensor_msgs.PointCloud;
 import std_msgs.Float64;
 import std_msgs.Float64MultiArray;
@@ -55,13 +54,15 @@ public class LocalizationNode extends AbstractNodeMain{
     private Time time_embedded_thrust;
     private Time time_embedded_imu;
     private Time time_embedded_depth;
-    private Time time_camera_targets;
+    private Time time_camera_targets_front;
+    private Time time_camera_targets_rear;
 
     private Duration timeout_status_system = new Duration(0.04);
     private Duration timeout_embedded_thrust = new Duration(0.04);
     private Duration timeout_embedded_imu = new Duration(0.04);
     private Duration timeout_embedded_depth = new Duration(0.04);
-    private Duration timeout_camera_targets = new Duration(0.04);
+    private Duration timeout_camera_targets_front = new Duration(0.04);
+    private Duration timeout_camera_targets_rear = new Duration(0.04);
 
     private boolean attemptLocalizationUpdate(ConnectedNode connectedNode){
         if((status_localization&127) == 0){ // Nothing is preventing us from running
@@ -126,7 +127,9 @@ public class LocalizationNode extends AbstractNodeMain{
         final Subscriber<Float64MultiArray> embedded_thrust_sub = connectedNode.newSubscriber("embedded_thrust", Float64MultiArray._TYPE);
         final Subscriber<geometry_msgs.Quaternion> embedded_imu_sub = connectedNode.newSubscriber("embedded_imu", geometry_msgs.Quaternion._TYPE);
         final Subscriber<Float64> embedded_depth_sub = connectedNode.newSubscriber("embedded_depth", Float64._TYPE);
-        final Subscriber<PointCloud> camera_targets_sub = connectedNode.newSubscriber("camera_targets", PointCloud._TYPE);
+        final Subscriber<PointCloud> camera_targets_front_sub = connectedNode.newSubscriber("camera_targets_front", PointCloud._TYPE);
+        final Subscriber<PointCloud> camera_targets_rear_sub = connectedNode.newSubscriber("camera_targets_rear", PointCloud._TYPE);
+
         // Define message wrappers
         state_pose_msg = state_pose_pub.newMessage();
         state_pose_msg_vect = state_pose_pub.newMessage().getTranslation();
@@ -145,7 +148,8 @@ public class LocalizationNode extends AbstractNodeMain{
                 time_embedded_thrust = connectedNode.getCurrentTime();
                 time_embedded_imu = connectedNode.getCurrentTime();
                 time_embedded_depth = connectedNode.getCurrentTime();
-                time_camera_targets = connectedNode.getCurrentTime();
+                time_camera_targets_front = connectedNode.getCurrentTime();
+                time_camera_targets_rear = connectedNode.getCurrentTime();
             }
 
             @Override
@@ -175,8 +179,12 @@ public class LocalizationNode extends AbstractNodeMain{
                     status_localization |= 2;
                 }else{ status_localization &= ~2;}
                 //TODO: Uncomment when cameras are ready
-                //if(time_current.compareTo(time_camera_targets.add(timeout_camera_targets)) == 1){
-                //    if(status_system != 0){Log.e("ROV_ERROR", "Localization node: Timeout on camera_targets");}
+                //if(time_current.compareTo(time_camera_targets_front.add(timeout_camera_targets_front)) == 1){
+                //    if(status_system != 0){Log.e("ROV_ERROR", "Localization node: Timeout on camera_targets_front");}
+                //    status_localization |= 2;
+                //} else { status_localization &= ~2;}
+                //if(time_current.compareTo(time_camera_targets_rear.add(timeout_camera_targets_rear)) == 1){
+                //    if(status_system != 0){Log.e("ROV_ERROR", "Localization node: Timeout on camera_targets_rear");}
                 //    status_localization |= 2;
                 //} else { status_localization &= ~2;}
 
@@ -217,7 +225,7 @@ public class LocalizationNode extends AbstractNodeMain{
             @Override
             public void onNewMessage(geometry_msgs.Quaternion imu_data) {
                 time_embedded_imu = connectedNode.getCurrentTime();
-                rov_localization.setImuData(new Quaternion(imu_data.getX(),imu_data.getY(),imu_data.getZ(),imu_data.getW()),time_embedded_imu);
+                rov_localization.setImuData(new Quaternion(imu_data.getX(),imu_data.getY(),imu_data.getZ(),imu_data.getW()));
                 attemptLocalizationUpdate(connectedNode);
             }
         });
@@ -226,18 +234,51 @@ public class LocalizationNode extends AbstractNodeMain{
             @Override
             public void onNewMessage(Float64MultiArray embedded_thrust_msg) {
                 time_embedded_thrust = connectedNode.getCurrentTime();
-                rov_localization.setThrusterData(embedded_thrust_msg.getData());
+                SimpleMatrix embedded_thrust = new SimpleMatrix(6,1,false,embedded_thrust_msg.getData());
+                rov_localization.setThrusterData(embedded_thrust);
                 attemptLocalizationUpdate(connectedNode);
             }
         });
 
-        camera_targets_sub.addMessageListener(new MessageListener<PointCloud>() {
+        camera_targets_front_sub.addMessageListener(new MessageListener<PointCloud>() {
             @Override
-            public void onNewMessage(PointCloud pointCloud) {
-                time_camera_targets = connectedNode.getCurrentTime();
-                // TODO: add camera targets callback
-                //rov_localization.setCameraTargets();
-                attemptLocalizationUpdate(connectedNode);
+            public void onNewMessage(PointCloud target_cloud) {
+                time_camera_targets_front = connectedNode.getCurrentTime();
+                int size = target_cloud.getPoints().size();
+                if(size == target_cloud.getChannels().size()){
+                    for(int i = 0; i < size; i++){
+                        CameraTarget[] camera_targets = new CameraTarget[size];
+                        float[] azumuths  = target_cloud.getChannels().get(0).getValues();
+                        float[] altitudes = target_cloud.getChannels().get(1).getValues();
+                        float[] ids       = target_cloud.getChannels().get(2).getValues();
+                        camera_targets[i] = new CameraTarget(azumuths[i],altitudes[i],(int)ids[i]);
+                        rov_localization.setCameraTargetsFront(camera_targets);
+                        attemptLocalizationUpdate(connectedNode);
+                    }
+                }else{
+                    Log.e("ROV_ERROR", "Localization: camera targets size");
+                }
+            }
+        });
+
+        camera_targets_rear_sub.addMessageListener(new MessageListener<PointCloud>() {
+            @Override
+            public void onNewMessage(PointCloud target_cloud) {
+                time_camera_targets_rear = connectedNode.getCurrentTime();
+                int size = target_cloud.getPoints().size();
+                if(size == target_cloud.getChannels().size()){
+                    for(int i = 0; i < size; i++){
+                        CameraTarget[] camera_targets = new CameraTarget[size];
+                        float[] azumuths  = target_cloud.getChannels().get(0).getValues();
+                        float[] altitudes = target_cloud.getChannels().get(1).getValues();
+                        float[] ids       = target_cloud.getChannels().get(2).getValues();
+                        camera_targets[i] = new CameraTarget(azumuths[i],altitudes[i],(int)ids[i]);
+                        rov_localization.setCameraTargetsRear(camera_targets);
+                        attemptLocalizationUpdate(connectedNode);
+                    }
+                }else{
+                    Log.e("ROV_ERROR", "Localization: camera targets size");
+                }
             }
         });
 
@@ -281,7 +322,19 @@ public class LocalizationNode extends AbstractNodeMain{
 
         param_tree.addParameterListener("/map", new ParameterListener() {
             @Override
-            public void onNewValue(Object param_data) {}
+            public void onNewValue(Object map_data_msg) {
+                ArrayList<Number> map_data = (ArrayList<Number>) map_data_msg;
+                int size = map_data.size()/4;
+                if(size*4 == map_data.size()) {
+                    MapTarget[] map = new MapTarget[size];
+                    for (int i = 0; i < size; i++) {
+                        map[i] = new MapTarget((double) map_data.get((i * 4) + 0), (double) map_data.get((i * 4) + 1), (double) map_data.get((i * 4) + 2), (int) map_data.get((i * 4) + 3));
+                    }
+                    rov_localization.setMapData(map);
+                }else{
+                    Log.e("ROV_ERROR", "Localization: Map size");
+                }
+            }
         });
     }
 }

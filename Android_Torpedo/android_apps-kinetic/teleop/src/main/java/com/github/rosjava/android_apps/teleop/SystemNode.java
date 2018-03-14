@@ -75,8 +75,6 @@ public class SystemNode extends AbstractNodeMain {
         final Subscriber<std_msgs.Int32> status_controller_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
         final Subscriber<std_msgs.Int32> status_parameters_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
         // Define data connections
-        final Subscriber<Int32> embedded_reed_switches_sub = connectedNode.newSubscriber("embedded_reed_switches", Int32._TYPE);
-
 
         // Main cancelable loop
         connectedNode.executeCancellableLoop(new CancellableLoop() {

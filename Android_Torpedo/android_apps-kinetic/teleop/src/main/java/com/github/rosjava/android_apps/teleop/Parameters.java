@@ -18,9 +18,10 @@ public class Parameters {
     ArrayList<Double> data_A;
     ArrayList<Double> data_B;
     ArrayList<Double> data_K;
+    ArrayList<Double> data_map;
 
     // Other
-    private String dynamics_path = "res/raw/";
+    private String path = "res/raw/";
     private final int SIZE_A = 144;
     private final int SIZE_B = 72;
     private final int SIZE_K = 72;
@@ -30,12 +31,16 @@ public class Parameters {
         data_A = new ArrayList<>(SIZE_A);
         data_B = new ArrayList<>(SIZE_B);
         data_K = new ArrayList<>(SIZE_K);
+        data_map = new ArrayList<>();
     }
 
     public boolean updateDynamics(String _filename) {
-        String filename = dynamics_path + _filename;
+        String filename = path + _filename;
         InputStream is = this.getClass().getClassLoader().getResourceAsStream(filename);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        data_A = new ArrayList<>(SIZE_A);
+        data_B = new ArrayList<>(SIZE_B);
+        data_K = new ArrayList<>(SIZE_K);
         String line;
         try {
             for(int i = 0; i < SIZE_A; i++) {
@@ -65,13 +70,40 @@ public class Parameters {
         } catch (Exception e) {
             Log.e("ROV_ERROR", "Catch error on dynamics file read");
             e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public boolean updateMap(String _filename){
+        String filename = path + _filename;
+        InputStream is = this.getClass().getClassLoader().getResourceAsStream(filename);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        data_map = new ArrayList<>();
+        String line;
+        try {
+            int count = Integer.parseInt(reader.readLine());
+            double scale = Double.parseDouble(reader.readLine());
+            for(int i = 0; i < count; i++){
+                line = reader.readLine();
+                data_map.add(Double.parseDouble(reader.readLine()));
+                data_map.add(Double.parseDouble(reader.readLine()));
+                data_map.add(Double.parseDouble(reader.readLine()));
+                data_map.add((double)Integer.parseInt(reader.readLine()));
+            }
+            reader.close();
+        } catch (Exception e) {
+            Log.e("ROV_ERROR", "Catch error on map file read");
+            e.printStackTrace();
+            return false;
         }
         return true;
     }
 
     // Accessors
-    public ArrayList getData_A(){return data_A;}
-    public ArrayList getData_B(){return data_B;}
-    public ArrayList getData_K(){return data_K;}
+    public ArrayList getDataA(){return data_A;}
+    public ArrayList getDataB(){return data_B;}
+    public ArrayList getDataK(){return data_K;}
+    public ArrayList getDataMap(){return data_map;}
 
 }

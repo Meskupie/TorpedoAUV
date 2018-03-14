@@ -9,24 +9,18 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 import com.github.rosjava.android_remocons.common_tools.apps.RosAppActivity;
-import com.physicaloid.lib.Physicaloid;
 
 import org.ros.android.view.VirtualJoystickView;
-import org.ros.namespace.NameResolver;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
@@ -34,10 +28,11 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
+import Autonomy.ControllerNode;
+import Autonomy.Localization.LocalizationNode;
+import Autonomy.PlannerNode;
 import Communication.AsyncArduinoWrite;
-import Communication.JSONFromatter;
-import Util.EmbeddedManager;
-import Util.MotorOutputs;
+import Communication.CommunicationNode;
 
 public class MainActivity extends RosAppActivity {
 	public static final String TAG = "Torpedo Debug";

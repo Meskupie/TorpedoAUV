@@ -1,8 +1,7 @@
-package com.github.rosjava.android_apps.teleop;
+package Autonomy;
 
 import android.util.Log;
 
-import org.jboss.netty.handler.codec.marshalling.MarshallingEncoder;
 import org.ros.concurrent.CancellableLoop;
 import org.ros.message.Duration;
 import org.ros.message.MessageListener;

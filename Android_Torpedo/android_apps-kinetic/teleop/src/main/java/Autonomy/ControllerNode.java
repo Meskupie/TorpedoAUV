@@ -1,8 +1,7 @@
-package com.github.rosjava.android_apps.teleop;
+package Autonomy;
 
 import android.util.Log;
 
-import org.ejml.simple.SimpleMatrix;
 import org.ros.concurrent.CancellableLoop;
 import org.ros.message.Duration;
 import org.ros.message.MessageListener;
@@ -10,8 +9,6 @@ import org.ros.message.Time;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
-import org.ros.node.Node;
-import org.ros.node.NodeMain;
 import org.ros.node.parameter.ParameterListener;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
@@ -20,10 +17,7 @@ import org.ros.node.topic.Subscriber;
 import java.util.ArrayList;
 
 import std_msgs.Float64MultiArray;
-import std_msgs.Int16;
 import std_msgs.Int32;
-import std_msgs.Int8;
-import std_msgs.UInt8;
 
 public class ControllerNode extends AbstractNodeMain{
     private Controller rov_controller = new Controller();

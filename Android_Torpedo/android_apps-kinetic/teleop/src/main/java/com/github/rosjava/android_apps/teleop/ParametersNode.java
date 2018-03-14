@@ -35,7 +35,7 @@ import std_msgs.Int32;
  */
 
 public class ParametersNode extends AbstractNodeMain {
-    private Parameters params;
+    private Parameters params = new Parameters();
 
     private Time time_current;
     private Time time_status_system;
@@ -45,23 +45,27 @@ public class ParametersNode extends AbstractNodeMain {
     private int status_parameters;
 
     // Update booleans
-    private boolean update_dynamics;
+    private boolean update_dynamics = false;
+    private boolean update_map = false;
 
 
-    public ParametersNode(){
-        // set updates to false
-        update_dynamics = false;
-
-        // parameter class object
-        params = new Parameters();
-    }
+    public ParametersNode(){}
 
     public boolean setDynamics(String _filename){
         if(!params.updateDynamics(_filename)){
-            Log.e("ROV_ERROR", "Unable to update dynamics");
+            Log.e("ROV_ERROR", "Parameters node: Failure reading dynamics");
             return false;
         }
         update_dynamics = true;
+        return true;
+    }
+
+    public boolean setMap(String _filename){
+        if(!params.updateMap(_filename)){
+            Log.e("ROV_ERROR", "Parameters node: Failure reading map");
+            return false;
+        }
+        update_map = true;
         return true;
     }
 
@@ -94,17 +98,21 @@ public class ParametersNode extends AbstractNodeMain {
                 // Check timeouts
                 time_current = connectedNode.getCurrentTime();
                 if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
-                    if(status_system > 0){Log.e("ROV_ERROR", "Controller node: Timeout on system state");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Parameters node: Timeout on system state");}
                     status_parameters |= 2;
                 } else { status_parameters &= ~2;}
 
                 if(status_parameters == 0) {
                     // Update any parameters that have been modified
                     if (update_dynamics) {
-                        param_tree.set("/dynamics_A", params.getData_A());
-                        param_tree.set("/dynamics_B", params.getData_B());
-                        param_tree.set("/controller_K", params.getData_K());
+                        param_tree.set("/dynamics_A", params.getDataA());
+                        param_tree.set("/dynamics_B", params.getDataB());
+                        param_tree.set("/controller_K", params.getDataK());
                         update_dynamics = false;
+                    }
+                    if (update_map){
+                        param_tree.set("/planner_map", params.getDataMap());
+                        update_map = false;
                     }
                     // TODO: add more parameters
                 }
