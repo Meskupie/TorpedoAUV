@@ -235,6 +235,8 @@ void MC_SixStep_Init_main_data(void);
   */
 void MC_SixStep_TABLE(uint8_t step_number)
 { 
+
+
 #if (GPIO_COMM!=0)
   HAL_GPIO_TogglePin(GPIO_PORT_COMM,GPIO_CH_COMM);  
 #endif
@@ -385,6 +387,7 @@ void MC_SixStep_TABLE(uint8_t step_number)
     break;
   }
 #elif (defined(HALL_SENSORS))
+
   switch (step_number)
   { 
     case 1:
@@ -599,6 +602,7 @@ void MC_SixStep_NEXT_step(int32_t Reference)
 #else
 void MC_SixStep_NEXT_step(int32_t Reference)
 {
+	//HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
   H1 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0);
   H2 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_1);
   H3 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2);    
@@ -1087,22 +1091,44 @@ void MC_TIMx_SixStep_CommutationEvent()
 #endif
   }  
 #ifndef FIXED_HALL_DELAY
+
 	H1 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0);
   H2 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_1);
   H3 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2);    
   hallStatus = (H1 << 2) | (H2 << 1) | H3; 
+	
 
-		if (hallStatus == 3||hallStatus == 5||hallStatus == 6)
+	
+	if(SIXSTEP_parameters.speed_fdbk >0) //FORWARD
+	{
+
+		if (hallStatus == 3||hallStatus == 5||hallStatus == 6) // RISING TO FALLING
+		{  			
+//				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+//				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+			SIXSTEP_parameters.commutation_delay = ((SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH)>>1) - HALL_OFFSET_H;
+		
+		}
+		else //FALLING TO RISING 
+		{
+			
+			SIXSTEP_parameters.commutation_delay = ((SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL)>>1) - HALL_OFFSET_L;
+		}
+	}
+	else
+	{
+		if (hallStatus == 3||hallStatus == 5||hallStatus == 6) //FALLING TO RISING
+		{ 
+		SIXSTEP_parameters.commutation_delay = ((SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH)>>1) - HALL_OFFSET_H;
+		
+		}
+		else  // RISING TO FALLING
 		{
 				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
-				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);   			
-			SIXSTEP_parameters.commutation_delay = (SIXSTEP_parameters.hall_capture>>1) - COMMUTATION_DELAY_RISE_TIME_STEP;    
+				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR); 	
+		SIXSTEP_parameters.commutation_delay = ((SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL)>>1) - HALL_OFFSET_L;
 		}
-		else 
-		{
-			SIXSTEP_parameters.commutation_delay = (SIXSTEP_parameters.hall_capture>>1)  - COMMUTATION_DELAY_FALL_TIME_STEP;
-		}
-
+	}
 #endif
   __HAL_TIM_SetCompare(&LF_TIMx,TIM_CHANNEL_2,SIXSTEP_parameters.commutation_delay);
 }
