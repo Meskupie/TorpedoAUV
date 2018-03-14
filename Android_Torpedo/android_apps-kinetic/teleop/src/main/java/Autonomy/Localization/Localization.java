@@ -63,6 +63,9 @@ public class Localization {
     private SimpleMatrix param_B_mat = new SimpleMatrix(SIZE_STATES, SIZE_INPUTS);
     private MapTarget[] param_map;
 
+    // Data fitting
+    TargetProcessing target_processor;
+
     public Localization() {}
 
     public Boolean attemptUpdate(Time call_time) {
@@ -80,16 +83,15 @@ public class Localization {
 
     public Boolean attmptUpdateTwo(Time call_time){
 
+        // build complete camera set
+
+        // match corespondences
+
+
+
         return true;
     }
 
-
-    public void matchCorrespondences(Transform pose){
-        int size = data_camera_targets_all.length;
-        for(int i = 0; i < size; i++){
-
-        }
-    }
 
 
     public boolean setInitialOrientation() {
@@ -145,12 +147,16 @@ public class Localization {
 
     public boolean setCameraTargetsFront(CameraTarget[] _data_camera_targets) {
         data_camera_targets_front = _data_camera_targets;
+        for(int i = 0; i < data_camera_targets_front.length; i++){
+            data_camera_targets_front[i].setFrame(camera_transform_front);}
         ready_camera_front = true;
         return ready_camera_front;
     }
 
     public boolean setCameraTargetsRear(CameraTarget[] _data_camera_targets) {
-        data_camera_targets_front = _data_camera_targets;
+        data_camera_targets_rear = _data_camera_targets;
+        for(int i = 0; i < data_camera_targets_rear.length; i++){
+            data_camera_targets_rear[i].setFrame(camera_transform_rear);}
         ready_camera_rear = true;
         return ready_camera_rear;
     }
@@ -158,6 +164,7 @@ public class Localization {
     public boolean setMapData(MapTarget[] _data_map_targets) {
         param_map = _data_map_targets;
         ready_map = true;
+        target_processor = new TargetProcessing(param_map);
         ready_localization = myIsReady();
         return ready_map;
     }
