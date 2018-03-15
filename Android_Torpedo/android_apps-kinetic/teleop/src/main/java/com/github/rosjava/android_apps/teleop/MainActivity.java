@@ -88,9 +88,6 @@ public class MainActivity extends RosAppActivity {
 		setMainWindowResource(R.layout.main);
 		super.onCreate(savedInstanceState);
 
-		EmbeddedManager manager = new EmbeddedManager(null);
-		EmbeddedManager.Message message = manager.parseBitSet();
-
 		text = (TextView) findViewById(R.id.textOut);
 		text.setMovementMethod(new ScrollingMovementMethod());
 
@@ -193,6 +190,10 @@ public class MainActivity extends RosAppActivity {
 	}
 
 	public void onClickButton2(View v) {
+		EmbeddedManager manager = new EmbeddedManager();
+		byte[] test = manager.hexStringToByteArray("D930F7EA2183EF009F120000000000000000000000000000FFBC1F33333300");
+		EmbeddedManager.Message message = manager.parseBytes(test);
+		System.out.println(message.toString());
 	}
 
 	public void onClickButton3(View v) {
