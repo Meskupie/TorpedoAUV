@@ -208,7 +208,7 @@
 	#define BSP_BOARD_LF_TIMx_HALL_AF        (GPIO_AF2_TIM2)
 #endif
 //#define BSP_BOARD_ADCx_GPIOB             ()
-
+m
 #ifdef PWM_ON_BEMF_SENSING
 	#define GPIO_PORT_BEMF                   (GPIOB)       /*!< GPIO port name for TON/TOFF BEMF sensing method */
 	#define GPIO_CH_BEMF                     (GPIO_PIN_6)  /*!< GPIO pin name for TON/TOFF BEMF sensing method */

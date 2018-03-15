@@ -83,6 +83,7 @@ extern ADC_HandleTypeDef ADCx;
 #ifdef HALL_SENSORS
 uint16_t H1, H2, H3;
 uint8_t hallStatus;
+uint16_t hall_capture_adjusted;
 #endif
 #ifdef BEMF_RECORDING
 #define BEMF_ARRAY_SIZE 400
@@ -237,6 +238,7 @@ void MC_SixStep_TABLE(uint8_t step_number)
 { 
 
 
+	
 #if (GPIO_COMM!=0)
   HAL_GPIO_TogglePin(GPIO_PORT_COMM,GPIO_CH_COMM);  
 #endif
@@ -602,7 +604,7 @@ void MC_SixStep_NEXT_step(int32_t Reference)
 #else
 void MC_SixStep_NEXT_step(int32_t Reference)
 {
-	//HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+	
   H1 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0);
   H2 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_1);
   H3 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2);    
@@ -611,6 +613,8 @@ void MC_SixStep_NEXT_step(int32_t Reference)
   {
     if(Reference > 0)
     {
+			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
       switch (hallStatus)
       {
         case 2:
@@ -1104,28 +1108,29 @@ void MC_TIMx_SixStep_CommutationEvent()
 
 		if (hallStatus == 3||hallStatus == 5||hallStatus == 6) // RISING TO FALLING
 		{  			
-				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
-				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
-			SIXSTEP_parameters.commutation_delay = ((SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH)>>1) - HALL_OFFSET_H;
-		
+			
+			hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH);
+			SIXSTEP_parameters.commutation_delay =  ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_H);
 		}
 		else //FALLING TO RISING 
 		{
+			hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL);
+			SIXSTEP_parameters.commutation_delay = ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_L);
 			
-			SIXSTEP_parameters.commutation_delay = ((SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL)>>1) - HALL_OFFSET_L;
 		}
 	}
 	else
 	{
 		if (hallStatus == 3||hallStatus == 5||hallStatus == 6) //FALLING TO RISING
 		{ 
-		SIXSTEP_parameters.commutation_delay = ((SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH)>>1) - HALL_OFFSET_H;
+		hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH);
+		SIXSTEP_parameters.commutation_delay =  ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_H);
 		
 		}
 		else  // RISING TO FALLING
 		{
- 	
-		SIXSTEP_parameters.commutation_delay = ((SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL)>>1) - HALL_OFFSET_L;
+		hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL);
+		SIXSTEP_parameters.commutation_delay = ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_L);
 		}
 	}
 #endif
