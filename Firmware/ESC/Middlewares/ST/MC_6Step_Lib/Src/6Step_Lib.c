@@ -1104,8 +1104,8 @@ void MC_TIMx_SixStep_CommutationEvent()
 
 		if (hallStatus == 3||hallStatus == 5||hallStatus == 6) // RISING TO FALLING
 		{  			
-//				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
-//				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
 			SIXSTEP_parameters.commutation_delay = ((SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH)>>1) - HALL_OFFSET_H;
 		
 		}
@@ -1124,8 +1124,7 @@ void MC_TIMx_SixStep_CommutationEvent()
 		}
 		else  // RISING TO FALLING
 		{
-				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
-				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR); 	
+ 	
 		SIXSTEP_parameters.commutation_delay = ((SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL)>>1) - HALL_OFFSET_L;
 		}
 	}

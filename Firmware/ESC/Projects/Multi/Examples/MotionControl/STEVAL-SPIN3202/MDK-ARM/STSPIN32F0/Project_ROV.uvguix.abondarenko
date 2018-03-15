@@ -3577,11 +3577,11 @@
       </Doc>
       <Doc>
         <Name>..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Src\6Step_Lib.c</Name>
-        <ColumnNumber>115</ColumnNumber>
-        <TopLine>798</TopLine>
-        <CurrentLine>1109</CurrentLine>
+        <ColumnNumber>54</ColumnNumber>
+        <TopLine>800</TopLine>
+        <CurrentLine>1108</CurrentLine>
         <Folding>1</Folding>
-        <ContractedFolders>86,100,114,127,720,882,901,983,1015,1050,1144,1192,1227</ContractedFolders>
+        <ContractedFolders>86,100,114,127,720,882,901,983,1015,1050,1143,1191,1226</ContractedFolders>
         <PaneID>0</PaneID>
       </Doc>
       <Doc>
@@ -3670,7 +3670,7 @@
 
   <Bookmarks>
     <ListItem>..\..\Inc\MC_SUPPO_2217_9_950_KV.h 180</ListItem>
-    <ListItem>..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Src\6Step_Lib.c 1132</ListItem>
+    <ListItem>..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Src\6Step_Lib.c 1131</ListItem>
     <ListItem>..\..\..\..\..\..\..\Middlewares\ST\MC_6Step_Lib\Src\6Step_Lib.c 393</ListItem>
   </Bookmarks>
 
