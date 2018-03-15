@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\Project_Uart.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\Project_Uart.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Wed Mar 14 19:00:02 2018
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Thu Mar 15 01:40:27 2018
 <BR><P>
 <H3>Maximum Stack Usage =        196 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -931,7 +931,7 @@ Global Symbols
 <P><STRONG><a name="[a2]"></a>HAL_GPIO_TogglePin</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, stm32f0xx_hal_gpio.o(i.HAL_GPIO_TogglePin))
 <BR><BR>[Called By]<UL><LI><a href="#[a1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIMEx_CommutationCallback
 <LI><a href="#[ea]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MX_GPIO_Init
-<LI><a href="#[b1]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_TIMx_SixStep_CommutationEvent
+<LI><a href="#[d7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_SixStep_NEXT_step
 </UL>
 
 <P><STRONG><a name="[7b]"></a>HAL_GPIO_WritePin</STRONG> (Thumb, 12 bytes, Stack size 0 bytes, stm32f0xx_hal_gpio.o(i.HAL_GPIO_WritePin))
@@ -1514,10 +1514,11 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[d4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_SixStep_INIT
 </UL>
 
-<P><STRONG><a name="[d7]"></a>MC_SixStep_NEXT_step</STRONG> (Thumb, 272 bytes, Stack size 24 bytes, 6step_lib.o(i.MC_SixStep_NEXT_step))
+<P><STRONG><a name="[d7]"></a>MC_SixStep_NEXT_step</STRONG> (Thumb, 314 bytes, Stack size 24 bytes, 6step_lib.o(i.MC_SixStep_NEXT_step))
 <BR><BR>[Stack]<UL><LI>Max Depth = 40<LI>Call Chain = MC_SixStep_NEXT_step &rArr; MC_GetMechSpeedRPM &rArr; __aeabi_idivmod
 </UL>
-<BR>[Calls]<UL><LI><a href="#[d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_ReadPin
+<BR>[Calls]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_TogglePin
+<LI><a href="#[d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_ReadPin
 <LI><a href="#[ce]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_GetMechSpeedRPM
 <LI><a href="#[d9]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__ARM_common_switch8
 </UL>
@@ -1602,11 +1603,10 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[9e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SYSTICK_Callback
 </UL>
 
-<P><STRONG><a name="[b1]"></a>MC_TIMx_SixStep_CommutationEvent</STRONG> (Thumb, 172 bytes, Stack size 24 bytes, 6step_lib.o(i.MC_TIMx_SixStep_CommutationEvent))
+<P><STRONG><a name="[b1]"></a>MC_TIMx_SixStep_CommutationEvent</STRONG> (Thumb, 146 bytes, Stack size 24 bytes, 6step_lib.o(i.MC_TIMx_SixStep_CommutationEvent))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24<LI>Call Chain = MC_TIMx_SixStep_CommutationEvent
 </UL>
-<BR>[Calls]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_TogglePin
-<LI><a href="#[d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_ReadPin
+<BR>[Calls]<UL><LI><a href="#[d8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_GPIO_ReadPin
 </UL>
 <BR>[Called By]<UL><LI><a href="#[b0]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_TIM_IC_CaptureCallback
 </UL>
@@ -1828,7 +1828,7 @@ Global Symbols
 <LI><a href="#[fb]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;UART_Set_Value
 </UL>
 
-<P><STRONG><a name="[55]"></a>main</STRONG> (Thumb, 84 bytes, Stack size 24 bytes, main_32f0.o(i.main))
+<P><STRONG><a name="[55]"></a>main</STRONG> (Thumb, 82 bytes, Stack size 24 bytes, main_32f0.o(i.main))
 <BR><BR>[Stack]<UL><LI>Max Depth = 196<LI>Call Chain = main &rArr; MX_HF_TIMx_Init &rArr; HAL_TIM_Base_Init &rArr; HAL_TIM_Base_MspInit &rArr; HAL_GPIO_Init
 </UL>
 <BR>[Calls]<UL><LI><a href="#[91]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_Init
