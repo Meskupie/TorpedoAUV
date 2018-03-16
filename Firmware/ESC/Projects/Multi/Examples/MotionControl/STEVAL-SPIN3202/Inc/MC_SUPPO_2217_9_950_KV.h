@@ -108,8 +108,8 @@
 //#define KP_GAIN                           2048     /*!< Kp parameter for PI regulator */
 //#define KI_GAIN                           1960     /*!< Ki parameter for PI regulator */
 
-#define KP_GAIN                            2048     /*!< Kp parameter for PI regulator */
-#define KI_GAIN                            1960     /*!< Ki parameter for PI regulator */
+#define KP_GAIN                            10     /*!< Kp parameter for PI regulator */
+#define KI_GAIN                            0     /*!< Ki parameter for PI regulator */
 #else
 #define KP_GAIN                           2730     /*!< Kp parameter for PID regulator */
 #define KI_GAIN                           1180     /*!< Ki parameter for PID regulator */
