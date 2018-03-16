@@ -161,7 +161,7 @@
 #define HALL_OFFSET_H					LF_TIM_uS_TO_STEP(HALL_RISE_TIME)
 #define HALL_OFFSET_L					LF_TIM_uS_TO_STEP(HALL_FALL_TIME)
 
-#define HALL_PHASE_GAP 				 (0)
+#define HALL_PHASE_GAP 				 (-0.1)
 
 
 
