@@ -83,6 +83,7 @@ extern ADC_HandleTypeDef ADCx;
 #ifdef HALL_SENSORS
 uint16_t H1, H2, H3;
 uint8_t hallStatus;
+uint16_t hall_capture_adjusted;
 #endif
 #ifdef BEMF_RECORDING
 #define BEMF_ARRAY_SIZE 400
@@ -235,6 +236,9 @@ void MC_SixStep_Init_main_data(void);
   */
 void MC_SixStep_TABLE(uint8_t step_number)
 { 
+
+
+	
 #if (GPIO_COMM!=0)
   HAL_GPIO_TogglePin(GPIO_PORT_COMM,GPIO_CH_COMM);  
 #endif
@@ -385,6 +389,7 @@ void MC_SixStep_TABLE(uint8_t step_number)
     break;
   }
 #elif (defined(HALL_SENSORS))
+
   switch (step_number)
   { 
     case 1:
@@ -599,6 +604,7 @@ void MC_SixStep_NEXT_step(int32_t Reference)
 #else
 void MC_SixStep_NEXT_step(int32_t Reference)
 {
+	
   H1 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0);
   H2 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_1);
   H3 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2);    
@@ -607,6 +613,8 @@ void MC_SixStep_NEXT_step(int32_t Reference)
   {
     if(Reference > 0)
     {
+			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
       switch (hallStatus)
       {
         case 2:
@@ -1071,7 +1079,7 @@ void MC_SixStep_ARR_step()
 #ifdef HALL_SENSORS
 void MC_TIMx_SixStep_CommutationEvent()
 { 
-	HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);         
+      
   SIXSTEP_parameters.hall_capture = __HAL_TIM_GetCompare(&LF_TIMx,TIM_CHANNEL_1);
   SIXSTEP_parameters.hall_ok = 1;
   if (SIXSTEP_parameters.start_cnt <= 0)
@@ -1087,7 +1095,44 @@ void MC_TIMx_SixStep_CommutationEvent()
 #endif
   }  
 #ifndef FIXED_HALL_DELAY
-  SIXSTEP_parameters.commutation_delay = SIXSTEP_parameters.hall_capture>>1;
+
+	H1 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0);
+  H2 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_1);
+  H3 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2);    
+  hallStatus = (H1 << 2) | (H2 << 1) | H3; 
+	
+
+	
+	if(SIXSTEP_parameters.speed_fdbk >0) //FORWARD
+	{
+
+		if (hallStatus == 3||hallStatus == 5||hallStatus == 6) // RISING TO FALLING
+		{  			
+			
+			hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH);
+			SIXSTEP_parameters.commutation_delay =  ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_H);
+		}
+		else //FALLING TO RISING 
+		{
+			hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL);
+			SIXSTEP_parameters.commutation_delay = ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_L);
+			
+		}
+	}
+	else
+	{
+		if (hallStatus == 3||hallStatus == 5||hallStatus == 6) //FALLING TO RISING
+		{ 
+		hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH);
+		SIXSTEP_parameters.commutation_delay =  ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_H);
+		
+		}
+		else  // RISING TO FALLING
+		{
+		hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL);
+		SIXSTEP_parameters.commutation_delay = ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_L);
+		}
+	}
 #endif
   __HAL_TIM_SetCompare(&LF_TIMx,TIM_CHANNEL_2,SIXSTEP_parameters.commutation_delay);
 }
@@ -1503,20 +1548,34 @@ void MC_Set_Speed(uint16_t speed_value)
 */
 int16_t thrustToSpeed(int16_t thrust_mN)
 {
-	uint16_t speed_value;
-	if (thrust_mN >10)
-	{
-		speed_value =  (int16_t)(10933 * sqrt(((double)thrust_mN)*0.1186));
-	}
-	else if (thrust_mN <-10)
-	{
-		speed_value =  (int16_t)(-10933 * sqrt(((double)-thrust_mN)*0.1186));
-	}
-	else
-	{
-		speed_value = 0;
-	}
-	return speed_value;
+    
+    uint16_t speed_value;
+    double thrust_N = thrust_mN/1000.0;
+    if (thrust_mN >10)
+    {
+        speed_value =  (int16_t)(10933 * sqrt((thrust_N)*0.1186));
+    }
+    else if (thrust_mN <-10)
+    {
+        speed_value =  (int16_t)(-10933 * sqrt((-thrust_N)*0.1186));
+    }
+    else
+    {
+        speed_value = 0;
+    }
+    return speed_value;
+}
+int16_t thrustToDirection(int16_t thrust_mN)
+{
+    if (thrust_mN >0)
+    {
+        return 1;
+    }
+    else
+		{
+			return 0;
+		}
+
 }
 
 /** @defgroup MC_Set_Thrust    MC_Set_Thrust
@@ -1527,9 +1586,11 @@ int16_t thrustToSpeed(int16_t thrust_mN)
 */
 void MC_Set_Thrust(int16_t thrust_mN)
 {
+		SIXSTEP_parameters.CW_CCW = thrustToDirection(thrust_mN);
 #ifdef SPEED_RAMP  
   PI_parameters.ReferenceToBeUpdated++;
   SIXSTEP_parameters.speed_target = thrustToSpeed(thrust_mN);
+	
 #else  
   PI_parameters.Reference = thrustToSpeed(thrust_mN);
   SIXSTEP_parameters.speed_target = PI_parameters.Reference;

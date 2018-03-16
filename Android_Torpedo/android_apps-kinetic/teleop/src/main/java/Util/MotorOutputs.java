@@ -12,6 +12,7 @@ public class MotorOutputs {
         FL, FR, FV, BL, BR, BV
     }
 
+    // MOTOR VALUES ARE IN MILLINEWTONS
     int scalingFactor = 2^16 - 1;
 
     /** Motor outputs go from 0 to 5
@@ -26,26 +27,22 @@ public class MotorOutputs {
         0-1 scale for doubles, 0 - 2^16-1 for nominal
     */
 
-    public double[] motorOutputs;
+    public int[] motorOutputs;
 
     public MotorOutputs() {
-        this.motorOutputs = new double[6];
+        this.motorOutputs = new int[6];
     }
 
-    public MotorOutputs(double[] m) {
+    public MotorOutputs(int[] m) {
         if(m.length == 6) {
             this.motorOutputs = m;
         } else {
-            this.motorOutputs = new double[6];
+            this.motorOutputs = new int[6];
             Log.d("ERROR", "the motor Outputs specified was not the right size (6)");
         }
     }
 
-    public int get(MotorOutputs.Motor motor) {
-        return (int)(getNormalized(motor) * scalingFactor);
-    }
-
-    public double getNormalized(MotorOutputs.Motor motor) {
+    public double get(MotorOutputs.Motor motor) {
         return constrainInput(this.motorOutputs[motor.ordinal()]);
     }
 

@@ -14,6 +14,7 @@ import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import org.ros.rosjava_geometry.Quaternion;
 
+import Util.EmbeddedManager;
 import sensor_msgs.PointCloud;
 import std_msgs.Float32;
 import std_msgs.Float64;
@@ -71,6 +72,7 @@ public class CommunicationNode extends AbstractNodeMain {
         final Publisher<Int32> embedded_reed_switches_pub = connectedNode.newPublisher("embedded_reed_switchs",Int32._TYPE);
         final Publisher<PointCloud> camera_targets_pub = connectedNode.newPublisher("camera_targets", PointCloud._TYPE);
         final Subscriber<Float64MultiArray> input_thrust_sub = connectedNode.newSubscriber("input_thrust",Float64MultiArray._TYPE);
+
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
             // Define publishing messages
