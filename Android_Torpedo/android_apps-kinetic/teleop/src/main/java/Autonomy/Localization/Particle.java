@@ -16,15 +16,15 @@ import Autonomy.MyQuaternion;
 // Particle Class
 public class Particle{
     Random random = new Random();
-    private double fitness;
-    private Transform pose_intertial_cur;
-    private Transform pose_intertial_prev;
+    private double fitness = 100000;
+    private Transform pose_inertial_cur;
+    private Transform pose_inertial_prev;
     private SimpleMatrix pose_body_cur = new SimpleMatrix(12, 1);
     private SimpleMatrix pose_body_prev = new SimpleMatrix(12, 1);
 
     public Particle(){
-        pose_intertial_cur = new Transform(new Vector3(0,0,0),new Quaternion(0,0,0,1));
-        pose_intertial_prev = pose_intertial_cur;
+        pose_inertial_cur = new Transform(new Vector3(0,0,0),new Quaternion(0,0,0,1));
+        pose_inertial_prev = pose_inertial_cur;
     }
 
     public void propagateState(SimpleMatrix A, SimpleMatrix B, SimpleMatrix u, SimpleMatrix stdev){
@@ -35,7 +35,7 @@ public class Particle{
     }
 
     public void transformPose(Transform delta){
-        pose_intertial_cur = pose_intertial_cur.multiply(delta);
+        pose_inertial_cur = pose_inertial_cur.multiply(delta);
     }
 
     public void randomizeState(SimpleMatrix stddev){
@@ -48,12 +48,11 @@ public class Particle{
     }
 
     public void correctPose(double update_period){
-        // TODO: update inertial prev and cur logic (twist)
-        // TODO: update prev pose
-        Transform delta = pose_intertial_prev.invert().multiply(pose_intertial_cur);
+        Transform delta = pose_inertial_prev.invert().multiply(pose_inertial_cur);
         Vector3 trans = delta.getTranslation();
         MyQuaternion rot = new MyQuaternion(delta.getRotationAndScale());
 
+        // Set body velocities
         pose_body_cur.set(1,0,trans.getX()/update_period);
         pose_body_cur.set(3,0,trans.getY()/update_period);
         pose_body_cur.set(5,0,trans.getZ()/update_period);
@@ -61,14 +60,15 @@ public class Particle{
         pose_body_cur.set(9,0,rot.getPitch()/update_period);
         pose_body_cur.set(11,0,rot.getYaw()/update_period);
 
+        // Update old pose
         pose_body_prev = pose_body_cur;
-        pose_intertial_prev = pose_intertial_cur;
+        pose_inertial_prev = pose_inertial_cur;
     }
 
     // Mutators
     public void setPose(Transform _pose){
-        pose_intertial_cur = _pose;
-        pose_intertial_prev = pose_intertial_cur;
+        pose_inertial_cur = _pose;
+        pose_inertial_prev = pose_inertial_cur;
     }
 
     public void setFitness(double _fitness){
@@ -76,6 +76,6 @@ public class Particle{
     }
 
     // Accessors
-    public Transform getPose(){return pose_intertial_cur;}
+    public Transform getPose(){return pose_inertial_cur;}
     public double getFitness(){return fitness;}
 }

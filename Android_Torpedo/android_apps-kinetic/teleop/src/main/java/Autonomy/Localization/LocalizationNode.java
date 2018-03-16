@@ -67,7 +67,7 @@ public class LocalizationNode extends AbstractNodeMain{
     private boolean attemptLocalizationUpdate(ConnectedNode connectedNode){
         if((status_localization&127) == 0){ // Nothing is preventing us from running
             if(((status_localization&128) == 128)||(status_system <= 2)){ // We do not have pose lock
-                rov_localization.setInitialOrientation();
+                rov_localization.attemptInitialization(connectedNode.getCurrentTime());
             }else{ // We should be good to stream
                 if(rov_localization.attemptUpdate(connectedNode.getCurrentTime())){
                     // Get and publish pose

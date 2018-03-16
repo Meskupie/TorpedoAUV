@@ -2,11 +2,15 @@ package Autonomy.Localization;
 
 import android.util.Log;
 
+import org.ejml.data.Complex_F64;
+import org.ejml.simple.SimpleEVD;
 import org.ejml.simple.SimpleMatrix;
 import org.ros.rosjava_geometry.Quaternion;
 import org.ros.rosjava_geometry.Transform;
 import org.ros.rosjava_geometry.Vector3;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import Autonomy.MyQuaternion;
@@ -80,6 +84,45 @@ public class ParticleCloud {
         for(int i = 0; i < particles_size; i++){
             particles[i].correctPose(update_period);
         }
+    }
+
+
+    public Transform calculateAveragePose(){
+        Vector3 average_point = new Vector3(0,0,0);
+        SimpleMatrix Q = new SimpleMatrix(4,particles_size);
+        // Build iteration through particles
+        for(int i = 0; i < particles_size; i++){
+            Transform pose = particles[i].getPose();
+            average_point = average_point.add(pose.getTranslation());
+            Quaternion q = pose.getRotationAndScale();
+            Q.set(0,i,q.getX());
+            Q.set(1,i,q.getY());
+            Q.set(2,i,q.getZ());
+            Q.set(3,i,q.getW());
+        }
+        // Find the average point
+        average_point = average_point.scale(1/particles_size);
+
+        // Use this fancy Eigen vector based average for quaternions
+        SimpleEVD<SimpleMatrix> Q_EVD = Q.mult(Q.transpose()).eig();
+        SimpleMatrix Q_Ev = new SimpleMatrix(4,1);
+        Q_Ev.set(0,0,Q_EVD.getEigenvalue(0).getReal());
+        Q_Ev.set(1,0,Q_EVD.getEigenvalue(1).getReal());
+        Q_Ev.set(2,0,Q_EVD.getEigenvalue(2).getReal());
+        Q_Ev.set(3,0,Q_EVD.getEigenvalue(3).getReal());
+        double max = 0;
+        int index = 0;
+        for(int i = 0; i < 4; i++){
+            double Ev = Q_EVD.getEigenvalue(0).getReal();
+            if(Ev > max){
+                max = Ev;
+                index = i;
+            }
+        }
+        SimpleMatrix q_mat = Q_EVD.getEigenVector(index);
+        Quaternion average_orientation = new Quaternion(q_mat.get(0,0),q_mat.get(1,0),q_mat.get(2,0),q_mat.get(3,0));
+
+        return new Transform(average_point,average_orientation);
     }
 
 //    // Individual functions on single particle
