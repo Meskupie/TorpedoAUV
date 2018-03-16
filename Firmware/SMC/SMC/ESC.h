@@ -99,7 +99,9 @@ typedef enum
     ESC_CMD_SetKI,
     ESC_CMD_SetKD,
     ESC_CMD_RESET,
-    ESC_CMD_GetStatusStruct
+    ESC_CMD_GetStatusStruct,
+    ESC_CMD_GetThrust,
+    ESC_CMD_SetThrust,
 } ESC_COMMAND;
 
 typedef enum
@@ -123,6 +125,8 @@ typedef struct
     uint8_t pin;
     int16_t speedSetPoint;
     ESC_RUN_STATE runState;
+    int16_t thrustSetPoint_mN;
+    int16_t thrustMeasured_mN;
     int32_t speedMeasured;
     int16_t currentMeasured;
     uint8_t temperature;
@@ -163,6 +167,9 @@ uint16_t ESCGetSpeed(ESC_Struct* ESC_hande);
 uint16_t ESCGetCurrent(ESC_Struct* ESC_hande);
 unsigned int ESCReset(ESC_Struct* ESC_hande);
 ESC_StatusStruct ESCGetStatusStruct(ESC_Struct* ESC_hande);
+
+int16_t ESCGetThrust(ESC_Struct* ESC_hande);
+unsigned int ESCSetThrust(ESC_Struct* ESC_hande,int16_t thrustSetPoint_mN);
 
 
 #endif // ESC____FILEEXTENSION___

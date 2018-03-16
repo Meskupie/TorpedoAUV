@@ -1,5 +1,14 @@
 package com.github.rosjava.android_apps.teleop;
 
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbInterface;
+import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.method.ScrollingMovementMethod;
@@ -12,6 +21,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.felhr.usbserial.CDCSerialDevice;
+import com.felhr.usbserial.FTDISerialDevice;
+import com.felhr.usbserial.UsbSerialDevice;
+import com.felhr.usbserial.UsbSerialInterface;
 import com.github.rosjava.android_remocons.common_tools.apps.RosAppActivity;
 import com.physicaloid.lib.Physicaloid;
 
@@ -21,12 +34,30 @@ import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 
+import Communication.AsyncArduinoWrite;
 import Communication.JSONFromatter;
+import Util.EmbeddedManager;
 import Util.MotorOutputs;
 
 public class MainActivity extends RosAppActivity {
-	private VirtualJoystickView virtualJoystickView;
+	public static final String TAG = "Torpedo Debug";
+
+	public static final String ACTION_USB_ATTACHED = "android.hardware.usb.action.USB_DEVICE_ATTACHED";
+	public static final String ACTION_USB_DETACHED = "android.hardware.usb.action.USB_DEVICE_DETACHED";
+	public static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
+
+
+	public static final int BOARD_VENDOR_ID = 0x2341;
+	public static final int BOARD_PRODUCT_ID = 0x8036;
+
+	public static final int TEST_VENDOR_ID = 4292;
+	public static final int TEST_PRODUCT_ID = 60000;
+
+
+		private VirtualJoystickView virtualJoystickView;
 	private Button backButton;
 
 	private SystemNode system_node;
@@ -36,48 +67,24 @@ public class MainActivity extends RosAppActivity {
 	private ControllerNode controller_node;
 	private ParametersNode parameters_node;
 
+	private UsbDevice arduino;
+	private UsbManager usbManager;
+	private BroadcastReceiver mUsbReceiver;
+	private UsbDeviceConnection usbConnection;
+	private UsbSerialDevice serial;
 
 	private TextView text;
 
-	private EditText FL;
-	private EditText FR;
-	private EditText FV;
-	private EditText BL;
-	private EditText BR;
-	private EditText BV;
+	private boolean askingForRead = false;
 
-	private Physicaloid physicaloid;
-
-	Handler mHandler = new Handler();
-	Handler mHandler2 = new Handler();
-
-	private void tvAppend(TextView tv, String text, boolean fromAndroid) {
+	private void tvAppend(TextView tv, CharSequence text) {
 		final TextView ftv = tv;
-		String append  = fromAndroid ? "Android: " : "Atmega";
-
-		//final CharSequence ftext = append + text + '\n';
-		final CharSequence ftext = (fromAndroid?'\n':"") + text;
-
-		mHandler.post(new Runnable() {
-			@Override
-			public void run() {
-				ftv.append(ftext); 	// add text to Text view
-			}
+		final CharSequence ftext = text;
+		runOnUiThread(new Runnable() {
+			@Override public void run() {
+				ftv.append(ftext); }
 		});
 	}
-
-	private void tvClear(TextView tv) {
-		final TextView ftv = tv;
-		mHandler2.post(new Runnable() {
-			@Override
-			public void run() {
-				ftv.setText(""); // clear text
-			}
-		});
-	}
-
-	final Handler timeDelayHandler = new Handler();
-
 
 
 	public MainActivity() {
@@ -89,31 +96,13 @@ public class MainActivity extends RosAppActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 
+
 		setDashboardResource(R.id.top_bar);
 		setMainWindowResource(R.layout.main);
 		super.onCreate(savedInstanceState);
 
-
-		try {
-
-			physicaloid = new Physicaloid(this);
-			physicaloid.setBaudrate(9600);
-
-		} catch (Exception e) {
-			Log.d("IO EXCEPTION", "there was a serial exception");
-		}
-
-		FL = (EditText) findViewById(R.id.FL);
-		FR = (EditText) findViewById(R.id.FR);
-		FV = (EditText) findViewById(R.id.FV);
-		BL = (EditText) findViewById(R.id.BL);
-		BR = (EditText) findViewById(R.id.BR);
-		BV = (EditText) findViewById(R.id.BV);
-
 		text = (TextView) findViewById(R.id.textOut);
 		text.setMovementMethod(new ScrollingMovementMethod());
-
-		virtualJoystickView = (VirtualJoystickView) findViewById(R.id.virtual_joystick);
 
         backButton = (Button) findViewById(R.id.back_button);
         backButton.setOnClickListener(new View.OnClickListener() {
@@ -122,7 +111,6 @@ public class MainActivity extends RosAppActivity {
                 onBackPressed();
             }
         });
-		doRoutine();
 
 
         // Setup nodes
@@ -132,114 +120,122 @@ public class MainActivity extends RosAppActivity {
 		planner_node = new PlannerNode();
         controller_node = new ControllerNode();
         parameters_node = new ParametersNode();
+
+        this.initializeArduino();
 	}
 
-	private void delayedCallToSetMotors(int millis, final MotorOutputs outputs) {
-		timeDelayHandler.postDelayed(new Runnable() {
-			@Override
-			public void run() {
-				updateMotorDisplay(outputs);
-				setOutputsToMotors(outputs);
+	private void initializeArduino() {
+		// Attempt to Find arduino by vendor and product id
+		this.usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+
+		HashMap<String, UsbDevice> deviceList = this.usbManager.getDeviceList();
+
+		for (String key: deviceList.keySet()){
+			UsbDevice device = deviceList.get(key);
+			if(device.getVendorId() == BOARD_VENDOR_ID && device.getProductId() == BOARD_PRODUCT_ID) {
+				this.arduino = device;
+				Toast.makeText(this, "Recognized Arduino Device", Toast.LENGTH_SHORT).show();
+				break;
 			}
-		}, millis);
-	}
+		}
 
+		// setup broadcast receiver for user permission granting
+		this.mUsbReceiver = new BroadcastReceiver() {
+			public void onReceive(Context context, Intent intent) {
+				String action = intent.getAction();
+				if (ACTION_USB_PERMISSION.equals(action)) {
+					synchronized (this) {
+						usbConnection = usbManager.openDevice(arduino);
+						serial = UsbSerialDevice.createUsbSerialDevice(arduino, usbConnection);
+					//	serial.setDTR(true);
+						if (serial != null) {
 
-	public void beginRoutine(View v) {
-		doRoutine();
-	}
+							if (serial.open()) { //Set Serial Connection Parameters.
+								serial.setDTR(true);
+								serial.setBaudRate(115200);
+								serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
+								serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
+								serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
+								serial.setParity(UsbSerialInterface.PARITY_NONE);
+								serial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
+								serial.read(mCallback);
+							} else {
+								text.append("Serial Port not open!" + '\n');
+							}
+						} else {
+							text.append("Serial Port is null" + '\n');
+						}
+						if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+							if(arduino != null){
+								//call method to set up device communication
+							}
+						} else {
+							text.append("Permission denied for arduino!" + '\n');
+						}
+					}
+				}
+			}
+		};
 
-	public void doRoutine() {
-		delayedCallToSetMotors(0000, getMotorOutputs(0.1, 0.1));
-		delayedCallToSetMotors(5000, getMotorOutputs(-0.0, 0.1));
-		delayedCallToSetMotors(12000, getMotorOutputs(0.1, 0.1));
-		delayedCallToSetMotors(16000, getMotorOutputs(0.0, -0.1));
-		delayedCallToSetMotors(20000, getMotorOutputs(-0.1, -0.1));
-	}
-
-	public MotorOutputs getMotorOutputs(double x, double y){
-		return new MotorOutputs(new double[]{-x+y, -x+y, 0, x+y, x+y, 0});
-	}
-
-	public void updateMotors(double x, double y) {
-		MotorOutputs outputs = new MotorOutputs(new double[]{-x+y, -x+y, 0, x+y, x+y, 0});
-		updateMotorDisplay(outputs);
-		setOutputsToMotors(outputs);
-	}
-	public void updateMotorDisplay(MotorOutputs outputs) {
-
-		FL.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.FL)));
-		FR.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.FR)));
-		FV.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.FV)));
-		BL.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.BL)));
-		BR.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.BR)));
-		BV.setText(String.format("%.3f", outputs.getNormalized(MotorOutputs.Motor.BV)));
-	}
-
-	public void setOutputsToMotors(MotorOutputs outputs) {
-		physicaloid.close();
-		if(physicaloid.open()) {
-
-			JSONFromatter formatter = new JSONFromatter();
-			String jsonOutput = formatter.formatMotorOutputs(outputs);
-
-			this.updateMotorDisplay(outputs);
-
-			byte[] buf = jsonOutput.getBytes();
-
-			tvAppend(text, "Write: " + new String(buf), true);
-			physicaloid.write(buf, buf.length);
-
+		// request permission from the user on create
+		if(this.arduino != null) {
+			PendingIntent mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
+			IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+			this.registerReceiver(mUsbReceiver, filter);
+			this.usbManager.requestPermission(this.arduino,mPermissionIntent);
 		} else {
-			//Error while connecting
-			Toast.makeText(MainActivity.this, "Cannot open for Write", Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, "Could not find arduino on Startup Arduino Device", Toast.LENGTH_SHORT).show();
 		}
 	}
 
+	public UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() {
+		//Defining a Callback which triggers whenever data is read.
+		@Override
+		public void onReceivedData(byte[] arg0) {
+			String data = null;
+			try {
+				data = new String(arg0, "UTF-8");
+				tvAppend(text, "data read: " + data + '\n');
+				tvAppend(text, "" + '\n');
 
-	public void onClickWrite(View v) {
-		MotorOutputs outs = new MotorOutputs(new double[]{1, 1, 1, 1, 1, 1});
-		setOutputsToMotors(outs);
-	}
+				EmbeddedManager manager = new EmbeddedManager();
+				EmbeddedManager.Message message = manager.parseBytes(arg0);
+				System.out.println(message.toString());
+				tvAppend(text, "Converted Message: " + 'n' + message.toString());
 
-
-	public void onClickReset(View v) {
-		tvClear(text);
-		physicaloid.close();
-	}
-
-	@Override
-	public void onStart(){
-		super.onStart();
-
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
 		}
+	};
+
+
+	public void onClickButton1(View v) {
+		// read
+		//new AsyncArduinoWrite().execute(new Object[] {serial, "q"});
+		//set boolean flag to read
+		this.askingForRead = true;
+		text.clearComposingText();
+	}
+
+	public void onClickButton2(View v) {
+//		EmbeddedManager manager = new EmbeddedManager();
+//		byte[] test = manager.hexStringToByteArray("D930F7EA2183EF009F120000000000000000000000000000FFBC1F33333300");
+//		EmbeddedManager.Message message = manager.parseBytes(test);
+//		System.out.println(message.toString());
+		initializeArduino();
+	}
+
+
+	public void onClickButton3(View v) {
+		new AsyncArduinoWrite().execute(new Object[]{serial,  "q"});
+
+	}
 
 	@Override
 	protected void init(NodeMainExecutor nodeMainExecutor) {
 		
 		super.init(nodeMainExecutor);
-        try {
-            java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-            java.net.InetAddress local_network_address = socket.getLocalAddress();
-            socket.close();
-            NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-
-			String joyTopic = remaps.get(getString(R.string.joystick_topic));
-
-			NameResolver appNameSpace = getMasterNameSpace();
-			joyTopic = appNameSpace.resolve(joyTopic).toString();
-
-			virtualJoystickView.setTopicName(joyTopic);
-
-			nodeMainExecutor.execute(virtualJoystickView,
-					nodeConfiguration.setNodeName("android/virtual_joystick"));
-
-			System.out.println("Socket works");
-
-        } catch (IOException e) {
-        	System.out.println("Socket error: " + e.getMessage());
-        }
-
 		// Start System Node
 		try {
 			java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
@@ -329,7 +325,22 @@ public class MainActivity extends RosAppActivity {
 	}
 
 	@Override
-	public void onDestroy() {
+	protected void onDestroy() {
 		super.onDestroy();
+
+		if(this.mUsbReceiver != null) {
+			try {
+				unregisterReceiver(this.mUsbReceiver);
+				textAppend("Unregistered usb receiver");
+
+			} catch (Exception e) {
+				textAppend("Caught exception: " + e.getMessage());
+			}
+		}
 	}
+
+	public void textAppend(String str) {
+		text.append(str + '\n');
+	}
+
 }

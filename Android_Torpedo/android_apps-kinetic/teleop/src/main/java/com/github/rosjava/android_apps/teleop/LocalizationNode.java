@@ -15,27 +15,97 @@ import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import org.ros.rosjava_geometry.Quaternion;
+import org.ros.rosjava_geometry.Transform;
 
 import java.util.ArrayList;
 
+import geometry_msgs.Pose;
+import geometry_msgs.Twist;
+import geometry_msgs.Vector3;
 import sensor_msgs.PointCloud;
+import std_msgs.Float64;
 import std_msgs.Float64MultiArray;
 import std_msgs.Int32;
 
 public class LocalizationNode extends AbstractNodeMain{
     private Localization rov_localization = new Localization();
 
-    private int system_state;
+    // Publishing variables
+    private Publisher<geometry_msgs.Transform> state_pose_pub;
+    private Publisher<Twist> state_twist_pub;
+    private Publisher<Float64> state_fitness_pub;
 
-    private Time time_system_state;
-    private Time time_embedded_imu;
+    private geometry_msgs.Transform state_pose_msg;
+    private geometry_msgs.Vector3 state_pose_msg_vect;
+    private geometry_msgs.Quaternion state_pose_msg_quat;
+    private Twist state_twist_msg;
+    private geometry_msgs.Vector3 state_twist_msg_vect;
+    private Float64 state_fitness_msg;
+
+    private Transform state_pose;
+    private Twist state_twist;
+    private double state_fitness;
+
+    private int status_system;
+    private int status_localization;
+
+    // State machine
+    private Time time_current;
+    private Time time_status_system;
     private Time time_embedded_thrust;
+    private Time time_embedded_imu;
+    private Time time_embedded_depth;
     private Time time_camera_targets;
 
-    private Duration timeout_system_state;
-    private Duration timeout_embedded_imu;
-    private Duration timeout_embedded_thrust;
-    private Duration timeout_camera_targets;
+    private Duration timeout_status_system = new Duration(0.04);
+    private Duration timeout_embedded_thrust = new Duration(0.04);
+    private Duration timeout_embedded_imu = new Duration(0.04);
+    private Duration timeout_embedded_depth = new Duration(0.04);
+    private Duration timeout_camera_targets = new Duration(0.04);
+
+    private boolean attemptLocalizationUpdate(ConnectedNode connectedNode){
+        if((status_localization&127) == 0){ // Nothing is preventing us from running
+            if(((status_localization&128) == 128)||(status_system <= 2)){ // We do not have pose lock
+                rov_localization.setInitialOrientation();
+            }else{ // We should be good to stream
+                if(rov_localization.attemptUpdate(connectedNode.getCurrentTime())){
+                    // Get and publish pose
+                    state_pose = rov_localization.getPose();
+                    state_pose_msg_vect.setX(state_pose.getTranslation().getX());
+                    state_pose_msg_vect.setY(state_pose.getTranslation().getY());
+                    state_pose_msg_vect.setZ(state_pose.getTranslation().getZ());
+                    state_pose_msg.setTranslation(state_pose_msg_vect);
+                    state_pose_msg_quat.setX(state_pose.getRotationAndScale().getX());
+                    state_pose_msg_quat.setY(state_pose.getRotationAndScale().getY());
+                    state_pose_msg_quat.setZ(state_pose.getRotationAndScale().getZ());
+                    state_pose_msg_quat.setW(state_pose.getRotationAndScale().getW());
+                    state_pose_msg.setRotation(state_pose_msg_quat);
+                    state_pose_pub.publish(state_pose_msg);
+
+                    // Get and publish twist
+                    state_twist = rov_localization.getTwist();
+                    state_twist_msg_vect.setX(state_twist.getLinear().getX());
+                    state_twist_msg_vect.setY(state_twist.getLinear().getY());
+                    state_twist_msg_vect.setZ(state_twist.getLinear().getZ());
+                    state_twist_msg.setLinear(state_pose_msg_vect);
+                    state_twist_msg_vect.setX(state_twist.getAngular().getX());
+                    state_twist_msg_vect.setY(state_twist.getAngular().getY());
+                    state_twist_msg_vect.setZ(state_twist.getAngular().getZ());
+                    state_twist_msg.setAngular(state_pose_msg_vect);
+                    state_twist_pub.publish(state_twist_msg);
+
+                    // Get and publish fitness
+                    state_fitness = rov_localization.getFitness();
+                    state_fitness_msg.setData(state_fitness);
+                    state_fitness_pub.publish(state_fitness_msg);
+                }
+            }
+        }
+        else{ // We shouldn't be running
+            rov_localization.resetInitialOrientation();
+        }
+        return true;
+    }
 
     @Override
     public GraphName getDefaultNodeName() {
@@ -44,39 +114,99 @@ public class LocalizationNode extends AbstractNodeMain{
 
     @Override
     public void onStart(final ConnectedNode connectedNode) {
-        final Publisher<geometry_msgs.Transform> state_x_pub = connectedNode.newPublisher("state_x", geometry_msgs.Transform._TYPE);
-
-        // Subscribers
-        final Subscriber<Int32> system_state_sub = connectedNode.newSubscriber("system_state", Int32._TYPE);
-        final Subscriber<geometry_msgs.Quaternion> embedded_imu_sub = connectedNode.newSubscriber("embedded_imu", geometry_msgs.Quaternion._TYPE);
-        final Subscriber<Float64MultiArray> embedded_thrust_sub = connectedNode.newSubscriber("embedded_thrust", Float64MultiArray._TYPE);
-        final Subscriber<PointCloud> camera_targets_sub = connectedNode.newSubscriber("camera_targets", PointCloud._TYPE);
+        // Define system connections
+        final Publisher<Int32> status_localization_pub = connectedNode.newPublisher("status_localization",Int32._TYPE);
+        final Subscriber<Int32> status_system_sub = connectedNode.newSubscriber("status_system", Int32._TYPE);
         final ParameterTree param_tree = connectedNode.getParameterTree();
+        // Define data connections
+        state_pose_pub = connectedNode.newPublisher("state_pose", geometry_msgs.Transform._TYPE);
+        state_twist_pub = connectedNode.newPublisher("state_twist", Twist._TYPE);
+        state_fitness_pub = connectedNode.newPublisher("state_fitness", Float64._TYPE);
+        final Subscriber<Float64MultiArray> embedded_thrust_sub = connectedNode.newSubscriber("embedded_thrust", Float64MultiArray._TYPE);
+        final Subscriber<geometry_msgs.Quaternion> embedded_imu_sub = connectedNode.newSubscriber("embedded_imu", geometry_msgs.Quaternion._TYPE);
+        final Subscriber<Float64> embedded_depth_sub = connectedNode.newSubscriber("embedded_depth", Float64._TYPE);
+        final Subscriber<PointCloud> camera_targets_sub = connectedNode.newSubscriber("camera_targets", PointCloud._TYPE);
+        // Define message wrappers
+        state_pose_msg = state_pose_pub.newMessage();
+        state_pose_msg_vect = state_pose_pub.newMessage().getTranslation();
+        state_pose_msg_quat = state_pose_pub.newMessage().getRotation();
+        state_twist_msg = state_twist_pub.newMessage();
+        state_twist_msg_vect = state_twist_pub.newMessage().getLinear();
+        state_fitness_msg = state_fitness_pub.newMessage();
 
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
+            Int32 status_localization_msg = status_localization_pub.newMessage();
+            
             @Override
             protected void setup(){
-
+                time_status_system = connectedNode.getCurrentTime();
+                time_embedded_thrust = connectedNode.getCurrentTime();
+                time_embedded_imu = connectedNode.getCurrentTime();
+                time_embedded_depth = connectedNode.getCurrentTime();
+                time_camera_targets = connectedNode.getCurrentTime();
             }
 
             @Override
             protected void loop() throws InterruptedException {
 
-                rov_localization.attemptUpdate(connectedNode.getCurrentTime());
+                // Check compliance
+                if(status_system <= 1){
+                    status_localization |= 1;
+                } else {status_localization &= ~1;}
 
+                // Check timeouts
+                time_current = connectedNode.getCurrentTime();
+                if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
+                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on system state");}
+                    status_localization |= 2;
+                } else {status_localization &= ~2;}
+                if(time_current.compareTo(time_embedded_thrust.add(timeout_embedded_thrust)) == 1){
+                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded thrust");}
+                    status_localization |= 2;
+                } else { status_localization &= ~2;}
+                if(time_current.compareTo(time_embedded_imu.add(timeout_embedded_imu)) == 1){
+                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded imu");}
+                    status_localization |= 2;
+                } else { status_localization &= ~2;}
+                if(time_current.compareTo(time_embedded_thrust.add(timeout_embedded_depth)) == 1){
+                    if(status_system >= 0){Log.e("ROV_ERROR", "Localization node: Timeout on embedded depth");}
+                    status_localization |= 2;
+                } else { status_localization &= ~2;}
+                //TODO: Uncomment when cameras are ready
+                //if(time_current.compareTo(time_camera_targets.add(timeout_camera_targets)) == 1){
+                //    if(status_system != 0){Log.e("ROV_ERROR", "Localization node: Timeout on camera_targets");}
+                //    status_localization |= 2;
+                //} else { status_localization &= ~2;}
 
-                Thread.sleep(10);
+                // Check if all data/params filled
+                if (!rov_localization.isReady()){
+                    status_localization |= 4;
+                }else{
+                    status_localization &= ~4;
+                }
+
+                // Check errors
+                // NOT IMPLEMENTED: This would modify status_localization bit 3
+
+                // Check if the system is ready to proceed
+                // TODO: Add pose lock here
+
+                attemptLocalizationUpdate(connectedNode);
+                // Publish status
+                status_localization_msg.setData(status_localization);
+                status_localization_pub.publish(status_localization_msg);
+                Thread.sleep(5);
             }
         });
 
         // System state callback
-        system_state_sub.addMessageListener(new MessageListener<Int32>() {
+        status_system_sub.addMessageListener(new MessageListener<Int32>() {
             @Override
-            public void onNewMessage(Int32 system_state_msg) {
-                time_system_state = connectedNode.getCurrentTime();
-                system_state = system_state_msg.getData();
-                rov_localization.attemptUpdate(connectedNode.getCurrentTime());
+            public void onNewMessage(Int32 status_system_msg) {
+                time_status_system = connectedNode.getCurrentTime();
+                status_system = status_system_msg.getData();
+                attemptLocalizationUpdate(connectedNode);
             }
         });
 
@@ -85,7 +215,7 @@ public class LocalizationNode extends AbstractNodeMain{
             public void onNewMessage(geometry_msgs.Quaternion imu_data) {
                 time_embedded_imu = connectedNode.getCurrentTime();
                 rov_localization.setImuData(new Quaternion(imu_data.getX(),imu_data.getY(),imu_data.getZ(),imu_data.getW()),time_embedded_imu);
-                rov_localization.attemptUpdate(connectedNode.getCurrentTime());
+                attemptLocalizationUpdate(connectedNode);
             }
         });
 
@@ -94,7 +224,7 @@ public class LocalizationNode extends AbstractNodeMain{
             public void onNewMessage(Float64MultiArray embedded_thrust_msg) {
                 time_embedded_thrust = connectedNode.getCurrentTime();
                 rov_localization.setThrusterData(embedded_thrust_msg.getData());
-                rov_localization.attemptUpdate(connectedNode.getCurrentTime());
+                attemptLocalizationUpdate(connectedNode);
             }
         });
 
@@ -102,8 +232,9 @@ public class LocalizationNode extends AbstractNodeMain{
             @Override
             public void onNewMessage(PointCloud pointCloud) {
                 time_camera_targets = connectedNode.getCurrentTime();
-
+                // TODO: add camera targets callback
                 //rov_localization.setCameraTargets();
+                attemptLocalizationUpdate(connectedNode);
             }
         });
 

@@ -9,6 +9,10 @@ import org.ros.node.ConnectedNode;
  */
 
 public class LoggingNode extends AbstractNodeMain {
+    // Define system connections
+
+    // Define data connections
+
     @Override
     public GraphName getDefaultNodeName() {
         return GraphName.of("LoggingNode");

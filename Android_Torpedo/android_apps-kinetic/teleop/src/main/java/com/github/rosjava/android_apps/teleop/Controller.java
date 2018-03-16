@@ -14,45 +14,44 @@ import tf2_msgs.LookupTransformGoal;
  */
 
 public class Controller {
+
+    double[] input_thrust = new double[6];
+    double[] state_reference = new double[12];
+
     private final int SIZE_STATES = 12;
     private final int SIZE_INPUTS = 6;
 
-    private SimpleMatrix lqr_K_mat;
-    private SimpleMatrix state_r_mat;
-    private SimpleMatrix input_t_mat;
+    private SimpleMatrix lqr_K_mat = new SimpleMatrix(SIZE_INPUTS,SIZE_STATES);
+    private SimpleMatrix state_reference_mat = new SimpleMatrix(SIZE_STATES,1);
+    private SimpleMatrix input_thrust_mat = new SimpleMatrix(SIZE_INPUTS,1);
 
-    private boolean ready;
+    private boolean ready_controller = false;
+    private boolean ready_state_reference = false;
 
-    public Controller() {
-        // Set variables to initial values
-        lqr_K_mat = new SimpleMatrix(SIZE_INPUTS,SIZE_STATES);
-        state_r_mat = new SimpleMatrix(SIZE_STATES,1);
-        input_t_mat = new SimpleMatrix(SIZE_INPUTS,1);
-        ready = false;
-    }
+    public Controller() {}
 
-    public double[] computeInputThrust (double[] _state_r_arr){
-        if(ready){
-            double[] state_r_arr = _state_r_arr;
-            double[] input_t_arr = new double[6];
-            SimpleMatrix state_r_mat = new SimpleMatrix(12,1);
-            SimpleMatrix input_t_mat;
-
-            for(int i = 0; i < 12; i++){
-                state_r_mat.set(1,i,state_r_arr[i]);
+    public boolean computeInputThrust (){
+        if(ready_controller&&ready_state_reference){
+            for(int i = 0; i < SIZE_STATES; i++){
+                state_reference_mat.set(1,i,state_reference[i]);
             }
-            input_t_mat = lqr_K_mat.mult(state_r_mat);
-            for(int i = 0; i < 6; i++){
-                input_t_arr[i] = input_t_mat.get(i);
+            input_thrust_mat = lqr_K_mat.mult(state_reference_mat);
+            for(int i = 0; i < SIZE_INPUTS; i++){
+                input_thrust[i] = input_thrust_mat.get(i);
             }
-            return input_t_arr;
-        } else {
-            // return empty input
-            return new double[6];
+            ready_state_reference = false;
+            return true;
         }
+        return false;
     }
 
     // Mutator
+    public boolean setStateReference(double[] _state_reference_arr){
+        ready_state_reference = true;
+        state_reference = _state_reference_arr;
+        return true;
+    }
+
     public boolean setData_K (ArrayList<Number> data_K_arr){
         if(data_K_arr.size() != SIZE_STATES*SIZE_INPUTS){
             Log.e("ROV_ERROR","Matrix K set controller");
@@ -63,7 +62,16 @@ public class Controller {
                 lqr_K_mat.set(i,j,(double)data_K_arr.get(j+i*SIZE_STATES));
             }
         }
-        ready = true;
+        ready_controller = true;
         return true;
+    }
+
+    // Accessor
+    public double[] getInputThrust(){
+        return input_thrust;
+    }
+
+    public boolean isReady(){
+        return ready_controller;
     }
 }
