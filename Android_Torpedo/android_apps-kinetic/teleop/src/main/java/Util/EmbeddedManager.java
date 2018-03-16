@@ -11,6 +11,9 @@ import java.util.Set;
  * Created by isaiah on 07/03/18.
  */
 
+// q Read, Q Write
+// upper case set, lower case read
+
 public class EmbeddedManager {
 
     private static final int TOTAL_NUM_BITS = 248;
@@ -119,22 +122,21 @@ public class EmbeddedManager {
         int numBits;
 
         DataUnit(Type dataType, int numBits) {
-            this.dataType = dataType;
-            this.numBits = numBits;
+//            this.dataType = dataType;
+//            this.numBits = numBits;
+//            byte[] bytes = ByteBuffer.allocate(4).putInt(1695609641).array();
+//
+//            for (byte b : bytes) {
+//                System.out.format("0x%x ", b);
+//            }
         }
 
     }
 
     public String formatMessageToSend(MotorOutputs outputs, int status) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(outputs.get(MotorOutputs.Motor.FL));
-        sb.append(outputs.get(MotorOutputs.Motor.FR));
-        sb.append(outputs.get(MotorOutputs.Motor.FV));
-        sb.append(outputs.get(MotorOutputs.Motor.BL));
-        sb.append(outputs.get(MotorOutputs.Motor.BR));
-        sb.append(outputs.get(MotorOutputs.Motor.BV));
-        return sb.toString();
+        outputs.get(MotorOutputs.Motor.FL).;
     }
+
 
     public class Message {
 

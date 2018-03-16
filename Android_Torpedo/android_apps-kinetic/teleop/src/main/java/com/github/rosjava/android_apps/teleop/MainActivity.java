@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
+import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,6 +21,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.felhr.usbserial.CDCSerialDevice;
+import com.felhr.usbserial.FTDISerialDevice;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 import com.github.rosjava.android_remocons.common_tools.apps.RosAppActivity;
@@ -46,7 +49,15 @@ public class MainActivity extends RosAppActivity {
 	public static final String ACTION_USB_DETACHED = "android.hardware.usb.action.USB_DEVICE_DETACHED";
 	public static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
-	private VirtualJoystickView virtualJoystickView;
+
+	public static final int BOARD_VENDOR_ID = 0x2341;
+	public static final int BOARD_PRODUCT_ID = 0x8036;
+
+	public static final int TEST_VENDOR_ID = 4292;
+	public static final int TEST_PRODUCT_ID = 60000;
+
+
+		private VirtualJoystickView virtualJoystickView;
 	private Button backButton;
 
 	private SystemNode system_node;
@@ -63,6 +74,8 @@ public class MainActivity extends RosAppActivity {
 	private UsbSerialDevice serial;
 
 	private TextView text;
+
+	private boolean askingForRead = false;
 
 	private void tvAppend(TextView tv, CharSequence text) {
 		final TextView ftv = tv;
@@ -119,7 +132,7 @@ public class MainActivity extends RosAppActivity {
 
 		for (String key: deviceList.keySet()){
 			UsbDevice device = deviceList.get(key);
-			if(device.getVendorId() == 4292 && device.getProductId() == 60000) {
+			if(device.getVendorId() == BOARD_VENDOR_ID && device.getProductId() == BOARD_PRODUCT_ID) {
 				this.arduino = device;
 				Toast.makeText(this, "Recognized Arduino Device", Toast.LENGTH_SHORT).show();
 				break;
@@ -134,14 +147,18 @@ public class MainActivity extends RosAppActivity {
 					synchronized (this) {
 						usbConnection = usbManager.openDevice(arduino);
 						serial = UsbSerialDevice.createUsbSerialDevice(arduino, usbConnection);
+					//	serial.setDTR(true);
 						if (serial != null) {
+
 							if (serial.open()) { //Set Serial Connection Parameters.
+								serial.setDTR(true);
 								serial.setBaudRate(115200);
 								serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
 								serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
+								serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
 								serial.setParity(UsbSerialInterface.PARITY_NONE);
 								serial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
-								serial.read(mCallback); //
+								serial.read(mCallback);
 							} else {
 								text.append("Serial Port not open!" + '\n');
 							}
@@ -179,24 +196,40 @@ public class MainActivity extends RosAppActivity {
 			try {
 				data = new String(arg0, "UTF-8");
 				tvAppend(text, "data read: " + data + '\n');
+				tvAppend(text, "" + '\n');
+
+				EmbeddedManager manager = new EmbeddedManager();
+				EmbeddedManager.Message message = manager.parseBytes(arg0);
+				System.out.println(message.toString());
+				tvAppend(text, "Converted Message: " + 'n' + message.toString());
+
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
 		}
 	};
 
+
 	public void onClickButton1(View v) {
-		new AsyncArduinoWrite().execute(new Object[]{serial});
+		// read
+		//new AsyncArduinoWrite().execute(new Object[] {serial, "q"});
+		//set boolean flag to read
+		this.askingForRead = true;
+		text.clearComposingText();
 	}
 
 	public void onClickButton2(View v) {
-		EmbeddedManager manager = new EmbeddedManager();
-		byte[] test = manager.hexStringToByteArray("D930F7EA2183EF009F120000000000000000000000000000FFBC1F33333300");
-		EmbeddedManager.Message message = manager.parseBytes(test);
-		System.out.println(message.toString());
+//		EmbeddedManager manager = new EmbeddedManager();
+//		byte[] test = manager.hexStringToByteArray("D930F7EA2183EF009F120000000000000000000000000000FFBC1F33333300");
+//		EmbeddedManager.Message message = manager.parseBytes(test);
+//		System.out.println(message.toString());
+		initializeArduino();
 	}
 
+
 	public void onClickButton3(View v) {
+		new AsyncArduinoWrite().execute(new Object[]{serial,  "q"});
+
 	}
 
 	@Override
