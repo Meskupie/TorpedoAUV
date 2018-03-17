@@ -1,4 +1,4 @@
-package com.github.rosjava.android_apps.teleop;
+package Communication;
 
 import android.util.Log;
 
@@ -167,7 +167,7 @@ public class CommunicationNode extends AbstractNodeMain {
             @Override public void onNewMessage(Int32 status_system_msg) {
                 time_status_system = connectedNode.getCurrentTime();
                 status_system = status_system_msg.getData();
-                new AsyncArduinoWrite().execute(new Object[]{serial, EmbeddedManager.WRITE_COMMAND.getBytes()});
+                new AsyncArduinoWrite().execute(new Object[]{serial, EmbeddedManager.SMC_WRITE.getBytes()});
 
                 int[] thrustVals = new int[]{23, -24, -95, 0, 70,100};
                 byte[] bytes = EmbeddedManager.getEmbeddedByteArray(thrustVals, numberOfMessagesSent);
@@ -197,7 +197,7 @@ public class CommunicationNode extends AbstractNodeMain {
     }
 
 
-    public void publishMessageData(EmbeddedManager.Message message) {
+    public void SMCSensorsPub(EmbeddedManager.SMCSensors message) {
         if(!this.initialized) {
             Log.d("ERROR:", "Ros publishers were not initialized yet, so could not publish data");
             return;

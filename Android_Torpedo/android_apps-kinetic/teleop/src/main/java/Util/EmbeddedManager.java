@@ -18,25 +18,25 @@ import java.util.Set;
 
 public class EmbeddedManager {
 
-    private static final String TAG = "Isaiah";
+    private static final String TAG = "ROV_DEBUG";
 
     private byte[] input; // 33 bytes max
     private int byteIndex = 0;
     private int bitIndex = 0;
 
-    public static final String WRITE_COMMAND = "X";
-    public static final String READ_COMMAND = "x";
+    public static final String SMC_WRITE = "X";
+    public static final String SMC_READ = "x";
 
     private byte[] test;
 
-    public Message parseBytes(byte[] input) {
+    public SMCSensors parseBytes(byte[] input) {
         this.input = input;
         return this.parseBitSet();
     }
 
-    public Message parseBitSet() {
+    public SMCSensors parseBitSet() {
 
-        Message m = new Message();
+        SMCSensors m = new SMCSensors();
 
         m.batteryVoltage = (int)readNextBytes(new DataUnit(Type.uint16_t, 16));
         m.depth = (int)readNextBytes(new DataUnit(Type.uint16_t, 16));
@@ -124,7 +124,7 @@ public class EmbeddedManager {
 
     }
 
-    public class Message {
+    public class SMCSensors {
 
         public int batteryVoltage;
         public int depth;
@@ -141,7 +141,7 @@ public class EmbeddedManager {
         public boolean swStateRear;
 
 
-        public Message() {
+        public SMCSensors() {
 
             this.imuData = new int[4];
             this.motorThrust = new int[6];

@@ -1,9 +1,8 @@
-package com.github.rosjava.android_apps.teleop;
+package Autonomy;
 
 import android.os.Handler;
 import android.util.Log;
 
-import org.jboss.netty.handler.codec.marshalling.MarshallingEncoder;
 import org.ros.concurrent.CancellableLoop;
 import org.ros.message.Duration;
 import org.ros.message.MessageListener;
@@ -79,11 +78,11 @@ public class PlannerNode extends AbstractNodeMain {
                 // Check timeouts
                 time_current = connectedNode.getCurrentTime();
                 if (time_current.compareTo(time_status_system.add(timeout_status_system)) == 1) {
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Planner node: Timeout on system state");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Planner node: Timeout on system state");}
                     status_planner |= 2;
                 } else {status_planner &= ~2;}
                 if (time_current.compareTo(time_state_pose.add(timeout_state_pose)) == 1) {
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Planner node: Timeout on state pose");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Planner node: Timeout on state pose");}
                     status_planner |= 2;
                 } else {status_planner &= ~2;}
 

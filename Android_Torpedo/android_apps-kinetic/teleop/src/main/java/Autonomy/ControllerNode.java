@@ -1,8 +1,7 @@
-package com.github.rosjava.android_apps.teleop;
+package Autonomy;
 
 import android.util.Log;
 
-import org.ejml.simple.SimpleMatrix;
 import org.ros.concurrent.CancellableLoop;
 import org.ros.message.Duration;
 import org.ros.message.MessageListener;
@@ -10,8 +9,6 @@ import org.ros.message.Time;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
-import org.ros.node.Node;
-import org.ros.node.NodeMain;
 import org.ros.node.parameter.ParameterListener;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
@@ -20,10 +17,7 @@ import org.ros.node.topic.Subscriber;
 import java.util.ArrayList;
 
 import std_msgs.Float64MultiArray;
-import std_msgs.Int16;
 import std_msgs.Int32;
-import std_msgs.Int8;
-import std_msgs.UInt8;
 
 public class ControllerNode extends AbstractNodeMain{
     private Controller rov_controller = new Controller();
@@ -74,11 +68,11 @@ public class ControllerNode extends AbstractNodeMain{
                 // Check timeouts
                 time_current = connectedNode.getCurrentTime();
                 if(time_current.compareTo(time_state_reference.add(timeout_state_reference)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Controller node: Timeout on state reference");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Controller node: Timeout on state reference");}
                     status_controller |= 2;
                 } else {status_controller &= ~2;}
                 if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Controller node: Timeout on system state");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Controller node: Timeout on system state");}
                     status_controller |= 2;
                 } else { status_controller &= ~2;}
 
