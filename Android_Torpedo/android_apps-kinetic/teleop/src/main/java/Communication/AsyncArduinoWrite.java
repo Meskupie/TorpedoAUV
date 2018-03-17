@@ -34,7 +34,7 @@ public class AsyncArduinoWrite extends AsyncTask<Object, Void, Void>
         }
 
         UsbSerialDevice serial = (UsbSerialDevice) params[0];
-        byte[] buf = ((String)params[1]).getBytes();
+        byte[] buf = (byte[]) params[1];
 
         if(serial != null) {
             serial.write(buf);

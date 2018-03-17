@@ -7,29 +7,23 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
-import android.hardware.usb.UsbInterface;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.method.ScrollingMovementMethod;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.felhr.usbserial.CDCSerialDevice;
-import com.felhr.usbserial.FTDISerialDevice;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 import com.github.rosjava.android_remocons.common_tools.apps.RosAppActivity;
-import com.physicaloid.lib.Physicaloid;
 
+import org.apache.commons.codec.binary.Hex;
 import org.ros.android.view.VirtualJoystickView;
-import org.ros.namespace.NameResolver;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
@@ -37,10 +31,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 
+
 import Communication.AsyncArduinoWrite;
-import Communication.JSONFromatter;
 import Util.EmbeddedManager;
-import Util.MotorOutputs;
 
 public class MainActivity extends RosAppActivity {
 	public static final String TAG = "Torpedo Debug";
@@ -57,7 +50,7 @@ public class MainActivity extends RosAppActivity {
 	public static final int TEST_PRODUCT_ID = 60000;
 
 
-		private VirtualJoystickView virtualJoystickView;
+	private VirtualJoystickView virtualJoystickView;
 	private Button backButton;
 
 	private SystemNode system_node;
@@ -67,15 +60,19 @@ public class MainActivity extends RosAppActivity {
 	private ControllerNode controller_node;
 	private ParametersNode parameters_node;
 
-	private UsbDevice arduino;
+
 	private UsbManager usbManager;
+	private UsbDevice arduino;
 	private BroadcastReceiver mUsbReceiver;
 	private UsbDeviceConnection usbConnection;
+
 	private UsbSerialDevice serial;
 
 	private TextView text;
-
 	private boolean askingForRead = false;
+	private Handler handler;
+
+
 
 	private void tvAppend(TextView tv, CharSequence text) {
 		final TextView ftv = tv;
@@ -122,6 +119,12 @@ public class MainActivity extends RosAppActivity {
         parameters_node = new ParametersNode();
 
         this.initializeArduino();
+
+		communication_node = new CommunicationNode();
+		localization_node = new LocalizationNode();
+		planner_node = new PlannerNode();
+		controller_node = new ControllerNode();
+		parameters_node = new ParametersNode();
 	}
 
 	private void initializeArduino() {
@@ -147,11 +150,11 @@ public class MainActivity extends RosAppActivity {
 					synchronized (this) {
 						usbConnection = usbManager.openDevice(arduino);
 						serial = UsbSerialDevice.createUsbSerialDevice(arduino, usbConnection);
-					//	serial.setDTR(true);
 						if (serial != null) {
 
 							if (serial.open()) { //Set Serial Connection Parameters.
-								serial.setDTR(true);
+								communication_node.setSerial(serial);
+								//serial.setDTR(true);
 								serial.setBaudRate(115200);
 								serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
 								serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
@@ -177,6 +180,8 @@ public class MainActivity extends RosAppActivity {
 			}
 		};
 
+
+
 		// request permission from the user on create
 		if(this.arduino != null) {
 			PendingIntent mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
@@ -193,6 +198,17 @@ public class MainActivity extends RosAppActivity {
 		@Override
 		public void onReceivedData(byte[] arg0) {
 			String data = null;
+			tvAppend(text, "Length of byte array:" + arg0.length);
+			if (arg0.length >=1){
+				tvAppend(text, "byte1: " + arg0[0] + ",byte2: " + arg0[1]);
+			}
+				StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < arg0.length; i++) {
+				sb.append("" + arg0[i]);
+				sb.append(",");
+			}
+			tvAppend(text, sb.toString() + '\n');
+
 			try {
 				data = new String(arg0, "UTF-8");
 				tvAppend(text, "data read: " + data + '\n');
@@ -203,6 +219,8 @@ public class MainActivity extends RosAppActivity {
 				System.out.println(message.toString());
 				tvAppend(text, "Converted Message: " + 'n' + message.toString());
 
+				communication_node.publishMessageData(message);
+
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
@@ -211,25 +229,16 @@ public class MainActivity extends RosAppActivity {
 
 
 	public void onClickButton1(View v) {
-		// read
-		//new AsyncArduinoWrite().execute(new Object[] {serial, "q"});
-		//set boolean flag to read
-		this.askingForRead = true;
-		text.clearComposingText();
+		text.setText("");
 	}
 
 	public void onClickButton2(View v) {
-//		EmbeddedManager manager = new EmbeddedManager();
-//		byte[] test = manager.hexStringToByteArray("D930F7EA2183EF009F120000000000000000000000000000FFBC1F33333300");
-//		EmbeddedManager.Message message = manager.parseBytes(test);
-//		System.out.println(message.toString());
 		initializeArduino();
 	}
 
 
 	public void onClickButton3(View v) {
-		new AsyncArduinoWrite().execute(new Object[]{serial,  "q"});
-
+		new AsyncArduinoWrite().execute(new Object[]{serial,  EmbeddedManager.READ_COMMAND.getBytes()});
 	}
 
 	@Override
