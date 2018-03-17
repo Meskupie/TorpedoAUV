@@ -28,9 +28,14 @@ public class AsyncArduinoWrite extends AsyncTask<Object, Void, Void>
     //this method will be running on background thread so don't update UI frome here
     //do your long running http tasks here,you dont want to pass argument and u can access the parent class' variable url over here
 
+        if(params.length != 2) {
+            System.out.println("Error: there were too few parameters in the async write call");
+            return null;
+        }
 
         UsbSerialDevice serial = (UsbSerialDevice) params[0];
-        byte[] buf = "<{\"motorValues\":{\"FL\":0.5}}>".getBytes();
+        byte[] buf = (byte[]) params[1];
+
         if(serial != null) {
             serial.write(buf);
         } else {

@@ -1,5 +1,9 @@
 package Util;
 
+import android.util.Log;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -9,22 +13,26 @@ import java.util.Set;
  * Created by isaiah on 07/03/18.
  */
 
+// q Read, Q Write
+// upper case set, lower case read
+
 public class EmbeddedManager {
 
-    private static final int TOTAL_NUM_BITS = 248;
+    private static final String TAG = "Isaiah";
 
-    private byte[] input; // 31 bytes max
+    private byte[] input; // 33 bytes max
     private int byteIndex = 0;
+    private int bitIndex = 0;
+
+    public static final String WRITE_COMMAND = "X";
+    public static final String READ_COMMAND = "x";
 
     private byte[] test;
 
-    public EmbeddedManager(byte[] input) {
-        test = new byte[]{0xD,0x9,0x3,0x0,0x0,0x0,0x0,0x0,0xF,0x7,0xE,0xA,0x2,0x1,0x8,0x3,0xE,0xF,0x0,0x0,0x9,0xF,0x1,0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xF,0xF,0xB,0xC,0x1,0xF,0x3,0x3,0x3,0x3,0x3,0x3,0x0,0x0};
-
-        this.input = test;
-        //this.parseBitSet();
+    public Message parseBytes(byte[] input) {
+        this.input = input;
+        return this.parseBitSet();
     }
-
 
     public Message parseBitSet() {
 
@@ -32,69 +40,77 @@ public class EmbeddedManager {
 
         m.batteryVoltage = (int)readNextBytes(new DataUnit(Type.uint16_t, 16));
         m.depth = (int)readNextBytes(new DataUnit(Type.uint16_t, 16));
-        m.imuData = readNextNBytes(new DataUnit(Type.uint16_t, 16),4 );
-        m.motorThrust = readNextNBytes(new DataUnit(Type.uint16_t, 16),6);
+        m.imuData = readNextNBytes(new DataUnit(Type.int16_t, 16),4 );
+        m.motorThrust = readNextNBytes(new DataUnit(Type.int16_t, 16),6);
         m.battSOC = (int)readNextBytes(new DataUnit(Type.uint8_t, 8));
         m.battSOP = (int)readNextBytes(new DataUnit(Type.uint8_t, 8));
+        m.battCurrent_mA = (int)readNextBytes(new DataUnit(Type.int16_t, 16));
         m.ambientTemp = (int)readNextBytes(new DataUnit(Type.uint16_t, 16));
 
-        double[] motorStatus = readNextNBytes(new DataUnit(Type.uint16_t, 16), 6);
+        int[] motorStatus = readNextNBytes(new DataUnit(Type.uint16_t, 4), 6);
         for(int i = 0; i < motorStatus.length; i++) {
-            m.motorStatus[i] = (int)motorStatus[i];
+            m.motorStatus[i] = motorStatus[i];
         }
 
         m.smcStatus = (int)readNextBytes(new DataUnit(Type.uint16_t, 16));
-        m.swStatFront = (boolean)readNextBytes(new DataUnit(Type.uint8_t, 1));
-        m.swStateCenter = (boolean)readNextBytes(new DataUnit(Type.uint8_t, 1));
-        m.swStateRear = (boolean)readNextBytes(new DataUnit(Type.uint8_t, 1));
+        m.swStatFront = (int)readNextBytes(new DataUnit(Type.uint8_t, 1)) == 1;
+        m.swStateCenter = (int)readNextBytes(new DataUnit(Type.uint8_t, 1)) == 1;
+        m.swStateRear = (int)readNextBytes(new DataUnit(Type.uint8_t, 1)) == 1;
 
         return m;
     }
 
-    // TODO: implement a byte by bbyte parsing system, remember little endian, swap first 8 bits with second 8 bist for each 16 bits
-    public Object readNextBytes(DataUnit data) {
+
+    // TODO: fix ambient temp, add check for 4 bits and 3 bit status
+    private Object readNextBytes(DataUnit data) {
         int numBits = data.numBits;
         int numBytes = numBits / 8;
-        byteIndex += numBytes;
+
         int value = 0;
 
-        if(byteIndex +1 < this.input.length) {
-            value = (int)this.input[byteIndex] << 8 + (int)this.input[byteIndex+1];
+        //assumes that disjointed bits occur at end of parsing, and total less than 1 byte
+        if(numBits < 8) {
+            value = ((1 << (7 - bitIndex)) & numBits) != 0 ? 1 : 0;
+            bitIndex += numBits;
+        } else if(numBits == 8) {
+            Log.d(TAG, "weird things");
+            if(byteIndex < this.input.length)
+            value = ((int)this.input[byteIndex]) & 0xFF;
+
+            byteIndex += numBytes;
+        } else if ( numBits == 16){
+           Log.d(TAG, "byteNum: " + byteIndex);
+
+            if(byteIndex + 1 < this.input.length) {
+                // check if the number is negative, if so, then twos complement it
+                value = (short)((this.input[byteIndex]) & 0xFF) | (((int)this.input[byteIndex+1] & 0xFF) << 8);
+
+                if((this.input[byteIndex+1]  & (1 << 7)) != 0) { // first binary digit was 1
+                    value = ~(value-1) & 0xFFFF;
+                    value *= -1;
+                }
+
+                Log.d(TAG, "shifted A: " + ((this.input[byteIndex]) & 0xFF));
+                Log.d(TAG, "shefted B: " + (((int)this.input[byteIndex+1]) << 8));
+                Log.d(TAG, "value: " + value);
+            }
+
+
+            byteIndex += numBytes;
+        } else {
+            System.out.println("Error data type not supported");
+            return 0;
         }
-        return getFormattedData(value, data.dataType);
+        return value;
     }
 
-    public double[] readNextNBytes(DataUnit data, int n ) {
-        double[] arr = new double[n];
-
+    private int[] readNextNBytes(DataUnit data, int n ) {
+        int[] arr = new int[n];
         for(int i = 0; i < n; i++) {
             int numBitsToRead = data.numBits;
-          //  BitSet bitArray = this.bitset.get(bitIndex, bitIndex + numBitsToRead);
-          //  bitIndex += numBitsToRead;
-
-            arr[i] = (double)getFormattedData(10, data.dataType);
+            arr[i] = (int) readNextBytes(data);
         }
         return arr;
-    }
-
-    public Object getFormattedData(int bits, Type type){
-        int bitsToInt = 0;
-
-//        for (int i = 0; i < bits.length(); ++i) {
-//            bitsToInt += bits.get(i) ? (1 << i) : 0;
-//        }
-
-        switch(type) {
-            case uint16_t:
-            case uint8_t:
-            case ESC_RUN_STATE:
-            case SystemRunState:
-                return bitsToInt;
-            case int16_t:
-                return ((double)bitsToInt)/((2<<15)-1) - 0.5;
-            default:
-                return 0;
-        }
     }
 
     public class DataUnit {
@@ -112,10 +128,11 @@ public class EmbeddedManager {
 
         public int batteryVoltage;
         public int depth;
-        public double[] imuData;
-        public double[] motorThrust;
+        public int[] imuData;
+        public int[] motorThrust;
         public int battSOC;
         public int battSOP;
+        public int battCurrent_mA;
         public int ambientTemp;
         public int[] motorStatus;
         public int smcStatus;
@@ -123,46 +140,74 @@ public class EmbeddedManager {
         public boolean swStateCenter;
         public boolean swStateRear;
 
+
         public Message() {
 
-            this.imuData = new double[4];
-            this.motorThrust = new double[6];
+            this.imuData = new int[4];
+            this.motorThrust = new int[6];
             this.motorStatus = new int[6];
+        }
+
+        @Override
+        public String toString()
+        {
+            String str = "";
+            str += "batteryVoltage: " + batteryVoltage + '\n';
+            str += "depth: " + depth + '\n';
+            str += "imuData[0]: " + imuData[0] + '\n';
+            str += "imuData[1]: " + imuData[1] + '\n';
+            str += "imuData[2]: " + imuData[2] + '\n';
+            str += "imuData[3]: " + imuData[3] + '\n';
+            str += "motorThrust0: " + motorThrust[0] + '\n';
+            str += "motorThrust1: " + motorThrust[1] + '\n';
+            str += "motorThrust2: " + motorThrust[2] + '\n';
+            str += "motorThrust3: " + motorThrust[3] + '\n';
+            str += "motorThrust4: " + motorThrust[4] + '\n';
+            str += "motorThrust5: " + motorThrust[5] + '\n';
+            str += "battSOC: " + battSOC + '\n';
+            str += "battSOP: " + battSOP + '\n';
+            str += "battCurrent_mA:" + battCurrent_mA + '\n';
+            str += "ambientTemp: " + ambientTemp + '\n';
+            str += "motorStatus[i]: " + motorStatus[0];
+
+            // add more if necessary
+
+            return str;
         }
     }
 
     public enum Type {
         uint16_t, int16_t, uint8_t, ESC_RUN_STATE, SystemRunState
     }
-}
 
-/* Struct that is being sent as a byte array
-typedef struct {
-uint16_t battVoltage_mV:16;
-uint16_t depth_m : 16;
-int16_t imu_x : 16;
-int16_t imu_y : 16;
-int16_t imu_z : 16;
-int16_t imu_w : 16;
-uint16_t motorThrust0_mN : 16;
-uint16_t motorThrust1_mN : 16;
-uint16_t motorThrust2_mN : 16;
-uint16_t motorThrust3_mN : 16;
-uint16_t motorThrust4_mN : 16;
-uint16_t motorThrust5_mN : 16;
-uint8_t battSOC :8;
-uint8_t battSOP :8;
-uint8_t ambientTemperature_C:8;
-ESC_RUN_STATE motorStatus0 : 4;
-ESC_RUN_STATE motorStatus1 : 4;
-ESC_RUN_STATE motorStatus2 : 4;
-ESC_RUN_STATE motorStatus3 : 4;
-ESC_RUN_STATE motorStatus4 : 4;
-ESC_RUN_STATE motorStatus5 : 4;
-SystemRunState SMC_Status : 3;
-uint8_t swStateFront : 1;
-uint8_t swStateCenter : 1;
-uint8_t swStateRear : 1;
-uint8_t _filler:2;
-} HostUpdateStruct_transmit; //length 31 bytes
-*/
+    public byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
+    }
+
+    public static byte[] getEmbeddedByteArray(int[] motorOutputs, int numberOfMessagesSent) {
+        return new byte[]{(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF,(byte)0xFF};
+        /*StringBuilder ab = new StringBuilder();
+        ab.append(WRITE_COMMAND);
+
+        int checkSum = 0;
+        byte[] bytes = new byte[13];
+
+        for(int i = 0; i < 6; i++) {
+            bytes[i] = (byte)((motorOutputs[i] & 0xFF00) >> 8);
+            bytes[i+1] = (byte)(motorOutputs[i] & 0xFF);
+            checkSum += bytes[i] + bytes[i+1];
+        }
+
+        checkSum += numberOfMessagesSent;
+        checkSum %= 16;
+
+        bytes[12] = (byte)(((numberOfMessagesSent & 0xF) << 4) | (checkSum & 0xF));
+        return bytes;*/
+    }
+}

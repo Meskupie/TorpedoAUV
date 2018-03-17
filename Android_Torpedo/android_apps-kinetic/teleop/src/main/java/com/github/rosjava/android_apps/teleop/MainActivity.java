@@ -9,6 +9,8 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.text.method.ScrollingMovementMethod;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,6 +35,7 @@ import Autonomy.Localization.LocalizationNode;
 import Autonomy.PlannerNode;
 import Communication.AsyncArduinoWrite;
 import Communication.CommunicationNode;
+import Util.EmbeddedManager;
 
 public class MainActivity extends RosAppActivity {
 	public static final String TAG = "Torpedo Debug";
@@ -40,6 +43,14 @@ public class MainActivity extends RosAppActivity {
 	public static final String ACTION_USB_ATTACHED = "android.hardware.usb.action.USB_DEVICE_ATTACHED";
 	public static final String ACTION_USB_DETACHED = "android.hardware.usb.action.USB_DEVICE_DETACHED";
 	public static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
+
+
+	public static final int BOARD_VENDOR_ID = 0x2341;
+	public static final int BOARD_PRODUCT_ID = 0x8036;
+
+	public static final int TEST_VENDOR_ID = 4292;
+	public static final int TEST_PRODUCT_ID = 60000;
+
 
 	private VirtualJoystickView virtualJoystickView;
 	private Button backButton;
@@ -51,13 +62,19 @@ public class MainActivity extends RosAppActivity {
 	private ControllerNode controller_node;
 	private ParametersNode parameters_node;
 
-	private UsbDevice arduino;
+
 	private UsbManager usbManager;
+	private UsbDevice arduino;
 	private BroadcastReceiver mUsbReceiver;
 	private UsbDeviceConnection usbConnection;
+
 	private UsbSerialDevice serial;
 
 	private TextView text;
+	private boolean askingForRead = false;
+	private Handler handler;
+
+
 
 	private void tvAppend(TextView tv, CharSequence text) {
 		final TextView ftv = tv;
@@ -79,23 +96,20 @@ public class MainActivity extends RosAppActivity {
 	public void onCreate(Bundle savedInstanceState) {
 
 
-		//setDashboardResource(R.id.top_bar);
+		setDashboardResource(R.id.top_bar);
 		setMainWindowResource(R.layout.main);
 		super.onCreate(savedInstanceState);
 
-		//EmbeddedManager manager = new EmbeddedManager(null);
-		//EmbeddedManager.Message message = manager.parseBitSet();
+		text = (TextView) findViewById(R.id.textOut);
+		text.setMovementMethod(new ScrollingMovementMethod());
 
-		//text = (TextView) findViewById(R.id.textOut);
-		//text.setMovementMethod(new ScrollingMovementMethod());
-
-//        backButton = (Button) findViewById(R.id.back_button);
-//        backButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                onBackPressed();
-//            }
-//        });
+        backButton = (Button) findViewById(R.id.back_button);
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onBackPressed();
+            }
+        });
 
 
         // Setup nodes
@@ -107,6 +121,12 @@ public class MainActivity extends RosAppActivity {
         parameters_node = new ParametersNode();
 
         this.initializeArduino();
+
+		communication_node = new CommunicationNode();
+		localization_node = new LocalizationNode();
+		planner_node = new PlannerNode();
+		controller_node = new ControllerNode();
+		parameters_node = new ParametersNode();
 	}
 
 	private void initializeArduino() {
@@ -117,7 +137,7 @@ public class MainActivity extends RosAppActivity {
 
 		for (String key: deviceList.keySet()){
 			UsbDevice device = deviceList.get(key);
-			if(device.getVendorId() == 4292 && device.getProductId() == 60000) {
+			if(device.getVendorId() == BOARD_VENDOR_ID && device.getProductId() == BOARD_PRODUCT_ID) {
 				this.arduino = device;
 				Toast.makeText(this, "Recognized Arduino Device", Toast.LENGTH_SHORT).show();
 				break;
@@ -133,13 +153,17 @@ public class MainActivity extends RosAppActivity {
 						usbConnection = usbManager.openDevice(arduino);
 						serial = UsbSerialDevice.createUsbSerialDevice(arduino, usbConnection);
 						if (serial != null) {
+
 							if (serial.open()) { //Set Serial Connection Parameters.
+								communication_node.setSerial(serial);
+								//serial.setDTR(true);
 								serial.setBaudRate(115200);
 								serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
 								serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
+								serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
 								serial.setParity(UsbSerialInterface.PARITY_NONE);
 								serial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
-								serial.read(mCallback); //
+								serial.read(mCallback);
 							} else {
 								text.append("Serial Port not open!" + '\n');
 							}
@@ -158,6 +182,8 @@ public class MainActivity extends RosAppActivity {
 			}
 		};
 
+
+
 		// request permission from the user on create
 		if(this.arduino != null) {
 			PendingIntent mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
@@ -174,23 +200,47 @@ public class MainActivity extends RosAppActivity {
 		@Override
 		public void onReceivedData(byte[] arg0) {
 			String data = null;
+			tvAppend(text, "Length of byte array:" + arg0.length);
+			if (arg0.length >=1){
+				tvAppend(text, "byte1: " + arg0[0] + ",byte2: " + arg0[1]);
+			}
+				StringBuilder sb = new StringBuilder();
+			for(int i = 0; i < arg0.length; i++) {
+				sb.append("" + arg0[i]);
+				sb.append(",");
+			}
+			tvAppend(text, sb.toString() + '\n');
+
 			try {
 				data = new String(arg0, "UTF-8");
 				tvAppend(text, "data read: " + data + '\n');
+				tvAppend(text, "" + '\n');
+
+				EmbeddedManager manager = new EmbeddedManager();
+				EmbeddedManager.Message message = manager.parseBytes(arg0);
+				System.out.println(message.toString());
+				tvAppend(text, "Converted Message: " + 'n' + message.toString());
+
+				communication_node.publishMessageData(message);
+
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
 			}
 		}
 	};
 
+
 	public void onClickButton1(View v) {
-		new AsyncArduinoWrite().execute(new Object[]{serial});
+		text.setText("");
 	}
 
 	public void onClickButton2(View v) {
+		initializeArduino();
 	}
 
+
 	public void onClickButton3(View v) {
+		new AsyncArduinoWrite().execute(new Object[]{serial,  EmbeddedManager.READ_COMMAND.getBytes()});
 	}
 
 	@Override
