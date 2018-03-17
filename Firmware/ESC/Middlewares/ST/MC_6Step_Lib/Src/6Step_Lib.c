@@ -1565,6 +1565,18 @@ int16_t thrustToSpeed(int16_t thrust_mN)
     }
     return speed_value;
 }
+int16_t thrustToDirection(int16_t thrust_mN)
+{
+    if (thrust_mN >0)
+    {
+        return 1;
+    }
+    else
+		{
+			return 0;
+		}
+
+}
 
 /** @defgroup MC_Set_Thrust    MC_Set_Thrust
   *  @{
@@ -1574,9 +1586,11 @@ int16_t thrustToSpeed(int16_t thrust_mN)
 */
 void MC_Set_Thrust(int16_t thrust_mN)
 {
+		SIXSTEP_parameters.CW_CCW = thrustToDirection(thrust_mN);
 #ifdef SPEED_RAMP  
   PI_parameters.ReferenceToBeUpdated++;
   SIXSTEP_parameters.speed_target = thrustToSpeed(thrust_mN);
+	
 #else  
   PI_parameters.Reference = thrustToSpeed(thrust_mN);
   SIXSTEP_parameters.speed_target = PI_parameters.Reference;
