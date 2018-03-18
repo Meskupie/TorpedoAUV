@@ -29,7 +29,7 @@ public class SerialWrite extends AsyncTask<Object, Void, Void>
     //do your long running http tasks here,you dont want to pass argument and u can access the parent class' variable url over here
 
         if(params.length != 2) {
-            System.out.println("Error: there were too few parameters in the async write call");
+            Log.d("ROV_ERROR","Serial Write: There were too few parameters in the async write call");
             return null;
         }
 
@@ -39,7 +39,7 @@ public class SerialWrite extends AsyncTask<Object, Void, Void>
         if(serial != null) {
             serial.write(buf);
         } else {
-            Log.d("ARDUINO:", "serial is null");
+            Log.d("ROV_ERROR", "Serial Write: Serial was found to be null");
         }
         return null;
     }

@@ -226,7 +226,7 @@ public class SystemNode extends AbstractNodeMain {
                 // Publish system state
                 status_system_msg.setData(status_system);
                 status_system_pub.publish(status_system_msg);
-                Thread.sleep(1000);
+                Thread.sleep(2000);
             }
         });
 

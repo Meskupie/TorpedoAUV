@@ -6,16 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.felhr.usbserial.UsbSerialDevice;
@@ -34,22 +31,21 @@ import java.util.HashMap;
 import Autonomy.ControllerNode;
 import Autonomy.Localization.LocalizationNode;
 import Autonomy.PlannerNode;
+import Communication.MessageManager;
 import Communication.SerialWrite;
 import Communication.CommunicationNode;
 
 import Communication.USBDeviceWrapper;
-import Util.EmbeddedManager;
 
 public class MainActivity extends RosAppActivity {
-	public static final String TAG = "DEBUG_ROV";
+	public static final String TAG       = "DEBUG_MSG";
+	public static final String TAG_LOG   = "ROV_LOG";
+	public static final String TAG_ERROR = "ROV_ERROR";
 
 	// USB stuff
 	private UsbManager usb_manager;
-	private UsbSerialDevice usb_serial;
-	private USBDeviceWrapper usb_device_smc = new USBDeviceWrapper("System Management Controller",0x2341,0x8036);
-
-	public static final int TEST_VENDOR_ID = 4292;
-	public static final int TEST_PRODUCT_ID = 60000;
+	private USBDeviceWrapper usb_device_smc;
+	MessageManager message_manager = new MessageManager();
 
 	public static final String ACTION_USB_ATTACHED = "android.hardware.usb.action.USB_DEVICE_ATTACHED";
 	public static final String ACTION_USB_DETACHED = "android.hardware.usb.action.USB_DEVICE_DETACHED";
@@ -66,17 +62,6 @@ public class MainActivity extends RosAppActivity {
 	// UI stuff
 	private VirtualJoystickView virtualJoystickView;
 	private Button backButton;
-	private TextView text;
-	private boolean askingForRead = false;
-	private Handler handler;
-	private void tvAppend(TextView tv, CharSequence text) {
-		final TextView ftv = tv;
-		final CharSequence ftext = text;
-		runOnUiThread(new Runnable() {
-			@Override public void run() {
-				ftv.append(ftext); }
-		});
-	}
 
 
 	public MainActivity() {
@@ -93,8 +78,8 @@ public class MainActivity extends RosAppActivity {
 		setMainWindowResource(R.layout.main);
 		super.onCreate(savedInstanceState);
 
-		text = (TextView) findViewById(R.id.textOut);
-		text.setMovementMethod(new ScrollingMovementMethod());
+//		text = (TextView) findViewById(R.id.textOut);
+//		text.setMovementMethod(new ScrollingMovementMethod());
 
         backButton = (Button) findViewById(R.id.back_button);
         backButton.setOnClickListener(new View.OnClickListener() {
@@ -112,12 +97,34 @@ public class MainActivity extends RosAppActivity {
         controller_node = new ControllerNode();
         parameters_node = new ParametersNode();
 
+        // Setup USB SMC
+		usb_device_smc = new USBDeviceWrapper("System Management Controller",0x2341,0x8036);
+		usb_device_smc.callback = usb_callback_smc;
         usb_device_smc = initializeSerial(usb_device_smc);
+		communication_node.setUSBSMC(usb_device_smc);
+
+		// Setup USB Front Cam
+
+		// Setup USB Rear Cam
 	}
 
-	private USBDeviceWrapper initializeSerial(USBDeviceWrapper device_wrapper) {
-		this.usb_manager = (UsbManager) getSystemService(Context.USB_SERVICE);
+	private UsbSerialInterface.UsbReadCallback usb_callback_smc = new UsbSerialInterface.UsbReadCallback() {
+		//Defining a Callback which triggers whenever data is read.
+		@Override
+		public void onReceivedData(byte[] arg0) {
+			Log.d("DEBUG_MSG", "Serial found "+arg0.length+" bytes");
+			String temp = "";
+			for(int i = 0; i < arg0.length; i++){
+				temp += arg0[i]+" ";
+			}
+			Log.d("DEBUG_MSG", ""+temp);
+			message_manager.msg_smc_sensors.parseData(arg0);
+			communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);
+		}
+	};
 
+	private USBDeviceWrapper initializeSerial(final USBDeviceWrapper device_wrapper) {
+		this.usb_manager = (UsbManager) getSystemService(Context.USB_SERVICE);
 		// TODO: change to serial number
 		// Attempt to find device by vendor and product id
 		HashMap<String, UsbDevice> deviceList = this.usb_manager.getDeviceList();
@@ -125,110 +132,66 @@ public class MainActivity extends RosAppActivity {
 			UsbDevice device = deviceList.get(key);
 			if(device.getVendorId() == device_wrapper.VENDOR_ID && device.getProductId() == device_wrapper.PRODUCT_ID) {
 				device_wrapper.usbDevice = device;
-				Toast.makeText(this, "USB Device Found: "+device_wrapper.name, Toast.LENGTH_SHORT).show();
+				Log.d(TAG_LOG, "USB device "+device_wrapper.name+" found with serial number "+device.getSerialNumber());
 				break;
 			}
 		}
-
 		// setup broadcast receiver for user permission granting
 		device_wrapper.usbReceiver = new BroadcastReceiver() {
 			public void onReceive(Context context, Intent intent) {
 				String action = intent.getAction();
 				if (ACTION_USB_PERMISSION.equals(action)) {
 					synchronized (this) {
-						usbConnection = usb_manager.openDevice(device_wrapper.usbDevice );
-						serial = UsbSerialDevice.createUsbSerialDevice(arduino, usbConnection);
-						if (serial != null) {
-
-							if (serial.open()) { //Set Serial Connection Parameters.
-								communication_node.setSerial(serial);
+						device_wrapper.usbConnection = usb_manager.openDevice(device_wrapper.usbDevice );
+						device_wrapper.serial = UsbSerialDevice.createUsbSerialDevice(device_wrapper.usbDevice, device_wrapper.usbConnection);
+						if (device_wrapper.serial != null) {
+							if (device_wrapper.serial.open()) { //Set Serial Connection Parameters.
 								//serial.setDTR(true);
-								serial.setBaudRate(115200);
-								serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
-								serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
+								device_wrapper.serial.setBaudRate(115200);
+								device_wrapper.serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
+								device_wrapper.serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
 								//serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
-								serial.setParity(UsbSerialInterface.PARITY_NONE);
-								serial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
-								serial.read(mCallback);
+								device_wrapper.serial.setParity(UsbSerialInterface.PARITY_NONE);
+								device_wrapper.serial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
+
+								device_wrapper.serial.read(device_wrapper.callback);
 							} else {
-								text.append("Serial Port not open!" + '\n');
+								Log.d(TAG_ERROR,"USB serial port not open for "+device_wrapper.name);
 							}
 						} else {
-							text.append("Serial Port is null" + '\n');
+							Log.d(TAG_ERROR,"USB serial Port is null for "+device_wrapper.name);
 						}
 						if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-							if(arduino != null){
+							if(device_wrapper.usbDevice != null){
 								//call method to set up device communication
 							}
 						} else {
-							text.append("Permission denied for arduino!" + '\n');
+							Log.d(TAG_ERROR,"USB Permission denied for "+device_wrapper.name);
 						}
 					}
 				}
 			}
 		};
-
-
-
 		// request permission from the user on create
-		if(this.arduino != null) {
+		if(device_wrapper.usbDevice != null) {
 			PendingIntent mPermissionIntent = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
 			IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-			this.registerReceiver(mUsbReceiver, filter);
-			this.usbManager.requestPermission(this.arduino,mPermissionIntent);
+			this.registerReceiver(device_wrapper.usbReceiver, filter);
+			this.usb_manager.requestPermission(device_wrapper.usbDevice,mPermissionIntent);
 		} else {
-			Toast.makeText(this, "Could not find arduino on Startup Arduino Device", Toast.LENGTH_SHORT).show();
+			Log.d(TAG_ERROR,"USB could not find "+device_wrapper.name+" on startup");
 		}
-
 		return device_wrapper;
 	}
 
-	public UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() {
-		//Defining a Callback which triggers whenever data is read.
-		@Override
-		public void onReceivedData(byte[] arg0) {
-			String data = null;
-			tvAppend(text, "Length of byte array:" + arg0.length);
-			if (arg0.length >=1){
-				tvAppend(text, "byte1: " + arg0[0] + ",byte2: " + arg0[1]);
-			}
-				StringBuilder sb = new StringBuilder();
-			for(int i = 0; i < arg0.length; i++) {
-				sb.append("" + arg0[i]);
-				sb.append(",");
-			}
-			tvAppend(text, sb.toString() + '\n');
-
-			try {
-				data = new String(arg0, "UTF-8");
-				tvAppend(text, "data read: " + data + '\n');
-				tvAppend(text, "" + '\n');
-
-				EmbeddedManager manager = new EmbeddedManager();
-				EmbeddedManager.SMCSensors message = manager.parseBytes(arg0);
-				System.out.println(message.toString());
-				tvAppend(text, "Converted Message: " + 'n' + message.toString());
-
-				communication_node.SMCSensorsPub(message);
-
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-		}
-	};
-
-
 	public void onClickButton1(View v) {
-		text.setText("");
 	}
 
 	public void onClickButton2(View v) {
-		initializeArduino();
 	}
 
-
 	public void onClickButton3(View v) {
-		new SerialWrite().execute(new Object[]{serial,  EmbeddedManager.SMC_READ.getBytes()});
+		new SerialWrite().execute(new Object[]{usb_device_smc.serial, message_manager.msg_smc_sensors.getRequest()});
 	}
 
 	@Override
@@ -327,19 +290,14 @@ public class MainActivity extends RosAppActivity {
 	protected void onDestroy() {
 		super.onDestroy();
 
-		if(this.mUsbReceiver != null) {
+		if(usb_device_smc.usbReceiver != null) {
 			try {
-				unregisterReceiver(this.mUsbReceiver);
-				textAppend("Unregistered usb receiver");
-
+				unregisterReceiver(usb_device_smc.usbReceiver);
+				Log.d(TAG,"USB: Unregistering "+usb_device_smc.name);
 			} catch (Exception e) {
-				textAppend("Caught exception: " + e.getMessage());
+				Log.d(TAG,"USB: Caught exception when unregistering "+usb_device_smc.name+": " + e.getMessage());
 			}
 		}
-	}
-
-	public void textAppend(String str) {
-		text.append(str + '\n');
 	}
 
 }
