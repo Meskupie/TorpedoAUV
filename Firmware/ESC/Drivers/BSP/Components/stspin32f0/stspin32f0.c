@@ -75,6 +75,8 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart;
 #endif
 
+
+
 /**
   * @}
   */     

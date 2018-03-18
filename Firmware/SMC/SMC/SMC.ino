@@ -185,7 +185,7 @@ void loop()
 
 ////    printESCState(ESCGetStatus(&ESC[0]));
     
-    printStatusStruct(ESCGetStatusStruct(&ESC[3 ]));
+   // printStatusStruct(ESCGetStatusStruct(&ESC[0]));
     
 //    Serial.print("ver: ");
 //    Serial.println(gasGauge.testDataWriteToFlash());
@@ -228,7 +228,6 @@ void loop()
         }
     }
 #else
-    
     for (int i = 0; i<5;i++)
     {
         if (TIMEOUT>(lastTime-millis()) {

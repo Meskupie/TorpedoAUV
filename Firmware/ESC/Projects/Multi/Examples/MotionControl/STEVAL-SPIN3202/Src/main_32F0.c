@@ -39,10 +39,15 @@
 #include "main_32F0.h"
 #include "SPI_UI.h"
 
+
 /* Variables -----------------------------------------------------------------*/
 extern STSPIN32F0_MotorDriver_TypeDef STSPIN32F0MotorDriver;
 extern TIM_HandleTypeDef HF_TIMx;
 extern TIM_HandleTypeDef LF_TIMx;
+
+IWDG_HandleTypeDef hiwdg;
+DMA_HandleTypeDef hdma_spi1_tx;
+DMA_HandleTypeDef hdma_spi1_rx;
 
 #ifndef VOLTAGE_MODE
 extern TIM_HandleTypeDef REFx;
@@ -57,6 +62,7 @@ extern UART_HandleTypeDef huart;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+
 #if (!defined(HALL_SENSORS)||defined(POTENTIOMETER))
 static void MX_ADC_Init(void);
 #endif
@@ -71,6 +77,9 @@ static void MX_UART_Init(void);
 static void MX_SPI1_Init(void);
 extern void SPI_Communication_Task(void);
 #endif
+
+static void MX_IWDG_Init(void);
+static void MX_DMA_Init(void);
 
 int main(void)
 {
@@ -92,13 +101,16 @@ int main(void)
 #ifndef VOLTAGE_MODE
   MX_REFx_Init();
 #endif
+	
   MX_LF_TIMx_Init();
+	MX_DMA_Init();
 	
 #ifndef ROV
 MX_UART_Init();
 #else
 MX_SPI1_Init();
 #endif
+
  /* **************************************************************************** 
   ==============================================================================   
             ###### This function initializes 6-Step lib ######
@@ -106,7 +118,9 @@ MX_SPI1_Init();
   **************************************************************************** */     
   MC_SixStep_INIT();
   /****************************************************************************/  
-  
+  MX_IWDG_Init();
+	 
+	 
 	#ifndef ROV
 		MC_Set_Thrust(-400);
 	MC_StartMotor();
@@ -114,10 +128,18 @@ MX_SPI1_Init();
 #endif
 //	MC_StopMotor();
 	
-	
+
+
+
+			
+
+
+
   /* Infinite loop */
   while (1)
   {
+		
+									 
 /*! **************************************************************************
   ==============================================================================   
             ###### How to use the 6Step FW Example project ######
@@ -158,6 +180,7 @@ MX_SPI1_Init();
   *****************************************************************************/    
 #ifdef ROV
    SPI_Communication_Task();
+	 //HAL_IWDG_Refresh(&hiwdg);
 #else
 //	MC_Set_Thrust(400);
 //	HAL_Delay(2000);
@@ -178,11 +201,13 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI14;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI14|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSI14State = RCC_HSI14_ON;
   RCC_OscInitStruct.HSICalibrationValue = 16;
   RCC_OscInitStruct.HSI14CalibrationValue = 16;
+	RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+	
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL12;
@@ -194,7 +219,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1);
-
+	
   __SYSCFG_CLK_ENABLE();
 
 }
@@ -389,6 +414,29 @@ static void MX_SPI1_Init(void)
 }
 #endif
 
+static void MX_IWDG_Init(void)
+{
+
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
+  hiwdg.Init.Window = 4095;
+  hiwdg.Init.Reload = 4095;
+	HAL_IWDG_Init(&hiwdg);
+	
+}
+static void MX_DMA_Init(void) 
+{
+  /* DMA controller clock enable */
+	
+  __DMA1_CLK_ENABLE();
+	
+  /* DMA interrupt init */
+  /* DMA1_Channel2_3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
+
+}
+
 /** Configure pins as 
         * Analog 
         * Input 
@@ -433,10 +481,22 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+	
+
 
 	
 	
 	#endif
+//	GPIO_InitStruct.Pin = GPIO_PIN_1;
+//  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+//  GPIO_InitStruct.Pull = GPIO_NOPULL;
+//	GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+//  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+//	while (1)
+//	{
+//		HAL_GPIO_TogglePin(GPIOF,GPIO_PIN_1);
+//		HAL_Delay(100);
+//	}
   
   /*Configure overcurrent threshold GPIO pins */
   GPIO_InitStruct.Pin = BSP_SIP_OC_TH_STBY_PIN;

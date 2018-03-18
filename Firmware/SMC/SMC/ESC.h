@@ -106,18 +106,20 @@ typedef enum
 
 typedef enum
 {
-    IDLE,                               /* 0 */
-    STARTUP,                            /* 1 */
-    VALIDATION,                         /* 2 */
-    STOP,                               /* 3 */
-    START,                              /* 4 */
-    RUN,                                /* 5 */
-    ALIGNMENT,                          /* 6 */
-    SPEEDFBKERROR,                      /* 7 */
-    OVERCURRENT,                        /* 8 */
-    STARTUP_FAILURE,                    /* 9 */
-    STARTUP_BEMF_FAILURE,               /* 10 */
-    LF_TIMER_FAILURE                    /* 11 */
+    COMM_FAILURE,                       /* 0 */
+    IDLE,                               /* 1 */
+    STARTUP,                            /* 2 */
+    VALIDATION,                         /* 3 */
+    STOP,                               /* 4 */
+    START,                              /* 5 */
+    RUN,                                /* 6 */
+    ALIGNMENT,                          /* 7 */
+    SPEEDFBKERROR,                      /* 8 */
+    OVERCURRENT,                        /* 9 */
+    STARTUP_FAILURE,                    /* 10 */
+    STARTUP_BEMF_FAILURE,               /* 11 */
+    LF_TIMER_FAILURE,                   /* 12 */
+    WD_RESET                            /* 13 */
 } ESC_RUN_STATE;
 
 typedef struct

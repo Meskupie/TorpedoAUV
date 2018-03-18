@@ -52,6 +52,11 @@ extern TIM_HandleTypeDef HF_TIMx;
 extern TIM_HandleTypeDef LF_TIMx;
 #ifndef ROV
 extern UART_HandleTypeDef huart;
+#else
+extern SPI_HandleTypeDef hspi1;
+extern DMA_HandleTypeDef hdma_spi1_tx;
+extern DMA_HandleTypeDef hdma_spi1_rx;
+
 #endif
 /******************************************************************************/
 /*            Cortex-M0 Processor Interruption and Exception Handlers         */ 
@@ -93,16 +98,29 @@ void USART1_IRQHandler(void)
 #endif
 }
 
+
 /**
 * @brief This function handles DMA USART1 TX interrupt.
 */
 
+void SPI1_IRQHandler(void)
+{
+	HAL_SPI_IRQHandler(&hspi1);
+}
+
 void DMA1_Channel2_3_IRQHandler(void)
 {
 	#ifndef ROV
-	
   HAL_DMA_IRQHandler(huart.hdmatx);
+	#elseif 
+  HAL_DMA_IRQHandler(&hdma_spi1_rx);
+  HAL_DMA_IRQHandler(&hdma_spi1_tx);
 	#endif
+}
+
+void HAL_SPI_TxCpltCallback (SPI_HandleTypeDef * hspi)
+{
+	HAL_SPI_FlushRxFifo(hspi);
 }
 
 /**

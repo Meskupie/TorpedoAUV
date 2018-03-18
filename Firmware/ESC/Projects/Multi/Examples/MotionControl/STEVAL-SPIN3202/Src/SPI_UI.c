@@ -41,6 +41,7 @@
 #ifdef ROV
 
 extern SPI_HandleTypeDef hspi1;
+extern IWDG_HandleTypeDef hiwdg;
 
 extern SIXSTEP_Base_InitTypeDef SIXSTEP_parameters;      /*!< Main SixStep structure*/
 extern SIXSTEP_PI_PARAM_InitTypeDef_t PI_parameters;     /*!< SixStep PI regulator structure*/
@@ -93,6 +94,7 @@ void SPI_Communication_Task()
                 case ESC_CMD_Start:
                     MC_StartMotor();
                     break;
+								
                     //                case ESC_CMD_GetTemperature:
                     //                    //HAL_SPI_Transmit(&hspi1, (uint8_t*)temperature,1,1000);
                     
@@ -167,6 +169,19 @@ void SPI_Communication_Task()
                     break;
                     
                 case ESC_CMD_GetStatusStruct:
+//										if(HAL_IWDG_GetState(&hiwdg) == HAL_IWDG_STATE_READY)
+//										{
+//											HAL_IWDG_Start(&hiwdg);
+//											
+//											if (__HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST)==1)
+//												{
+//													SIXSTEP_parameters.STATUS = WD_RESET;
+//												}
+//										}
+//										else
+//										{
+//											HAL_IWDG_Refresh(&hiwdg);
+//										}
                     statusStructUnion.statusStruct.speedSetPoint = PI_parameters.Reference;
                     statusStructUnion.statusStruct.speedMeasured = SIXSTEP_parameters.speed_fdbk_filtered;
                     statusStructUnion.statusStruct.runState = SIXSTEP_parameters.STATUS;
@@ -181,11 +196,10 @@ void SPI_Communication_Task()
                     
                    //HAL_SPI_Transmit(&hspi1,statusStructUnion.stuctRaw,sizeof(statusStructUnion),10);
 									 
-									 HAL_SPI_TransmitReceive(&hspi1,statusStructUnion.stuctRaw,SPI_Recived_DUMP,sizeof(statusStructUnion),10);
-								
-     
-          
-   
+										
+									 //HAL_SPI_Transmit_DMA(&hspi1,statusStructUnion.stuctRaw,sizeof(statusStructUnion));
+									 HAL_SPI_TransmitReceive_DMA(&hspi1,statusStructUnion.stuctRaw,SPI_Recived_DUMP,sizeof(statusStructUnion));
+									 
                     break;
                     
                 default:
