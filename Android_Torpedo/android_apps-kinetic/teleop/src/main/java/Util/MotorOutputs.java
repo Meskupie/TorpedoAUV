@@ -2,6 +2,8 @@ package Util;
 
 import android.util.Log;
 
+import java.nio.ByteBuffer;
+
 /**
  * Created by isaiah on 01/03/18.
  */
@@ -12,7 +14,7 @@ public class MotorOutputs {
         FL, FR, FV, BL, BR, BV
     }
 
-    // MOTOR VALUES ARE IN MILLINEWTONS
+    // MOTOR VALUES ARE IN MILLINEWTONS received in newtons before transfer
     int scalingFactor = 2^16 - 1;
 
     /** Motor outputs go from 0 to 5
@@ -27,7 +29,7 @@ public class MotorOutputs {
         0-1 scale for doubles, 0 - 2^16-1 for nominal
     */
 
-    public int[] motorOutputs;
+    private int[] motorOutputs;
 
     public MotorOutputs() {
         this.motorOutputs = new int[6];
@@ -42,6 +44,13 @@ public class MotorOutputs {
         }
     }
 
+   public MotorOutputs(double[] m) {
+       this.motorOutputs = new int[6];
+       for(int i = 0; i < m.length; i++) {
+           this.motorOutputs[i] = (int)(1000*m[i]);
+       }
+   }
+
     public double get(MotorOutputs.Motor motor) {
         return constrainInput(this.motorOutputs[motor.ordinal()]);
     }
@@ -54,6 +63,10 @@ public class MotorOutputs {
         } else {
             return input;
         }
+    }
+
+    public int[] getMotorOutputs() {
+        return this.motorOutputs;
     }
 
 }

@@ -17,12 +17,14 @@ import std_msgs.Int32;
 public class SystemNode extends AbstractNodeMain {
     private int status_system;
     private int status_system_prev;
+    private int status_system_desired;
 
     private Time time_current;
     private int status_timeouts;
+    private int status_fault_nodes;
 
     private Time time_state_transition;
-    private Duration timeout_state_transition_leeway= new Duration(0.04);
+    private Duration timeout_initial_leeway = new Duration(0.5);
 
     private Time time_status_communication;
     private Time time_status_cameras;
@@ -47,6 +49,15 @@ public class SystemNode extends AbstractNodeMain {
     private int status_parameters;
 
 
+    public int getCurrentState(){
+        return status_system;
+    }
+
+    public boolean setDesiredState(int _status_system_desired){
+        status_system_desired = _status_system_desired;
+        return true;
+    }
+
     @Override
     public GraphName getDefaultNodeName() {
         return GraphName.of("SystemNode");
@@ -65,7 +76,6 @@ public class SystemNode extends AbstractNodeMain {
         final Subscriber<std_msgs.Int32> status_parameters_sub = connectedNode.newSubscriber("status_communication", Int32._TYPE);
         // Define data connections
 
-
         // Main cancelable loop
         connectedNode.executeCancellableLoop(new CancellableLoop() {
             std_msgs.Int32 status_system_msg = status_system_pub.newMessage();
@@ -80,7 +90,7 @@ public class SystemNode extends AbstractNodeMain {
                 time_status_planner = connectedNode.getCurrentTime();
                 time_status_controller = connectedNode.getCurrentTime();
                 time_status_parameters = connectedNode.getCurrentTime();
-                status_system = -1;
+                status_system = 0;
                 status_system_prev = -1;
             }
 
@@ -90,76 +100,133 @@ public class SystemNode extends AbstractNodeMain {
 
                 // Verify timeouts of all nodes
                 if(time_current.compareTo(time_status_communication.add(timeout_status_communication)) == 1){
-                    //Log.e("ROV_ERROR", "System node: Timeout node communication");
+                    if(status_timeouts == 0){Log.e("ROV_ERROR", "System node: Timeout node communication");}
                     status_timeouts |= 1;
                 } else { status_timeouts &= ~1;}
                 if(time_current.compareTo(time_status_embedded.add(timeout_status_embedded)) == 1){
-                    //Log.e("ROV_ERROR", "System node: Timeout node embedded");
+                    if(status_timeouts == 0){Log.e("ROV_ERROR", "System node: Timeout node embedded");}
                     status_timeouts |= 2;
                 } else { status_timeouts &= ~2;}
                 if(time_current.compareTo(time_status_cameras.add(timeout_status_cameras)) == 1){
-                    //Log.e("ROV_ERROR", "System node: Timeout node camera");
+                    if(status_timeouts == 0){Log.e("ROV_ERROR", "System node: Timeout node camera");}
                     status_timeouts |= 4;
                 } else { status_timeouts &= ~4;}
                 if(time_current.compareTo(time_status_localization.add(timeout_status_localization)) == 1){
-                    //Log.e("ROV_ERROR", "System node: Timeout node localization");
+                    if(status_timeouts == 0){Log.e("ROV_ERROR", "System node: Timeout node localization");}
                     status_timeouts |= 8;
                 } else { status_timeouts &= ~8;}
                 if(time_current.compareTo(time_status_planner.add(timeout_status_planner)) == 1){
-                    //Log.e("ROV_ERROR", "System node: Timeout node planner");
+                    if(status_timeouts == 0){Log.e("ROV_ERROR", "System node: Timeout node planner");}
                     status_timeouts |= 16;
                 } else { status_timeouts &= ~16;}
                 if(time_current.compareTo(time_status_controller.add(timeout_status_controller)) == 1){
-                    //Log.e("ROV_ERROR", "System node: Timeout node controller");
+                    if(status_timeouts == 0){Log.e("ROV_ERROR", "System node: Timeout node controller");}
                     status_timeouts |= 32;
                 } else { status_timeouts &= ~32;}
                 if(time_current.compareTo(time_status_parameters.add(timeout_status_parameters)) == 1){
-                    //Log.e("ROV_ERROR", "System node: Timeout node parameters");
+                    if(status_timeouts == 0){Log.e("ROV_ERROR", "System node: Timeout node parameters");}
                     status_timeouts |= 64;
                 } else { status_timeouts &= ~64;}
 
                 // Verify status of all nodes
-
-
+                status_fault_nodes |=    (status_communication&126);
+                status_fault_nodes |= 2 *(status_embedded&126);
+                status_fault_nodes |= 4 *(status_cameras&126);
+                status_fault_nodes |= 8 *(status_localization&126);
+                status_fault_nodes |= 16*(status_planner&126);
+                status_fault_nodes |= 32*(status_controller&126);
+                status_fault_nodes |= 64*(status_parameters&126);
 
                 // State machine
+                time_current = connectedNode.getCurrentTime();
                 switch (status_system){
-                    case 0:
+                    case -1: // Error
+                        // To idle
+                        if((status_fault_nodes == 0)||(status_timeouts == 0)){
+                            status_system = 1;
+                        }
+                        break;
+                    case 0: // Startup
                         // On entry
                         if(status_system != status_system_prev){
-
+                            time_state_transition = connectedNode.getCurrentTime();
                         }
-
-                        // On exit
-                        if(status_system != 0){
-
+                        // Transitions
+                        // To idle
+                        if((status_fault_nodes == 0)||(status_timeouts == 0)){
+                            status_system = 1;
+                        }
+                        // To error (if an error occurs after leeway or error requested)
+                        if(((time_current.compareTo(time_state_transition.add(timeout_initial_leeway)) == 1)
+                                &&((status_fault_nodes > 0)||(status_timeouts > 0)))
+                                || (status_system_desired == -1)){
+                            status_system = -1;
                         }
                         break;
-                    case 1:
-
+                    case 1: // Idle
+                        // Transitions
+                        // To pose lock
+                        if(status_system_desired == 2){
+                            status_system = 2;
+                        }
+                        // To error
+                        if(((status_fault_nodes > 0)||(status_timeouts > 0))||(status_system_desired == -1)){
+                            status_system = -1;
+                        }
                         break;
-                    case 2:
-
+                    case 2: // Pose Lock
+                        // Transitions
+                        // To arm
+                        if(((status_localization&128) == 0)&&((status_system_desired == 3)||((status_system_desired == 4)))){
+                            status_system = 3;
+                        }
+                        // To error
+                        if(((status_fault_nodes > 0)||(status_timeouts > 0))||(status_system_desired == -1)){
+                            status_system = -1;
+                        }
                         break;
-                    case 3:
-
+                    case 3: // Arm
+                        if(((status_embedded&128) == 0)&&(status_system_desired == 4)){
+                            status_system = 4;
+                        }
+                        // To error
+                        if(((status_fault_nodes > 0)||(status_timeouts > 0))||(status_system_desired == -1)){
+                            status_system = -1;
+                        }
                         break;
-                    case 4:
-
+                    case 4: // Position Hold
+                        if(status_system_desired == 5){
+                            status_system = 5;
+                        }
+                        // To error
+                        if(((status_fault_nodes > 0)||(status_timeouts > 0))||(status_system_desired == -1)){
+                            status_system = -1;
+                        }
                         break;
-                    case 5:
+                    case 5: // Run
 
+                        // To error
+                        if(((status_fault_nodes > 0)||(status_timeouts > 0))||(status_system_desired == -1)){
+                            status_system = -1;
+                        }
                         break;
                     default:
+                        // On entry
+                        if(status_system != status_system_prev){}
 
+                        // Transitions
+
+                        // On exit
+                        if(status_system != 0){}
                         break;
                 }
+                status_system_prev = status_system;
 
 
                 // Publish system state
                 status_system_msg.setData(status_system);
                 status_system_pub.publish(status_system_msg);
-                Thread.sleep(20);
+                Thread.sleep(2000);
             }
         });
 

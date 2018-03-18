@@ -9,13 +9,13 @@ import android.util.Log;
 import com.felhr.usbserial.UsbSerialDevice;
 
 /**
- * Created by Nick Skupien on 3/9/2018.
+ * Created by Isaiah on 3/9/2018.
  */
 
 // Q when sending the motor data
 // q when requesting to get new data
 
-public class AsyncArduinoWrite extends AsyncTask<Object, Void, Void>
+public class SerialWrite extends AsyncTask<Object, Void, Void>
 {
 
     @Override
@@ -25,23 +25,23 @@ public class AsyncArduinoWrite extends AsyncTask<Object, Void, Void>
 
     @Override
     protected Void doInBackground(Object... params) {
-    //this method will be running on background thread so don't update UI frome here
+    //this method will be running on background thread so don't update UI from here
     //do your long running http tasks here,you dont want to pass argument and u can access the parent class' variable url over here
 
         if(params.length != 2) {
-            System.out.println("Error: there were too few parameters in the async write call");
+            Log.d("ROV_ERROR","Serial Write: There were too few parameters in the async write call");
             return null;
         }
 
         UsbSerialDevice serial = (UsbSerialDevice) params[0];
-        byte[] buf = ((String)params[1]).getBytes();
+        byte[] buf = (byte[]) params[1];
 
         if(serial != null) {
             serial.write(buf);
         } else {
-            Log.d("ARDUINO:", "serial is null");
+            Log.d("ROV_ERROR", "Serial Write: Serial was found to be null");
         }
-;       return null;
+        return null;
     }
 
     @Override
