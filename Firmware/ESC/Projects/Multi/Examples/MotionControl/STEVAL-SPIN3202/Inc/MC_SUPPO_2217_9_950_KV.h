@@ -152,8 +152,8 @@
 
 #define LF_TIM_uS_TO_STEP(time) 				((int)(time/(1E6/(SYSCLOCK_FREQUENCY / (LF_TIMX_PSC+1)))))
 
-#define HALL_RISE_TIME				(64) // uS 
-#define HALL_FALL_TIME				(26) // uS 
+#define HALL_RISE_TIME				(54) // uS 
+#define HALL_FALL_TIME				(20) // uS 
 
 #define HALL_OFFSET_HL				LF_TIM_uS_TO_STEP(HALL_RISE_TIME-HALL_FALL_TIME)
 #define HALL_OFFSET_LH				LF_TIM_uS_TO_STEP(HALL_FALL_TIME-HALL_RISE_TIME)

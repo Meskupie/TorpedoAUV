@@ -1101,7 +1101,8 @@ void MC_TIMx_SixStep_CommutationEvent()
   H3 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2);    
   hallStatus = (H1 << 2) | (H2 << 1) | H3; 
 	
-
+		HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
 	
 	if(SIXSTEP_parameters.speed_fdbk >0) //FORWARD
 	{
