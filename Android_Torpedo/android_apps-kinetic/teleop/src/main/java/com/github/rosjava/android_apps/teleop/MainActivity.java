@@ -9,6 +9,7 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.Menu;
@@ -37,10 +38,11 @@ import Autonomy.Localization.LocalizationNode;
 import Autonomy.PlannerNode;
 import Communication.CommunicationNode;
 import Communication.MessageManager;
+import Communication.ReedSwitchManager;
 import Communication.SerialWrite;
 import Communication.USBDeviceWrapper;
 
-	public class MainActivity extends RosAppActivity implements View.OnGenericMotionListener{
+	public class MainActivity extends RosAppActivity {
 		public static final String TAG = "DEBUG_MSG";
 		public static final String TAG_LOG = "ROV_LOG";
 		public static final String TAG_ERROR = "ROV_ERROR";
@@ -75,8 +77,8 @@ import Communication.USBDeviceWrapper;
 		private TextView batterySoc;
 		private LinearLayout viewContainer;
 
-		// Input controller
-		private View joystick;
+		private ReedSwitchManager reedSwitchManager;
+
 
 		public MainActivity(){
 			// The RosActivity constructor configures the notification title and ticker messages.
@@ -148,8 +150,8 @@ import Communication.USBDeviceWrapper;
 				Log.d("ROV_ERROR", "Found too many input devices");
 			}
 
-			joystick = new View(this);
-			joystick.setOnGenericMotionListener(this);
+			// Setup Reed switch manager
+			this.reedSwitchManager = new ReedSwitchManager(button_nav_top, button_nav_middle, button_nav_bottom);
 		}
 
 
@@ -162,78 +164,19 @@ import Communication.USBDeviceWrapper;
 				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
 				java.net.InetAddress local_network_address = socket.getLocalAddress();
 				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(system_node,
-						nodeConfiguration.setNodeName("rov/system_node"));
+				NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+
+				// Start all nodes
+				nodeMainExecutor.execute(system_node, nodeConfiguration.setNodeName("rov/system_node"));
+				nodeMainExecutor.execute(communication_node, nodeConfiguration.setNodeName("rov/communication_node"));
+				nodeMainExecutor.execute(localization_node,	nodeConfiguration.setNodeName("rov/localization_node"));
+				nodeMainExecutor.execute(planner_node, nodeConfiguration.setNodeName("rov/planner_node"));
+				nodeMainExecutor.execute(controller_node, nodeConfiguration.setNodeName("rov/controller_node"));
+				nodeMainExecutor.execute(parameters_node, nodeConfiguration.setNodeName("rov/parameters_node"));
 			} catch (IOException e) {
 				System.out.println("Socket error: " + e.getMessage());
 			}
 
-			// Start Communication Node
-			try {
-				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-				java.net.InetAddress local_network_address = socket.getLocalAddress();
-				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(communication_node,
-						nodeConfiguration.setNodeName("rov/communication_node"));
-			} catch (IOException e) {
-				System.out.println("Socket error: " + e.getMessage());
-			}
-
-			// Start Localization Node
-			try {
-				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-				java.net.InetAddress local_network_address = socket.getLocalAddress();
-				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(localization_node,
-						nodeConfiguration.setNodeName("rov/localization_node"));
-			} catch (IOException e) {
-				System.out.println("Socket error: " + e.getMessage());
-			}
-
-			// Start Planner Node
-			try {
-				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-				java.net.InetAddress local_network_address = socket.getLocalAddress();
-				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(planner_node,
-						nodeConfiguration.setNodeName("rov/planner_node"));
-			} catch (IOException e) {
-				System.out.println("Socket error: " + e.getMessage());
-			}
-
-			// Start Controller Node
-			try {
-				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-				java.net.InetAddress local_network_address = socket.getLocalAddress();
-				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(controller_node,
-						nodeConfiguration.setNodeName("rov/controller_node"));
-			} catch (IOException e) {
-				System.out.println("Socket error: " + e.getMessage());
-			}
-
-			// Start Parameters Node
-			try {
-				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-				java.net.InetAddress local_network_address = socket.getLocalAddress();
-				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(parameters_node,
-						nodeConfiguration.setNodeName("rov/parameters_node"));
-			} catch (IOException e) {
-				System.out.println("Socket error: " + e.getMessage());
-			}
 
 			// Set parameters
 			parameters_node.setDynamics("rough_controller_data.txt");
@@ -281,13 +224,7 @@ import Communication.USBDeviceWrapper;
 				if (arg0.length == message_manager.msg_smc_sensors.size_bytes) {
 					message_manager.msg_smc_sensors.parseData(arg0);
 					communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);
-					if(message_manager.msg_smc_sensors.switch_front){
-//						if(switch_front_prev == false){
-//							button_nav_top.performClick();
-//						}else{
-//
-//						}
-					}
+		//			reedSwitchManager.updateSwitchState(communication_node.getReedFront(), communication_node.getReedCenter(), communication_node.getReedRear());
 				} else {
 					Log.d(TAG_ERROR, "First cam callback got an invalid number of bytes: " + arg0.length);
 				}
@@ -448,7 +385,7 @@ import Communication.USBDeviceWrapper;
 		}
 
 		@Override
-		public boolean onGenericMotion(View v, MotionEvent event) {
+		public boolean dispatchGenericMotionEvent(final MotionEvent event) {
 			Log.d(TAG_LOG,"EVENT!");
 			// Check that the event came from a game controller
 			if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
@@ -512,6 +449,7 @@ import Communication.USBDeviceWrapper;
 			button_nav_bottom.setText(R.string.back);
 			pageState = Page_State.ENABLE_RUN;
             viewContainer.setBackgroundResource(R.drawable.outline_bg);
+
 
             resetButtonHandler();
 
