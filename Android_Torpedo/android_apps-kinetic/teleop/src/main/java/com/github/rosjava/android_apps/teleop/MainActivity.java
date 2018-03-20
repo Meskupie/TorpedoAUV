@@ -77,8 +77,9 @@ import Communication.USBDeviceWrapper;
 		private TextView batterySoc;
 		private LinearLayout viewContainer;
 
-		private ReedSwitchManager reedSwitchManager;
-
+		private ReedSwitchManager frontReedSwitch;
+		private ReedSwitchManager centerReedSwitch;
+		private ReedSwitchManager rearReedSwitch;
 
 		public MainActivity(){
 			// The RosActivity constructor configures the notification title and ticker messages.
@@ -113,6 +114,11 @@ import Communication.USBDeviceWrapper;
 			currentDraw = (TextView) findViewById(R.id.current_info_value);
 			batterySoc = (TextView) findViewById(R.id.soc_info_value);
 			viewContainer = (LinearLayout) findViewById(R.id.view_container);
+
+			// Setup Reed switch manager
+			this.frontReedSwitch = new ReedSwitchManager(button_nav_top);
+			this.centerReedSwitch = new ReedSwitchManager(button_nav_middle);
+			this.rearReedSwitch = new ReedSwitchManager(button_nav_bottom);
 
 			onBeginCourseRun();
 
@@ -150,8 +156,8 @@ import Communication.USBDeviceWrapper;
 				Log.d("ROV_ERROR", "Found too many input devices");
 			}
 
-			// Setup Reed switch manager
-			this.reedSwitchManager = new ReedSwitchManager(button_nav_top, button_nav_middle, button_nav_bottom);
+
+
 		}
 
 
@@ -224,7 +230,6 @@ import Communication.USBDeviceWrapper;
 				if (arg0.length == message_manager.msg_smc_sensors.size_bytes) {
 					message_manager.msg_smc_sensors.parseData(arg0);
 					communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);
-		//			reedSwitchManager.updateSwitchState(communication_node.getReedFront(), communication_node.getReedCenter(), communication_node.getReedRear());
 				} else {
 					Log.d(TAG_ERROR, "First cam callback got an invalid number of bytes: " + arg0.length);
 				}
@@ -429,10 +434,18 @@ import Communication.USBDeviceWrapper;
                             onEnableRun();
                         }
                     });
+                    frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onEnableRun();
+						}
+					});
 
                     button_nav_middle.setOnClickListener(null);
+                    centerReedSwitch.setOnClickListener(null);
 
                     button_nav_bottom.setOnClickListener(null);
+                    rearReedSwitch.setOnClickListener(null);
                 }
             }, 200);
         }
@@ -452,6 +465,8 @@ import Communication.USBDeviceWrapper;
 
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
+
+            	// HANDLER FOR BUTTON CLICKS
                 @Override
                 public void run() {
                     button_nav_middle.setOnClickListener(new View.OnClickListener() {
@@ -498,7 +513,47 @@ import Communication.USBDeviceWrapper;
                         }
                     });
 
-                    button_nav_bottom.setOnClickListener(new View.OnClickListener() {
+                    //SAME HANDLER FOR REED SWTICHES
+					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							Handler enableClick = new Handler();
+							enableClick.postDelayed(new Runnable() {
+								@Override
+								public void run() {
+									frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+										@Override
+										public void onTouch(View v, MotionEvent event) {
+
+											switch (event.getAction()) {
+												case MotionEvent.ACTION_DOWN:
+													break;
+												case MotionEvent.ACTION_UP:
+													onEnableRun();
+													break;
+											}
+										}
+									});
+								}
+							}, 2000);
+
+							frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+								@Override
+								public void onTouch(View v, MotionEvent event) {
+									switch (event.getAction()) {
+										case MotionEvent.ACTION_DOWN:
+											onWaitingForLock();
+											break;
+										case MotionEvent.ACTION_UP:
+											onEnableRun();
+											break;
+									}
+								}
+							});
+						}
+					});
+
+                    rearReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             onBeginCourseRun();
@@ -519,23 +574,37 @@ import Communication.USBDeviceWrapper;
 			viewContainer.setBackgroundResource(R.drawable.outline_bg);
 
 			button_nav_bottom.setOnClickListener(null);
+			rearReedSwitch.setOnClickListener(null);
 
             button_nav_top.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
 
-                    switch (event.getAction()) {
-                        case MotionEvent.ACTION_DOWN:
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            onEnableRun();
-                            break;
-                    }
+					switch (event.getAction()) {
+						case MotionEvent.ACTION_DOWN:
+							break;
+						case MotionEvent.ACTION_UP:
+							onEnableRun();
+							break;
+					}
 
-                    return true;
-                }
-            });
+					return true;
+				}
+			});
 
+			frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+				@Override
+				public void onTouch(View v, MotionEvent event) {
+
+					switch (event.getAction()) {
+						case MotionEvent.ACTION_DOWN:
+							break;
+						case MotionEvent.ACTION_UP:
+							onEnableRun();
+							break;
+					}
+				}
+			});
             //Testing to force view change
 //            Handler handler2 = new Handler();
 //            handler2.postDelayed(new Runnable() {
@@ -558,8 +627,10 @@ import Communication.USBDeviceWrapper;
 			viewContainer.setBackgroundResource(R.drawable.outline_bg_green);
 
 			button_nav_middle.setOnClickListener(null);
-
 			button_nav_bottom.setOnClickListener(null);
+
+			centerReedSwitch.setOnClickListener(null);
+			rearReedSwitch.setOnClickListener(null);
 
 			//Testing to force view change
 //            Handler handler = new Handler();
@@ -595,6 +666,13 @@ import Communication.USBDeviceWrapper;
                             resetButtonHandler();
                         }
                     });
+					frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onRunning();
+							resetButtonHandler();
+						}
+					});
 
                     button_nav_middle.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -602,6 +680,12 @@ import Communication.USBDeviceWrapper;
                             onBeginCourseRun();
                         }
                     });
+					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
 
                     button_nav_bottom.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -609,6 +693,12 @@ import Communication.USBDeviceWrapper;
                             onBeginCourseRun();
                         }
                     });
+					rearReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
                 }
             }, 200);
         }
@@ -635,6 +725,12 @@ import Communication.USBDeviceWrapper;
                             onBeginCourseRun();
                         }
                     });
+					frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
 
                     button_nav_middle.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -642,6 +738,12 @@ import Communication.USBDeviceWrapper;
                             onBeginCourseRun();
                         }
                     });
+					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
 
                     button_nav_bottom.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -649,6 +751,12 @@ import Communication.USBDeviceWrapper;
                             onBeginCourseRun();
                         }
                     });
+					rearReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
                 }
             }, 200);
 
@@ -667,6 +775,13 @@ import Communication.USBDeviceWrapper;
             button_nav_top.setOnTouchListener(null);
             button_nav_middle.setOnTouchListener(null);
             button_nav_bottom.setOnTouchListener(null);
+
+			frontReedSwitch.setOnClickListener(null);
+			centerReedSwitch.setOnClickListener(null);
+			rearReedSwitch.setOnClickListener(null);
+			frontReedSwitch.setOnTouchListener(null);
+			centerReedSwitch.setOnTouchListener(null);
+			rearReedSwitch.setOnTouchListener(null);
         }
 
 	}
