@@ -105,6 +105,7 @@ extern ESC_Struct ESC[];
 
 
 
+
 Adafruit_BNO055 IMU = Adafruit_BNO055();
 BQ34110 gasGauge = BQ34110();
 
@@ -185,7 +186,8 @@ void loop()
 
 ////    printESCState(ESCGetStatus(&ESC[0]));
     
-   // printStatusStruct(ESCGetStatusStruct(&ESC[0]));
+    
+    printStatusStruct(ESC_Fast_COMM(&ESC[0],ESC[0].thrustSetPoint_mN));
     
 //    Serial.print("ver: ");
 //    Serial.println(gasGauge.testDataWriteToFlash());
@@ -248,3 +250,4 @@ void loop()
     delay(100);
     
 }
+            

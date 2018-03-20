@@ -110,12 +110,12 @@ void SPI1_IRQHandler(void)
 
 void DMA1_Channel2_3_IRQHandler(void)
 {
-	#ifndef ROV
-  HAL_DMA_IRQHandler(huart.hdmatx);
-	#elseif 
+//	#ifndef ROV
+//  HAL_DMA_IRQHandler(huart.hdmatx);
+//	#elseif 
   HAL_DMA_IRQHandler(&hdma_spi1_rx);
   HAL_DMA_IRQHandler(&hdma_spi1_tx);
-	#endif
+	//#endif
 }
 
 void HAL_SPI_TxCpltCallback (SPI_HandleTypeDef * hspi)

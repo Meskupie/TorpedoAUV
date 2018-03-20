@@ -22,6 +22,7 @@
 #define SPI_COMMS_DELAY_MICROSECONDS 1000
 
 #define MINIMUM_SPEED (500)
+#define MINIMUM_THRUST (50)
 
 // Library header
 #include "ESC.h"
@@ -64,6 +65,7 @@ unsigned int ESC_init(ESC_Struct* ESC_hande,int pin)
 {
     ESC_hande->pin = pin;
     ESC_hande->direction = 0;
+    ESC_hande->thrustSetPoint_mN = 0;
     pinMode(pin, OUTPUT);
     digitalWrite(ESC_hande->pin, HIGH);
     
@@ -141,11 +143,11 @@ unsigned int ESCSetSpeed(ESC_Struct* ESC_hande,int16_t newSpeedSetPoint)
 }
 unsigned int ESCSetThrust(ESC_Struct* ESC_hande,int16_t thrustSetPoint_mN)
 {
-    digitalWrite(ESC_hande->pin, LOW);
-    SPI.transfer(ESC_CMD_SetThrust);
-    SPI.transfer(thrustSetPoint_mN>>8);
-    SPI.transfer(thrustSetPoint_mN & 0xff);
-    digitalWrite(ESC_hande->pin, HIGH);
+//    digitalWrite(ESC_hande->pin, LOW);
+//    SPI.transfer(ESC_CMD_SetThrust);
+//    SPI.transfer(thrustSetPoint_mN>>8);
+//    SPI.transfer(thrustSetPoint_mN & 0xff);
+//    digitalWrite(ESC_hande->pin, HIGH);
     ESC_hande->thrustSetPoint_mN =thrustSetPoint_mN;
     return 0;
 }
@@ -156,7 +158,9 @@ int16_t ESCGetThrust(ESC_Struct* ESC_hande)
     SPI.transfer(ESC_CMD_GetThrust);
     SPI.transfer(0);
     SPI.transfer(0);
+    digitalWrite(ESC_hande->pin, HIGH);
     delayMicroseconds(SPI_COMMS_DELAY_MICROSECONDS);
+    digitalWrite(ESC_hande->pin, LOW);
     thrustMeasured_mN = SPI.transfer(0);
     thrustMeasured_mN = thrustMeasured_mN<<8;
     thrustMeasured_mN = thrustMeasured_mN | SPI.transfer(0);
@@ -171,7 +175,9 @@ uint16_t ESCGetSpeed(ESC_Struct* ESC_hande)
     SPI.transfer(ESC_CMD_GetSpeed);
     SPI.transfer(0);
     SPI.transfer(0);
+    digitalWrite(ESC_hande->pin, HIGH);
     delayMicroseconds(SPI_COMMS_DELAY_MICROSECONDS);
+    digitalWrite(ESC_hande->pin, LOW);
     speed = SPI.transfer(0);
     speed = speed<<8;
     speed = speed | SPI.transfer(0);
@@ -186,7 +192,9 @@ uint16_t ESCGetCurrent(ESC_Struct* ESC_hande)
     SPI.transfer(ESC_CMD_GetCurrent);
     SPI.transfer(0);
     SPI.transfer(0);
+    digitalWrite(ESC_hande->pin, HIGH);
     delayMicroseconds(SPI_COMMS_DELAY_MICROSECONDS);
+    digitalWrite(ESC_hande->pin, LOW);
     current = SPI.transfer(0);
     current = current<<8;
     current = current | SPI.transfer(0);
@@ -223,7 +231,10 @@ unsigned int ESCGetStatus(ESC_Struct* ESC_hande )
     SPI.transfer(ESC_CMD_GetRunState);
     SPI.transfer(0);
     SPI.transfer(0);
+    digitalWrite(ESC_hande->pin, HIGH);
     delayMicroseconds(SPI_COMMS_DELAY_MICROSECONDS);
+    digitalWrite(ESC_hande->pin, LOW);
+    
     int id = SPI.transfer(0);
     digitalWrite(ESC_hande->pin, HIGH);
     return id;
@@ -235,7 +246,9 @@ ESC_StatusStruct ESCGetStatusStruct(ESC_Struct* ESC_hande )
     SPI.transfer(ESC_CMD_GetStatusStruct);
     SPI.transfer(0);
     SPI.transfer(0);
+    digitalWrite(ESC_hande->pin, HIGH);
     delayMicroseconds(SPI_COMMS_DELAY_MICROSECONDS);
+    digitalWrite(ESC_hande->pin, LOW);
     for (int i = 0;i<sizeof(newData); i++)
     {
         newData.stuctRaw[i] = SPI.transfer(0);
@@ -259,7 +272,37 @@ unsigned int ESCReset(ESC_Struct* ESC_hande)
     return 0;
 }
 
-
+ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande,int16_t thrustSetPoint_mN)
+{
+    ESC_hande->thrustSetPoint_mN =thrustSetPoint_mN;
+    ESC_StatusStructUnion newStatusStruct;
+    ESC_CommandStructUnion newCommandStruct;
+    newCommandStruct.commandStruct.comms_key = COMM_KEY;
+    if ((thrustSetPoint_mN>MINIMUM_THRUST) || thrustSetPoint_mN<(-MINIMUM_THRUST))
+    {
+        newCommandStruct.commandStruct.state = 1;
+        newCommandStruct.commandStruct.thrust_mN = thrustSetPoint_mN;
+        ESC_hande->thrustSetPoint_mN =thrustSetPoint_mN;
+    }
+    else
+    {
+        newCommandStruct.commandStruct.state = 0;
+        newCommandStruct.commandStruct.thrust_mN = 0;
+        ESC_hande->thrustSetPoint_mN =0;
+    }
+    digitalWrite(ESC_hande->pin, LOW);
+    for (int i = 0;i<sizeof(newStatusStruct); i++)
+    {
+        newStatusStruct.stuctRaw[i] = SPI.transfer(newCommandStruct.stuctRaw[i]);
+    }
+    digitalWrite(ESC_hande->pin, HIGH);
+    ESC_hande->currentMeasured = newStatusStruct.statusStruct.currentMeasured;
+    ESC_hande->runState = newStatusStruct.statusStruct.runState;
+    ESC_hande->speedSetPoint = newStatusStruct.statusStruct.speedSetPoint;
+    ESC_hande->direction = newStatusStruct.statusStruct.direction;
+    ESC_hande->speedMeasured = newStatusStruct.statusStruct.speedMeasured;
+    return newStatusStruct.statusStruct;
+}
 
 
 
