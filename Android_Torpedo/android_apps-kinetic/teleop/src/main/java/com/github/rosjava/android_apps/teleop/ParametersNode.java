@@ -48,6 +48,7 @@ public class ParametersNode extends AbstractNodeMain {
     private boolean update_dynamics = false;
     private boolean update_map = false;
     private boolean update_run_mode = false;
+    private boolean update_teleop_style = false;
 
 
     public ParametersNode(){}
@@ -76,6 +77,15 @@ public class ParametersNode extends AbstractNodeMain {
             return false;
         }
         update_run_mode = true;
+        return true;
+    }
+
+    public boolean setTeleopStyle(int _mode){
+        if(!params.updateTeleopStyle(_mode)){
+            Log.e("ROV_ERROR", "Parameters node: Failure updating teleop style");
+            return false;
+        }
+        update_teleop_style = true;
         return true;
     }
 
@@ -127,6 +137,10 @@ public class ParametersNode extends AbstractNodeMain {
                     if (update_run_mode){
                         param_tree.set("/run_mode", params.getRunMode());
                         update_run_mode = false;
+                    }
+                    if (update_teleop_style){
+                        param_tree.set("/teleop_style", params.getTeleopStyle());
+                        update_teleop_style = false;
                     }
 
                 }

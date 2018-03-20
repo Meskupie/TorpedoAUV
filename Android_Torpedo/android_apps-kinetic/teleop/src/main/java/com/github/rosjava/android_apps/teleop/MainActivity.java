@@ -386,22 +386,19 @@ import Communication.USBDeviceWrapper;
 
 		@Override
 		public boolean dispatchGenericMotionEvent(final MotionEvent event) {
-			Log.d(TAG_LOG,"EVENT!");
 			// Check that the event came from a game controller
 			if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
 					&& event.getAction() == MotionEvent.ACTION_MOVE) {
-//					InputDevice mInputDevice = event.getDevice();
+//					InputDevice mInputDevice = event.getDevice();it l
 //					mInputDevice.getMotionRange(MotionEvent.AXIS_X, event.getSource()).getRange();
 
 				SimpleMatrix joy_state = new SimpleMatrix(6,1);
-				joy_state.set(0,0,event.getAxisValue(MotionEvent.AXIS_X));
-				joy_state.set(1,0,event.getAxisValue(MotionEvent.AXIS_Y));
-				joy_state.set(2,0,event.getAxisValue(MotionEvent.AXIS_Z));
-				joy_state.set(3,0,event.getAxisValue(MotionEvent.AXIS_RX));
-				joy_state.set(4,0,event.getAxisValue(MotionEvent.AXIS_RY));
-				joy_state.set(5,0,event.getAxisValue(MotionEvent.AXIS_RZ));
-
-				Log.d(TAG_LOG,"Joystick State, X:"+joy_state.get(0)+" Y:"+joy_state.get(1)+" Z:"+joy_state.get(2)+" RX"+joy_state.get(3)+" RY"+joy_state.get(4)+" RZ"+joy_state.get(5));
+				joy_state.set(0,0,(-1)*event.getAxisValue(MotionEvent.AXIS_Y));
+				joy_state.set(1,0,( 1)*event.getAxisValue(MotionEvent.AXIS_X));
+				joy_state.set(2,0,( 1)*event.getAxisValue(MotionEvent.AXIS_Z));
+				joy_state.set(3,0,(-1)*event.getAxisValue(MotionEvent.AXIS_RY));
+				joy_state.set(4,0,( 1)*event.getAxisValue(MotionEvent.AXIS_RX));
+				joy_state.set(5,0,( 1)*event.getAxisValue(MotionEvent.AXIS_RZ));
 
 				return true;
 			}
