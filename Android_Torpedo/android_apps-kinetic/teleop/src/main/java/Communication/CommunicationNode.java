@@ -26,6 +26,10 @@ public class CommunicationNode extends AbstractNodeMain {
     private int status_system;
     private int status_communication;
 
+    private boolean switch_front = false;
+    private boolean switch_center = false;
+    private boolean switch_rear = false;
+
     private Time time_current;
     private Time time_input_thrust;
     private Time time_status_system;
@@ -254,6 +258,16 @@ public class CommunicationNode extends AbstractNodeMain {
         embedded_battery_voltage_pub.publish(embedded_battery_voltage_msg);
         embedded_battery_current_pub.publish(embedded_battery_current_msg);
         embedded_reed_switches_pub.publish(embedded_reed_switches_msg);
+
+        //set up reed switch values
+        switch_front = message.switch_front;
+        switch_center = message.switch_center;
+        switch_rear = message.switch_rear;
+
+        //test if onClicks/onTouches should activate
+
+
+
     }
 
     public void frontCameraPub(MessageManager.MsgCameraTargets message){
@@ -271,6 +285,18 @@ public class CommunicationNode extends AbstractNodeMain {
 
     public void rearCameraPub(MessageManager.MsgCameraTargets message){
 
+    }
+
+    public boolean getReedFront() {
+        return this.switch_front;
+    }
+
+    public boolean getReedCenter() {
+        return this.switch_center;
+    }
+
+    public boolean getReedRear() {
+        return this.switch_rear;
     }
 
     // Mutators
