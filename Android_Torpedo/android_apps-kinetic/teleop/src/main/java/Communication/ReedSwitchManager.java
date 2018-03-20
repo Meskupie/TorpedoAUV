@@ -1,6 +1,7 @@
 package Communication;
 
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -10,52 +11,71 @@ import android.view.View;
 
 public class ReedSwitchManager {
 
-    public boolean front;
-    public boolean center;
-    public boolean rear;
-
-    public boolean frontPrev;
-    public boolean centerPrev;
-    public boolean rearPrev;
-
-    private View topNav;
-    private View centerNav;
-    private View bottomNav;
-
-    public ReedSwitchManager(View topNav, View centerNav, View bottomNav) {
-        this.topNav = topNav;
-        this.centerNav = centerNav;
-        this.bottomNav = bottomNav;
+    public interface OnClickListener {
+        void onClick(View view);
     }
 
-    public void updateSwitchStates(boolean front, boolean center, boolean rear) {
-        this.updateSwitchState(front, frontPrev, topNav);
-        this.updateSwitchState(center, centerPrev, centerNav);
-        this.updateSwitchState(rear, rearPrev, bottomNav );
-
-
-
+    public interface OnTouchListener {
+        void onTouch(View view, MotionEvent motionEvent);
     }
 
-    private void updateSwitchState(boolean curr, boolean prev, View view) {
-        // Obtain MotionEvent object
-        long downTime = SystemClock.uptimeMillis();
-        long eventTime = SystemClock.uptimeMillis() + 20;
-        float x = 0.0f;
-        float y = 0.0f;
+    private boolean currState;
+    private boolean prevState;
 
-        // List of meta states found here: developer.android.com/reference/android/view/KeyEvent.html#getMetaState()
-        int metaState = 0;
-        MotionEvent motionEvent = MotionEvent.obtain(
-                downTime,
-                eventTime,
-                MotionEvent.ACTION_UP,
-                x,
-                y,
-                metaState
-        );
+    private View navButton;
 
-        // Dispatch touch event to view
-        //view.dispatchTouchEvent(motionEvent);
+    private OnTouchListener onTouchListener;
+    private OnClickListener onClickListener;
+
+    public ReedSwitchManager(View navButton) {
+        this.navButton = navButton;
+
+        this.onClickListener = null;
+        this.onTouchListener = null;
+    }
+
+    public void updateSwitchStates(boolean newState) {
+        this.currState = newState;
+        MotionEvent motionEvent;
+
+        // check if switches were clicked
+        if(this.onClickListener != null) {
+            if (this.currState && !this.prevState) {
+                this.onClickListener.onClick(navButton);
+            }
+        } else {
+            Log.d("Listener Error", " onClick listener for navigation buttons never set!");
+        }
+
+        // set on touch
+        if(this.onTouchListener != null) {
+            boolean released = (this.prevState && !this.currState);
+            boolean clicked = (this.currState && !this.prevState);
+            if(released || clicked) {
+                int frontMotionEvent = 0;
+
+                if (released) {
+                    frontMotionEvent = MotionEvent.ACTION_UP;
+                } else if (clicked) {
+                    frontMotionEvent = MotionEvent.ACTION_DOWN;
+                }
+
+                motionEvent = MotionEvent.obtain(System.currentTimeMillis(), System.currentTimeMillis(), frontMotionEvent, 0, 0, 0);
+                this.onTouchListener.onTouch(this.navButton, motionEvent);
+            }
+        } else {
+            Log.d("Listener Error", " OnTouch listener for navigation buttons never set!");
+        }
+
+        // update prev state
+        this.prevState = this.currState;
+    }
+
+    public void setOnClickListener(OnClickListener oCL) {
+        this.onClickListener = oCL;
+    }
+
+    public void setOnTouchListener(OnTouchListener oTL) {
+        this.onTouchListener = oTL;
     }
 }
