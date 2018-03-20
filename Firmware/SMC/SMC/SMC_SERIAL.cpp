@@ -30,7 +30,7 @@ hostUpdateStruct_transmit_union txUnion;
 hostUpdateStruct_receive_union rxUnion;
 imu::Quaternion quat;
 
-
+extern MS5837 depthSensor;
 char queryType = 'X';
 int motor = 0;
 long speed = 0;
@@ -39,6 +39,7 @@ uint16_t current = 0;
 int8_t direction = 0;
 
 extern ESC_Struct ESC[];
+extern
 
 
 
@@ -318,6 +319,8 @@ void readSerialCommand() {
                 txUnion.statusStruct.swStateFront = swFront.updateButton();
                 txUnion.statusStruct.swStateCenter = swCenter.updateButton();
                 txUnion.statusStruct.swStateRear = swRear.updateButton();
+                depthSensor.readAsync();
+                txUnion.statusStruct.depth_m = depthSensor.depth_mm();
                 //ESC_Status_update_all();
                 txUnion.statusStruct.motorStatus0 = ESC[0].runState;
                 txUnion.statusStruct.motorStatus1 = ESC[1].runState;

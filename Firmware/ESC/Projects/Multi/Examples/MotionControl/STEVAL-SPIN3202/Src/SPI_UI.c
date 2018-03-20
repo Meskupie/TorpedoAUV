@@ -94,6 +94,12 @@ int16_t speedToThrust(int16_t speed)
 	thrust =  (int16_t)(0.0928 * (speedDub));
 	return thrust;
 }
+int16_t referenceToCurrent(int16_t reference)
+{
+    int32_t currentReferenceTHDS = (reference*1000)>>UPPER_OUT_SHIFT;
+    int currentSenseVoltage =  (2*OC_THRESHOLD-(((1000 -currentReferenceTHDS)*REFERENCE_PWM_HIGH_VOLTAGE)/REFERENCE_PWM_DIVIDER_RATIO));
+    return (((currentSenseVoltage*1000)/SENSE_GAIN)*1000)/SENSE_RESISTOR;
+}
 
 #ifdef FASTCOMM
 void SPI_Communication_Task()
@@ -103,7 +109,7 @@ void SPI_Communication_Task()
     statusStructUnion.statusStruct.runState = SIXSTEP_parameters.STATUS;
     statusStructUnion.statusStruct.direction = SIXSTEP_parameters.CW_CCW;
 	#ifndef VOLTAGE_MODE
-		statusStructUnion.statusStruct.currentMeasured = SIXSTEP_parameters.current_reference;
+		statusStructUnion.statusStruct.currentMeasured = referenceToCurrent(SIXSTEP_parameters.current_reference);
 	#endif
     HAL_SPI_TransmitReceive_DMA(&hspi1,statusStructUnion.stuctRaw,commandStructUnion.stuctRaw,sizeof(statusStructUnion));
     while (HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_BUSY_TX_RX);

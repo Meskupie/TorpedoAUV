@@ -85,6 +85,7 @@
 #include <utility/imumaths.h>
 #include "BQ34110.h"
 #include "debounce.h"
+#include "MS5837.h"
 
 
 
@@ -108,6 +109,8 @@ extern ESC_Struct ESC[];
 
 Adafruit_BNO055 IMU = Adafruit_BNO055();
 BQ34110 gasGauge = BQ34110();
+MS5837 depthSensor = MS5837();
+
 
 // Define variables and constants
 int currChar = 0;
@@ -161,6 +164,10 @@ void setup()
     // reed swich Init
     reedSwitchInit();
     
+    depthSensor.init();
+    depthSensor.read();
+    
+    
 }
 
 ESC_RUN_STATE lastState = STOP;
@@ -182,7 +189,7 @@ unsigned long lastTime = 0;
 void loop()
 {
 #ifdef MANUAL_CONTROL
-    printStatusStruct(ESC_Fast_COMM(&ESC[5]));
+    printStatusStruct(ESC_Fast_COMM(&ESC[4]));
     delay(20);
     
 #else

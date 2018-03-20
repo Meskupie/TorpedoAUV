@@ -56,6 +56,8 @@
 #include "BQ34110.h"
 #include "Adafruit_BNO055.h"
 #include "debounce.h"
+#include "MS5837.h"
+
 #ifndef SMC_SERIAL____FILEEXTENSION___
 ///
 /// @brief	Release
