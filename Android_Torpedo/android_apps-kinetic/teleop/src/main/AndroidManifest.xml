@@ -22,7 +22,7 @@
                 android:resource="@xml/device_filter" />
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN_FRAGMENT" />
+                <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
@@ -38,9 +38,6 @@
                 <action android:name="org.ros.android.NodeMainExecutorService" />
             </intent-filter>
         </service>
-        
-        <activity android:name=".FragmentBeginCourseRun"
-            android:label="Begin Course Run"
-            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
     </application>
 </manifest>
