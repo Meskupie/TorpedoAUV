@@ -10,6 +10,7 @@ import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.InputDevice;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -22,11 +23,13 @@ import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 import com.github.rosjava.android_remocons.common_tools.apps.RosAppActivity;
 
+import org.ejml.simple.SimpleMatrix;
 import org.ros.android.view.VirtualJoystickView;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import Autonomy.ControllerNode;
@@ -71,6 +74,9 @@ import Communication.USBDeviceWrapper;
 		private TextView currentDraw;
 		private TextView batterySoc;
 		private LinearLayout viewContainer;
+
+		// Input controller
+		private View joystick;
 
 		public MainActivity(){
 			// The RosActivity constructor configures the notification title and ticker messages.
@@ -122,16 +128,26 @@ import Communication.USBDeviceWrapper;
 			usb_device_smc = initializeSerial(usb_device_smc);
 			communication_node.setUSBSMC(usb_device_smc);
 
-			// Setup USB Front Cam
-			usb_device_first_cam = new USBDeviceWrapper("First Camera",0x0525,0xa4aa);
-			usb_device_first_cam.callback = usb_callback_first_cam;
-			usb_device_first_cam = initializeSerial(usb_device_first_cam);
+//			// Setup USB Front Cam
+//			usb_device_first_cam = new USBDeviceWrapper("First Camera",0x0525,0xa4aa);
+//			usb_device_first_cam.callback = usb_callback_first_cam;
+//			usb_device_first_cam = initializeSerial(usb_device_first_cam);
+//
+//			// Setup USB Rear Cam
+//			usb_device_second_cam = new USBDeviceWrapper("Second Camera",0x0525,0xa4aa);
+//			usb_device_second_cam.callback = usb_callback_second_cam;
+//			usb_device_second_cam = initializeSerial(usb_device_second_cam);
 
-			// Setup USB Rear Cam
-			usb_device_second_cam = new USBDeviceWrapper("Second Camera",0x0525,0xa4aa);
-			usb_device_second_cam.callback = usb_callback_second_cam;
-			usb_device_second_cam = initializeSerial(usb_device_second_cam);
-
+			// Setup Game Controller
+			ArrayList controllerIds = getGameControllerIds();
+			if(controllerIds.size() == 0){
+				Log.d("ROV_ERROR", "Could not find joystick device");
+			}else if(controllerIds.size() == 1){
+				Log.d(TAG_LOG, "Input device found with id: "+controllerIds.get(0));
+			}else{
+				Log.d("ROV_ERROR", "Found too many input devices");
+			}
+			joystick = new GameView();
 		}
 
 
@@ -404,6 +420,58 @@ import Communication.USBDeviceWrapper;
 			}
 			return device_wrapper;
 		}
+
+		// ================Control Device========================
+
+		public ArrayList getGameControllerIds() {
+			ArrayList gameControllerDeviceIds = new ArrayList();
+			int[] deviceIds = InputDevice.getDeviceIds();
+			for (int deviceId : deviceIds) {
+				InputDevice dev = InputDevice.getDevice(deviceId);
+				int sources = dev.getSources();
+
+
+				// Verify that the device has gamepad buttons, control sticks, or both.
+				boolean has_gamepad = ((sources & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD);
+				boolean has_joystick = ((sources & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK);
+				if (has_gamepad||has_joystick) {
+					// This device is a game controller. Store its device ID.
+					if (!gameControllerDeviceIds.contains(deviceId)) {
+						gameControllerDeviceIds.add(deviceId);
+					}
+				}
+			}
+			return gameControllerDeviceIds;
+		}
+
+		public class GameView extends View {
+			public GameView(){
+			}
+			@Override
+			public boolean onGenericMotionEvent(MotionEvent event) {
+
+				// Check that the event came from a game controller
+				if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
+						&& event.getAction() == MotionEvent.ACTION_MOVE) {
+//					InputDevice mInputDevice = event.getDevice();
+//					mInputDevice.getMotionRange(MotionEvent.AXIS_X, event.getSource()).getRange();
+
+					SimpleMatrix joy_state = new SimpleMatrix(6,1);
+					joy_state.set(0,0,event.getAxisValue(MotionEvent.AXIS_X));
+					joy_state.set(1,0,event.getAxisValue(MotionEvent.AXIS_Y));
+					joy_state.set(2,0,event.getAxisValue(MotionEvent.AXIS_Z));
+					joy_state.set(3,0,event.getAxisValue(MotionEvent.AXIS_RX));
+					joy_state.set(4,0,event.getAxisValue(MotionEvent.AXIS_RY));
+					joy_state.set(5,0,event.getAxisValue(MotionEvent.AXIS_RZ));
+
+					Log.d("DEBUG_MSG","Joystick State, X:"+joy_state.get(0)+" Y:"+joy_state.get(1)+" Z:"+joy_state.get(2)+" RX"+joy_state.get(3)+" RY"+joy_state.get(4)+" RZ"+joy_state.get(5));
+
+					return true;
+				}
+				return super.onGenericMotionEvent(event);
+			}
+		}
+
 
 
 		// =======================UI=============================
