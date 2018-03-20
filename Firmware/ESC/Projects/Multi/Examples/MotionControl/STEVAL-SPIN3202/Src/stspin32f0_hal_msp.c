@@ -583,7 +583,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
   */
 void HAL_TIMEx_CommutationCallback(TIM_HandleTypeDef *htim)
 {
-	HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+	//HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
   SIXSTEP_parameters.step_position=SIXSTEP_parameters.next_step_pos;
   SIXSTEP_parameters.hall_ok = 0;
 }

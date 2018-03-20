@@ -468,12 +468,12 @@ void MX_GPIO_Init(void)
   BSP_BOARD_FAULT_LED_OFF();
 	
 		//GPIO DEBUG
-  GPIO_InitStruct.Pin = GPIO_CH_ZCR;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
-  HAL_GPIO_Init(GPIO_PORT_ZCR, &GPIO_InitStruct);
-	HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+//  GPIO_InitStruct.Pin = GPIO_CH_ZCR;
+//  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+//  GPIO_InitStruct.Pull = GPIO_NOPULL;
+//  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+  //HAL_GPIO_Init(GPIO_PORT_ZCR, &GPIO_InitStruct);
+	//HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
 	
 	#else
 	// hack for bodged pin

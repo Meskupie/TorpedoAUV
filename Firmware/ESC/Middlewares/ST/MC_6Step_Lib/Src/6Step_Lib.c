@@ -240,7 +240,7 @@ void MC_SixStep_TABLE(uint8_t step_number)
 
 	
 #if (GPIO_COMM!=0)
-  HAL_GPIO_TogglePin(GPIO_PORT_COMM,GPIO_CH_COMM);  
+  //HAL_GPIO_TogglePin(GPIO_PORT_COMM,GPIO_CH_COMM);  
 #endif
 #if (defined(DELTA_6STEP_TABLE) && defined(COMPLEMENTARY_DRIVE) && !defined(HALL_SENSORS))
   switch (step_number)
@@ -613,8 +613,8 @@ void MC_SixStep_NEXT_step(int32_t Reference)
   {
     if(Reference > 0)
     {
-			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
-			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+//			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+//			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
       switch (hallStatus)
       {
         case 2:
@@ -1101,8 +1101,8 @@ void MC_TIMx_SixStep_CommutationEvent()
   H3 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2);    
   hallStatus = (H1 << 2) | (H2 << 1) | H3; 
 	
-		HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
-			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+//		HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+//			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
 	
 	if(SIXSTEP_parameters.speed_fdbk >0) //FORWARD
 	{
@@ -2155,7 +2155,7 @@ void MC_SixStep_ARR_Bemf(uint8_t up_bemf)
     if(SIXSTEP_parameters.SPEED_VALIDATED!=FALSE) 
     {
 #if (GPIO_ZERO_CROSS!=0)
-      HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);         
+//      HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);         
 #endif     
       if(cnt_bemf_event> BEMF_CNT_EVENT_MAX)
       {

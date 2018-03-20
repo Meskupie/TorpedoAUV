@@ -92,7 +92,7 @@
  ============================================================================== 
 **************************************************************************** */
 /*!< ********************* Open loop control *********************************/
-#define STARTUP_PEAK_CURRENT               1000     /*!< mA, Startup Peak Current */
+#define STARTUP_PEAK_CURRENT               300     /*!< mA, Startup Peak Current */
 #define SENSE_RESISTOR                      10     /*!< mOhms, (RS) */
 #define SENSE_RESISTOR_VOLTAGE      (STARTUP_PEAK_CURRENT*SENSE_RESISTOR)/1000  /*!< mV */
 #define SENSE_GAIN                        6600     /*!< Thousandths, (RF/RB) */

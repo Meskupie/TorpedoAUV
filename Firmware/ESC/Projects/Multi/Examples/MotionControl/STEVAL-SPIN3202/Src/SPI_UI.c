@@ -102,6 +102,9 @@ void SPI_Communication_Task()
     statusStructUnion.statusStruct.speedMeasured = SIXSTEP_parameters.speed_fdbk_filtered;
     statusStructUnion.statusStruct.runState = SIXSTEP_parameters.STATUS;
     statusStructUnion.statusStruct.direction = SIXSTEP_parameters.CW_CCW;
+	#ifndef VOLTAGE_MODE
+		statusStructUnion.statusStruct.currentMeasured = SIXSTEP_parameters.current_reference;
+	#endif
     HAL_SPI_TransmitReceive_DMA(&hspi1,statusStructUnion.stuctRaw,commandStructUnion.stuctRaw,sizeof(statusStructUnion));
     while (HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_BUSY_TX_RX);
     
