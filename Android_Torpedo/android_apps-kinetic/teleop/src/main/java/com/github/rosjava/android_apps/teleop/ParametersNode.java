@@ -47,6 +47,7 @@ public class ParametersNode extends AbstractNodeMain {
     // Update booleans
     private boolean update_dynamics = false;
     private boolean update_map = false;
+    private boolean update_run_mode = false;
 
 
     public ParametersNode(){}
@@ -66,6 +67,15 @@ public class ParametersNode extends AbstractNodeMain {
             return false;
         }
         update_map = true;
+        return true;
+    }
+
+    public boolean setRunMode(int _mode){
+        if(!params.updateRunMode(_mode)){
+            Log.e("ROV_ERROR", "Parameters node: Failure updating run mode");
+            return false;
+        }
+        update_run_mode = true;
         return true;
     }
 
@@ -114,7 +124,11 @@ public class ParametersNode extends AbstractNodeMain {
                         param_tree.set("/planner_map", params.getDataMap());
                         update_map = false;
                     }
-                    // TODO: add more parameters
+                    if (update_run_mode){
+                        param_tree.set("/run_mode", params.getRunMode());
+                        update_run_mode = false;
+                    }
+
                 }
                 status_parameters_msg.setData(status_parameters);
                 status_parameters_pub.publish(status_parameters_msg);

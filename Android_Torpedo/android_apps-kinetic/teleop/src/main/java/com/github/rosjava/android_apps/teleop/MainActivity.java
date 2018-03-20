@@ -40,7 +40,7 @@ import Communication.MessageManager;
 import Communication.SerialWrite;
 import Communication.USBDeviceWrapper;
 
-	public class MainActivity extends RosAppActivity {
+	public class MainActivity extends RosAppActivity implements View.OnGenericMotionListener{
 		public static final String TAG = "DEBUG_MSG";
 		public static final String TAG_LOG = "ROV_LOG";
 		public static final String TAG_ERROR = "ROV_ERROR";
@@ -147,7 +147,9 @@ import Communication.USBDeviceWrapper;
 			}else{
 				Log.d("ROV_ERROR", "Found too many input devices");
 			}
-			joystick = new GameView();
+
+			joystick = new View(this);
+			joystick.setOnGenericMotionListener(this);
 		}
 
 
@@ -235,6 +237,7 @@ import Communication.USBDeviceWrapper;
 
 			// Set parameters
 			parameters_node.setDynamics("rough_controller_data.txt");
+			parameters_node.setRunMode(2);
 
 		}
 
@@ -444,35 +447,29 @@ import Communication.USBDeviceWrapper;
 			return gameControllerDeviceIds;
 		}
 
-		public class GameView extends View {
-			public GameView(){
-			}
-			@Override
-			public boolean onGenericMotionEvent(MotionEvent event) {
-
-				// Check that the event came from a game controller
-				if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
-						&& event.getAction() == MotionEvent.ACTION_MOVE) {
+		@Override
+		public boolean onGenericMotion(View v, MotionEvent event) {
+			Log.d(TAG_LOG,"EVENT!");
+			// Check that the event came from a game controller
+			if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
+					&& event.getAction() == MotionEvent.ACTION_MOVE) {
 //					InputDevice mInputDevice = event.getDevice();
 //					mInputDevice.getMotionRange(MotionEvent.AXIS_X, event.getSource()).getRange();
 
-					SimpleMatrix joy_state = new SimpleMatrix(6,1);
-					joy_state.set(0,0,event.getAxisValue(MotionEvent.AXIS_X));
-					joy_state.set(1,0,event.getAxisValue(MotionEvent.AXIS_Y));
-					joy_state.set(2,0,event.getAxisValue(MotionEvent.AXIS_Z));
-					joy_state.set(3,0,event.getAxisValue(MotionEvent.AXIS_RX));
-					joy_state.set(4,0,event.getAxisValue(MotionEvent.AXIS_RY));
-					joy_state.set(5,0,event.getAxisValue(MotionEvent.AXIS_RZ));
+				SimpleMatrix joy_state = new SimpleMatrix(6,1);
+				joy_state.set(0,0,event.getAxisValue(MotionEvent.AXIS_X));
+				joy_state.set(1,0,event.getAxisValue(MotionEvent.AXIS_Y));
+				joy_state.set(2,0,event.getAxisValue(MotionEvent.AXIS_Z));
+				joy_state.set(3,0,event.getAxisValue(MotionEvent.AXIS_RX));
+				joy_state.set(4,0,event.getAxisValue(MotionEvent.AXIS_RY));
+				joy_state.set(5,0,event.getAxisValue(MotionEvent.AXIS_RZ));
 
-					Log.d("DEBUG_MSG","Joystick State, X:"+joy_state.get(0)+" Y:"+joy_state.get(1)+" Z:"+joy_state.get(2)+" RX"+joy_state.get(3)+" RY"+joy_state.get(4)+" RZ"+joy_state.get(5));
+				Log.d(TAG_LOG,"Joystick State, X:"+joy_state.get(0)+" Y:"+joy_state.get(1)+" Z:"+joy_state.get(2)+" RX"+joy_state.get(3)+" RY"+joy_state.get(4)+" RZ"+joy_state.get(5));
 
-					return true;
-				}
-				return super.onGenericMotionEvent(event);
+				return true;
 			}
+			return MainActivity.super.onGenericMotionEvent(event);
 		}
-
-
 
 		// =======================UI=============================
 
