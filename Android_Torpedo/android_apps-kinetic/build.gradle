@@ -22,6 +22,15 @@ buildscript {
     apply from: "https://github.com/rosjava/android_core/raw/kinetic/buildscript.gradle"
 }
 
+/*
+buildscript {
+    apply from: "https://github.com/rosjava/rosjava_bootstrap/raw/kinetic/buildscript.gradle"
+    dependencies {
+        classpath "com.android.tools.build:gradle:2.2.3"
+    }
+}
+*/
+
 apply plugin: 'catkin'
 
 allprojects {
