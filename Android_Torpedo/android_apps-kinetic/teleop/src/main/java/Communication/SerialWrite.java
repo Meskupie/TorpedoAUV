@@ -37,7 +37,7 @@ public class SerialWrite extends AsyncTask<Object, Void, Void>
         byte[] buf = (byte[]) params[1];
 
         if(serial != null) {
-            Log.d("ROV_LOG", "Sending "+buf.length+" bytes now");
+            //Log.d("ROV_LOG", "Sending "+buf.length+" bytes now");
             serial.write(buf);
         } else {
             Log.d("ROV_ERROR", "Serial Write: Serial was found to be null");

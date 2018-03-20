@@ -125,31 +125,6 @@ public class ParticleCloud {
         return new Transform(average_point,average_orientation);
     }
 
-//    // Individual functions on single particle
-//    public void transformParticle(Transform delta, int index){
-//        if(index >= particles_size){
-//            Log.e("ROV_ERROR", "Particle overrun on transformParticle");
-//        }else{
-//            particles[index].transformPose(delta);
-//        }
-//    }
-//
-//    public Transform getParticleTransform(int index){
-//        if(index >= particles_size){
-//            Log.e("ROV_ERROR", "Particle overrun on getParticleTransform");
-//            return new Transform(new Vector3(0,0,0), new Quaternion(0,0,0,1));
-//        }else{
-//            return particles[index].getPose();
-//        }
-//    }
-//
-//    public void setFitness(int index, double fitness){
-//        if(index >= particles_size){
-//            Log.e("ROV_ERROR", "Particle overrun on setFitness");
-//        }else{
-//            particles[index].setFitness(fitness);
-//        }
-//    }
 
     // ParticleCloud Mutators
     public void setInitialStddev(double trans, double rot){

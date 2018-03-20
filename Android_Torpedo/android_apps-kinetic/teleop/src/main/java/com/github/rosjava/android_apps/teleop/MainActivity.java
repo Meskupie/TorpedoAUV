@@ -262,6 +262,13 @@ import Communication.USBDeviceWrapper;
 				if (arg0.length == message_manager.msg_smc_sensors.size_bytes) {
 					message_manager.msg_smc_sensors.parseData(arg0);
 					communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);
+					if(message_manager.msg_smc_sensors.switch_front){
+//						if(switch_front_prev == false){
+//							button_nav_top.performClick();
+//						}else{
+//
+//						}
+					}
 				} else {
 					Log.d(TAG_ERROR, "First cam callback got an invalid number of bytes: " + arg0.length);
 				}
@@ -499,10 +506,20 @@ import Communication.USBDeviceWrapper;
                     });
                 }
             }, 200);
-
 		}
 
         private void onWaitingForLock() {
+			header.setText(R.string.waiting_for_lock);
+			description.setText(R.string.waiting_for_lock_description);
+			makeButtonsVisible();
+			button_nav_top.setText(R.string.hold);
+			button_nav_middle.setVisibility(View.INVISIBLE);
+			button_nav_bottom.setVisibility(View.INVISIBLE);
+			pageState = Page_State.WAITING_FOR_LOCK;
+			viewContainer.setBackgroundResource(R.drawable.outline_bg);
+
+			button_nav_bottom.setOnClickListener(null);
+
             button_nav_top.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
@@ -518,17 +535,6 @@ import Communication.USBDeviceWrapper;
                     return true;
                 }
             });
-
-            header.setText(R.string.waiting_for_lock);
-            description.setText(R.string.waiting_for_lock_description);
-            makeButtonsVisible();
-            button_nav_top.setText(R.string.hold);
-            button_nav_middle.setVisibility(View.INVISIBLE);
-            button_nav_bottom.setVisibility(View.INVISIBLE);
-            pageState = Page_State.WAITING_FOR_LOCK;
-            viewContainer.setBackgroundResource(R.drawable.outline_bg);
-
-            button_nav_bottom.setOnClickListener(null);
 
             //Testing to force view change
 //            Handler handler2 = new Handler();

@@ -28,7 +28,8 @@ import std_msgs.Float64MultiArray;
 import std_msgs.Int32;
 
 public class LocalizationNode extends AbstractNodeMain{
-    private Localization rov_localization = new Localization();
+    //private Localization rov_localization = new Localization();
+    private DeadReckon rov_localization = new DeadReckon();
 
     // Publishing variables
     private Publisher<geometry_msgs.Transform> state_pose_pub;
@@ -83,20 +84,7 @@ public class LocalizationNode extends AbstractNodeMain{
                     state_pose_msg_quat.setW(state_pose.getRotationAndScale().getW());
                     state_pose_msg.setRotation(state_pose_msg_quat);
                     state_pose_pub.publish(state_pose_msg);
-
                     // TODO: add this back in
-//                    // Get and publish twist
-//                    state_twist = rov_localization.getTwist();
-//                    state_twist_msg_vect.setX(state_twist.getLinear().getX());
-//                    state_twist_msg_vect.setY(state_twist.getLinear().getY());
-//                    state_twist_msg_vect.setZ(state_twist.getLinear().getZ());
-//                    state_twist_msg.setLinear(state_pose_msg_vect);
-//                    state_twist_msg_vect.setX(state_twist.getAngular().getX());
-//                    state_twist_msg_vect.setY(state_twist.getAngular().getY());
-//                    state_twist_msg_vect.setZ(state_twist.getAngular().getZ());
-//                    state_twist_msg.setAngular(state_pose_msg_vect);
-//                    state_twist_pub.publish(state_twist_msg);
-//
 //                    // Get and publish fitness
 //                    state_fitness = rov_localization.getFitness();
 //                    state_fitness_msg.setData(state_fitness);
@@ -105,7 +93,7 @@ public class LocalizationNode extends AbstractNodeMain{
             }
         }
         else{ // We shouldn't be running
-            rov_localization.resetInitialOrientation();
+            rov_localization.reset();
         }
         return true;
     }
@@ -226,6 +214,15 @@ public class LocalizationNode extends AbstractNodeMain{
             public void onNewMessage(geometry_msgs.Quaternion imu_data) {
                 time_embedded_imu = connectedNode.getCurrentTime();
                 rov_localization.setImuData(new Quaternion(imu_data.getX(),imu_data.getY(),imu_data.getZ(),imu_data.getW()));
+                attemptLocalizationUpdate(connectedNode);
+            }
+        });
+
+        embedded_depth_sub.addMessageListener(new MessageListener<Float64>() {
+            @Override
+            public void onNewMessage(Float64 depth_data_msg) {
+                time_embedded_depth = connectedNode.getCurrentTime();
+                rov_localization.setDepthData(depth_data_msg.getData());
                 attemptLocalizationUpdate(connectedNode);
             }
         });

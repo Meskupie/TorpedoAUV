@@ -226,7 +226,7 @@ public class Localization {
 
     // ========  Parameter Mutators  ========
     private boolean myIsReady(){
-        return(ready_A && ready_B && ready_map && ready_initial_pose);
+        return(ready_A && ready_B); //TODO: add back in: && ready_map && ready_initial_pose);
     }
     public boolean setMapData(MapTarget[] _map) {
         pose_fitting.setMap(_map);
@@ -307,4 +307,6 @@ public class Localization {
         ready_initial_pose = false;
         return !ready_initial_pose;
     }
+
+    public boolean isAveraged(){return ready_initial_pose;}
 }
