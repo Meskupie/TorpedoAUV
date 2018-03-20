@@ -238,6 +238,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
     GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
     GPIO_InitStruct.Alternate = BSP_BOARD_REFx_AF;
     HAL_GPIO_Init(BSP_BOARD_REFx_PORT, &GPIO_InitStruct);
+		
     
     /* Stop TIM during Breakpoint */
     BSP_BOARD_REFx_FREEZE_DBGMCU();        
@@ -475,7 +476,8 @@ void HAL_SPI_MspInit(SPI_HandleTypeDef* hspi)
     __HAL_LINKDMA(hspi,hdmarx,hdma_spi1_rx);
 
     /* SPI1 interrupt Init */
-    HAL_NVIC_SetPriority(SPI1_IRQn, 1, 0);
+
+    HAL_NVIC_SetPriority(SPI1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(SPI1_IRQn);
   /* USER CODE BEGIN SPI1_MspInit 1 */
 
@@ -582,7 +584,7 @@ void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
   */
 void HAL_TIMEx_CommutationCallback(TIM_HandleTypeDef *htim)
 {
-	HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+	//HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
   SIXSTEP_parameters.step_position=SIXSTEP_parameters.next_step_pos;
   SIXSTEP_parameters.hall_ok = 0;
 }

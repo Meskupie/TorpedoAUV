@@ -63,7 +63,9 @@
 
 
 #include "SPI.h"
+#define FASTCOMM
 
+#define COMM_KEY  (0x5f49fbf9)
 
 #define ESC_PIN_FR A5
 #define ESC_PIN_RR A4
@@ -85,6 +87,7 @@
 
 typedef enum
 {
+    ESC_CMD_COM_SYNC_ERROR,
     ESC_CMD_Stop,
     ESC_CMD_Start,
     ESC_CMD_GetTemperature,
@@ -101,7 +104,7 @@ typedef enum
     ESC_CMD_RESET,
     ESC_CMD_GetStatusStruct,
     ESC_CMD_GetThrust,
-    ESC_CMD_SetThrust,
+    ESC_CMD_SetThrust
 } ESC_COMMAND;
 
 typedef enum
@@ -145,6 +148,21 @@ typedef struct
     uint8_t direction:1;
 }ESC_StatusStruct;
 
+typedef struct
+{
+    uint16_t thrust_mN:16;
+    uint8_t state:8;
+    uint8_t filler :8;
+    uint32_t comms_key :32;
+    uint32_t filler2 :32;
+}ESC_CommandStruct;
+typedef union
+{
+    ESC_CommandStruct commandStruct;
+    uint8_t stuctRaw[sizeof(ESC_CommandStruct)];
+} ESC_CommandStructUnion;
+
+
 
 
 typedef union
@@ -155,8 +173,9 @@ typedef union
 
 
 
+ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande);
 
-unsigned int ESC_Status_update_all();
+unsigned int ESC_update_all();
 unsigned int ESC_init(ESC_Struct* ESC_hande,int pin);
 unsigned int ESC_init_all(void);
 unsigned int ESCStart(ESC_Struct* ESC_hande);

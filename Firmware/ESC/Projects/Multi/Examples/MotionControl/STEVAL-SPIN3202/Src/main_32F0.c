@@ -94,6 +94,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+	
 #if (!defined(HALL_SENSORS)||defined(POTENTIOMETER))
   MX_ADC_Init();
 #endif
@@ -111,6 +112,8 @@ MX_UART_Init();
 MX_SPI1_Init();
 #endif
 
+
+
  /* **************************************************************************** 
   ==============================================================================   
             ###### This function initializes 6-Step lib ######
@@ -126,7 +129,11 @@ MX_SPI1_Init();
 	MC_StartMotor();
 //	HAL_Delay(1000);
 #endif
-//	MC_StopMotor();
+
+//MC_SixStep_Current_Reference_Start();
+//MC_StartMotor();
+//HAL_Delay(1000);
+//MC_StopMotor();
 	
 
 
@@ -468,12 +475,12 @@ void MX_GPIO_Init(void)
   BSP_BOARD_FAULT_LED_OFF();
 	
 		//GPIO DEBUG
-  GPIO_InitStruct.Pin = GPIO_CH_ZCR;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
-  HAL_GPIO_Init(GPIO_PORT_ZCR, &GPIO_InitStruct);
-	HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+//  GPIO_InitStruct.Pin = GPIO_CH_ZCR;
+//  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+//  GPIO_InitStruct.Pull = GPIO_NOPULL;
+//  GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
+  //HAL_GPIO_Init(GPIO_PORT_ZCR, &GPIO_InitStruct);
+	//HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
 	
 	#else
 	// hack for bodged pin
@@ -481,11 +488,6 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-	
-
-
-	
-	
 	#endif
 //	GPIO_InitStruct.Pin = GPIO_PIN_1;
 //  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
