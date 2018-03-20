@@ -14,6 +14,7 @@ import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
 import org.ros.rosjava_geometry.Quaternion;
 
+import Autonomy.Localization.CameraTarget;
 import sensor_msgs.PointCloud;
 import std_msgs.Float64;
 import std_msgs.Float64MultiArray;
@@ -28,8 +29,12 @@ public class CommunicationNode extends AbstractNodeMain {
     private Time time_current;
     private Time time_input_thrust;
     private Time time_status_system;
+    private Time time_embedded;
     private Duration timeout_input_thrust = new Duration(0.1);
-    private Duration timeout_status_system= new Duration(0.1);
+    private Duration timeout_status_system= new Duration(0.06);
+    private Duration timeout_embedded = new Duration(0.1);
+
+    private boolean ready_new_embedded = false;
 
     //Publishers
     private Publisher<Int32> status_communication_pub;
@@ -49,7 +54,8 @@ public class CommunicationNode extends AbstractNodeMain {
     private Publisher<Float64> embedded_battery_voltage_pub;
     private Publisher<Float64> embedded_battery_current_pub;
     private Publisher<Int32> embedded_reed_switches_pub;
-    private Publisher<PointCloud> camera_targets_pub;
+    private Publisher<PointCloud> camera_targets_front_pub;
+    private Publisher<PointCloud> camera_targets_rear_pub;
 
     // Define publishing messages
     private Int32 status_communication_msg;
@@ -65,7 +71,8 @@ public class CommunicationNode extends AbstractNodeMain {
     private Float64 embedded_battery_voltage_msg;
     private Float64 embedded_battery_current_msg;
     private Int32 embedded_reed_switches_msg;
-    private PointCloud camera_targets_msg;
+    private PointCloud camera_targets_front_msg;
+    private PointCloud camera_targets_rear_msg;
 
     private boolean ready_pub = false;
 
@@ -105,20 +112,20 @@ public class CommunicationNode extends AbstractNodeMain {
         embedded_thrust_pub = connectedNode.newPublisher("embedded_thrust",Float64MultiArray._TYPE);
         embedded_controller_states_pub = connectedNode.newPublisher("embedded_controller_states",Int32MultiArray._TYPE);
         embedded_battery_soc_pub = connectedNode.newPublisher("embedded_battery_soc",Int32._TYPE);
-        embedded_battery_sop_pub = connectedNode.newPublisher("nebedded_battery_sop",Int32._TYPE);
+        embedded_battery_sop_pub = connectedNode.newPublisher("embedded_battery_sop",Int32._TYPE);
         embedded_battery_voltage_pub = connectedNode.newPublisher("embedded_battery_voltage",Float64._TYPE);
         embedded_battery_current_pub = connectedNode.newPublisher("embedded_battery_current",Float64._TYPE);
-        embedded_reed_switches_pub = connectedNode.newPublisher("embedded_reed_switchs",Int32._TYPE);
-        camera_targets_pub = connectedNode.newPublisher("camera_targets", PointCloud._TYPE);
+        embedded_reed_switches_pub = connectedNode.newPublisher("embedded_reed_switches",Int32._TYPE);
+        camera_targets_front_pub = connectedNode.newPublisher("camera_targets_front", PointCloud._TYPE);
+        camera_targets_rear_pub = connectedNode.newPublisher("camera_targets_rear", PointCloud._TYPE);
 
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
 
-
-
             @Override protected void setup(){
                 time_input_thrust = connectedNode.getCurrentTime();
                 time_status_system = connectedNode.getCurrentTime();
+                time_embedded = connectedNode.getCurrentTime();
 
                 status_communication_msg = status_communication_pub.newMessage();
                 status_embedded_msg = status_embedded_pub.newMessage();
@@ -133,7 +140,8 @@ public class CommunicationNode extends AbstractNodeMain {
                 embedded_battery_voltage_msg = embedded_battery_voltage_pub.newMessage();
                 embedded_battery_current_msg = embedded_battery_current_pub.newMessage();
                 embedded_reed_switches_msg = embedded_reed_switches_pub.newMessage();
-                camera_targets_msg = camera_targets_pub.newMessage();
+                camera_targets_front_msg = camera_targets_front_pub.newMessage();
+                camera_targets_rear_msg = camera_targets_rear_pub.newMessage();
 
                 ready_pub = true;
             }
@@ -142,6 +150,7 @@ public class CommunicationNode extends AbstractNodeMain {
             protected void loop() throws InterruptedException {
                 // Update USB devices
                 if((usb_smc.usbDevice != null)&&(usb_smc.serial != null)){
+                    Log.d("ROV_DEBUG", "USB device ready");
                     ready_usb_smc = true;
                 }
                 if((usb_front_cam.usbDevice != null)&&(usb_front_cam.serial != null)){
@@ -151,21 +160,31 @@ public class CommunicationNode extends AbstractNodeMain {
                     ready_usb_rear_cam = true;
                 }
 
-                    time_current = connectedNode.getCurrentTime();
+                // Update embedded timeout
+                if(ready_new_embedded){
+                    time_embedded = connectedNode.getCurrentTime();
+                    ready_new_embedded = false;
+                }
+
+                time_current = connectedNode.getCurrentTime();
                 // Check timeouts
                 if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
                     if(status_system > 0){Log.e("ROV_ERROR", "Communication node: Timeout on system state");}
                     status_communication |= 2;
                 } else { status_communication &= ~2;}
-                if(time_current.compareTo(time_input_thrust.add(timeout_input_thrust)) == 1){
-                    if(status_system > 0){Log.e("ROV_ERROR", "Communication node: Timeout on input thrust");}
+//                if(time_current.compareTo(time_input_thrust.add(timeout_input_thrust)) == 1){
+//                    if(status_system > 0){Log.e("ROV_ERROR", "Communication node: Timeout on input thrust");}
+//                    status_communication |= 2;
+//                } else { status_communication &= ~2;}
+                if(time_current.compareTo(time_embedded.add(timeout_embedded)) == 1){
+                    if(status_system > 0){Log.e("ROV_ERROR", "Embedded: Timeout on sensors message");}
                     status_communication |= 2;
                 } else { status_communication &= ~2;}
 
 
                 status_communication_msg.setData(status_communication);
                 status_communication_pub.publish(status_communication_msg);
-                Thread.sleep(20);
+                Thread.sleep(10);
             }
         });
 
@@ -175,18 +194,15 @@ public class CommunicationNode extends AbstractNodeMain {
                 status_system = status_system_msg.getData();
                 // request data from systems
                 if(ready_usb_smc) {
-                    //new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_sensors.getRequest()});
-                    if((temp%2)==1) {
-
-                    }else{
-                        new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_motors.getRequest()});
-                    }
-                    temp++;
+                    Log.d("ROV_LOG","Send is being queued");
+                    new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_sensors.getRequest()});
                 }
                 if(ready_usb_front_cam) {
+                    Log.d("ROV_LOG","Bad serial, bad");
                     new SerialWrite().execute(new Object[]{usb_front_cam.serial, message_manager.msg_front_targets.getRequest()});
                 }
                 if(ready_usb_rear_cam) {
+                    Log.d("ROV_LOG","Bad serial, bad");
                     new SerialWrite().execute(new Object[]{usb_rear_cam.serial, message_manager.msg_rear_targets.getRequest()});
                 }
             }
@@ -199,23 +215,15 @@ public class CommunicationNode extends AbstractNodeMain {
                 double[] input_thrust = input_thrust_msg.getData();
 
                 if (status_system >= 3) {
-                        message_manager.msg_smc_motors.input_thrust = input_thrust_msg.getData();
-                        new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_motors.getBuiltMsg()});
-
-                        //                    if (serial != null) {
-//                        MotorOutputs motorOutputs = new MotorOutputs(input_thrust);
-//                        int[] thrustVals = motorOutputs.getMotorOutputs();
-//                        byte[] bytes = MessageManager.getEmbeddedByteArray(thrustVals, numberOfMessagesSent);
-//                        numberOfMessagesSent++;
-//                        new AsyncArduinoWrite().execute(new Object[]{serial, bytes});
-//                    }
-
+                    message_manager.msg_smc_motors.input_thrust = input_thrust_msg.getData();
+                    new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_motors.getBuiltMsg()});
                 }
             }
         });
     }
 
     public void SMCSensorsPub(MessageManager.MsgSMCSensors message) {
+        ready_new_embedded = true;
         if(!ready_pub) {
             return;
         }
@@ -246,6 +254,23 @@ public class CommunicationNode extends AbstractNodeMain {
         embedded_battery_voltage_pub.publish(embedded_battery_voltage_msg);
         embedded_battery_current_pub.publish(embedded_battery_current_msg);
         embedded_reed_switches_pub.publish(embedded_reed_switches_msg);
+    }
+
+    public void frontCameraPub(MessageManager.MsgCameraTargets message){
+//        camera_targets_front_msg.setChannels(); message.azumuths
+//        for(int i = 0; i < target_cloud.getChannels().get(0).getValues().length; i++){
+//            CameraTarget[] camera_targets = new CameraTarget[target_cloud.getChannels().get(0).getValues().length];
+//            float[] azumuths  = target_cloud.getChannels().get(0).getValues();
+//            float[] altitudes = target_cloud.getChannels().get(1).getValues();
+//            float[] ids       = target_cloud.getChannels().get(2).getValues();
+//            camera_targets[i] = new CameraTarget(azumuths[i],altitudes[i],(int)ids[i]);
+//            rov_localization.setCameraTargetsRear(camera_targets);
+//            attemptLocalizationUpdate(connectedNode);
+//        }
+    }
+
+    public void rearCameraPub(MessageManager.MsgCameraTargets message){
+
     }
 
     // Mutators

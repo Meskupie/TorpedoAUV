@@ -44,12 +44,12 @@ public class MainActivity extends RosAppActivity {
 
 	// USB stuff
 	private UsbManager usb_manager;
+	private int[] usb_ids = new int[5];
+	private int usb_number_registered = 0;
 	private USBDeviceWrapper usb_device_smc;
+	private USBDeviceWrapper usb_device_first_cam;
+	private USBDeviceWrapper usb_device_second_cam;
 	MessageManager message_manager = new MessageManager();
-
-	public static final String ACTION_USB_ATTACHED = "android.hardware.usb.action.USB_DEVICE_ATTACHED";
-	public static final String ACTION_USB_DETACHED = "android.hardware.usb.action.USB_DEVICE_DETACHED";
-	public static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 
 	// ROS Nodes
 	private SystemNode system_node;
@@ -103,27 +103,94 @@ public class MainActivity extends RosAppActivity {
         usb_device_smc = initializeSerial(usb_device_smc);
 		communication_node.setUSBSMC(usb_device_smc);
 
-		// Setup USB Front Cam
-
-		// Setup USB Rear Cam
+//		// Setup USB Front Cam
+//		usb_device_first_cam = new USBDeviceWrapper("First Camera",0x0525,0xa4aa);
+//		usb_device_first_cam.callback = usb_callback_first_cam;
+//		usb_device_first_cam = initializeSerial(usb_device_first_cam);
+//
+//		// Setup USB Rear Cam
+//		usb_device_second_cam = new USBDeviceWrapper("Second Camera",0x0525,0xa4aa);
+//		usb_device_second_cam.callback = usb_callback_second_cam;
+//		usb_device_second_cam = initializeSerial(usb_device_second_cam);
 	}
 
 	private UsbSerialInterface.UsbReadCallback usb_callback_smc = new UsbSerialInterface.UsbReadCallback() {
 		//Defining a Callback which triggers whenever data is read.
 		@Override
 		public void onReceivedData(byte[] arg0) {
-			Log.d("DEBUG_MSG", "Serial found "+arg0.length+" bytes");
-			String temp = "";
-			for(int i = 0; i < arg0.length; i++){
-				temp += arg0[i]+" ";
+			Log.d("ROV_LOG","received "+arg0.length+" bytes now");
+			if (arg0.length == message_manager.msg_smc_sensors.size_bytes) {
+				message_manager.msg_smc_sensors.parseData(arg0);
+				communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);
+			} else {
+				Log.d(TAG_ERROR, "First cam callback got an invalid number of bytes: " + arg0.length);
 			}
-			Log.d("DEBUG_MSG", ""+temp);
-			message_manager.msg_smc_sensors.parseData(arg0);
-			communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);
 		}
 	};
 
+	private UsbSerialInterface.UsbReadCallback usb_callback_first_cam = new UsbSerialInterface.UsbReadCallback() {
+		@Override
+		public void onReceivedData(byte[] arg0) {
+			if(arg0.length == 1){ // This tells us what device it is
+				if(arg0[0] == 0x66) { //'f' this tells us its a front camera
+					usb_device_first_cam.name = "Front Camera";
+					communication_node.setUSBFrontCam(usb_device_first_cam);
+				}else if(arg0[0] == 0x72) { //'r' this tells us its a rear camera
+					usb_device_first_cam.name = "Rear Camera";
+					communication_node.setUSBRearCam(usb_device_first_cam);
+				}else{ // ignore this
+					Log.d(TAG_ERROR,"First cam ("+usb_device_first_cam.name+") callback got an invalid byte");
+				}
+			}else if(arg0.length == message_manager.msg_front_targets.size_bytes){
+				if(usb_device_first_cam.name == "Front Camera"){
+					message_manager.msg_front_targets.parseData(arg0);
+					communication_node.frontCameraPub(message_manager.msg_front_targets);
+				}else if(usb_device_first_cam.name == "Rear Camera") {
+					message_manager.msg_rear_targets.parseData(arg0);
+					communication_node.rearCameraPub(message_manager.msg_rear_targets);
+				}else{
+					Log.d(TAG_ERROR,"Unrecognized name in first camera callback: "+usb_device_first_cam.name);
+				}
+			}else{
+				Log.d(TAG_ERROR,"First cam ("+usb_device_first_cam.name+") callback got an invalid number of bytes: "+arg0.length);
+			}
+		}
+	};
+
+	private UsbSerialInterface.UsbReadCallback usb_callback_second_cam = new UsbSerialInterface.UsbReadCallback() {
+		@Override
+		public void onReceivedData(byte[] arg0) {
+			if(arg0.length == 1){ // This tells us what device it is
+				if(arg0[0] == 0x66) { // this tells us its a front camera
+					usb_device_second_cam.name = "Front Camera";
+					communication_node.setUSBFrontCam(usb_device_second_cam);
+				}else if(arg0[0] == 0x72) { // this tells us its a rear camera
+					usb_device_second_cam.name = "Rear Camera";
+					communication_node.setUSBRearCam(usb_device_second_cam);
+				}else{ // ignore this
+					Log.d(TAG_ERROR,"Second cam ("+usb_device_second_cam.name+") callback got an invalid byte");
+				}
+			}else if(arg0.length == message_manager.msg_front_targets.size_bytes){
+				if(usb_device_second_cam.name == "Front Camera"){
+					message_manager.msg_front_targets.parseData(arg0);
+					communication_node.frontCameraPub(message_manager.msg_front_targets);
+				}else if(usb_device_second_cam.name == "Rear Camera") {
+					message_manager.msg_rear_targets.parseData(arg0);
+					communication_node.rearCameraPub(message_manager.msg_rear_targets);
+				}else{
+					Log.d(TAG_ERROR,"Unrecognized name in first camera callback: "+usb_device_first_cam.name);
+				}
+			}else{
+				Log.d(TAG_ERROR,"Second cam ("+usb_device_second_cam.name+") callback got an invalid number of bytes: "+arg0.length);
+			}
+		}
+	};
+
+
 	private USBDeviceWrapper initializeSerial(final USBDeviceWrapper device_wrapper) {
+		final String ACTION_USB_ATTACHED = "android.hardware.usb.action.USB_DEVICE_ATTACHED";
+		final String ACTION_USB_DETACHED = "android.hardware.usb.action.USB_DEVICE_DETACHED";
+		final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
 		this.usb_manager = (UsbManager) getSystemService(Context.USB_SERVICE);
 		// TODO: change to serial number
 		// Attempt to find device by vendor and product id
@@ -131,9 +198,18 @@ public class MainActivity extends RosAppActivity {
 		for (String key: deviceList.keySet()){
 			UsbDevice device = deviceList.get(key);
 			if(device.getVendorId() == device_wrapper.VENDOR_ID && device.getProductId() == device_wrapper.PRODUCT_ID) {
-				device_wrapper.usbDevice = device;
-				Log.d(TAG_LOG, "USB device "+device_wrapper.name+" found with serial number "+device.getSerialNumber());
-				break;
+				boolean seen = false;
+				int id = device.getDeviceId();
+				for(int i = 0; i < (usb_number_registered); i++){
+					if(id == usb_ids[i]){seen = true;}
+				}
+				if(!seen){
+					usb_ids[usb_number_registered] = id;
+					usb_number_registered++;
+					device_wrapper.usbDevice = device;
+					Log.d(TAG_LOG, "USB device " + device_wrapper.name + " found with id: " + id);
+					break;
+				}
 			}
 		}
 		// setup broadcast receiver for user permission granting
@@ -146,11 +222,10 @@ public class MainActivity extends RosAppActivity {
 						device_wrapper.serial = UsbSerialDevice.createUsbSerialDevice(device_wrapper.usbDevice, device_wrapper.usbConnection);
 						if (device_wrapper.serial != null) {
 							if (device_wrapper.serial.open()) { //Set Serial Connection Parameters.
-								//serial.setDTR(true);
+								//device_wrapper.serial.setDTR(true);
 								device_wrapper.serial.setBaudRate(115200);
 								device_wrapper.serial.setDataBits(UsbSerialInterface.DATA_BITS_8);
 								device_wrapper.serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
-								//serial.setStopBits(UsbSerialInterface.STOP_BITS_1);
 								device_wrapper.serial.setParity(UsbSerialInterface.PARITY_NONE);
 								device_wrapper.serial.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
 
@@ -185,13 +260,15 @@ public class MainActivity extends RosAppActivity {
 	}
 
 	public void onClickButton1(View v) {
+
 	}
 
 	public void onClickButton2(View v) {
+
 	}
 
 	public void onClickButton3(View v) {
-		new SerialWrite().execute(new Object[]{usb_device_smc.serial, message_manager.msg_smc_sensors.getRequest()});
+		//new SerialWrite().execute(new Object[]{usb_device_smc.serial, message_manager.msg_smc_sensors.getRequest()});
 	}
 
 	@Override
