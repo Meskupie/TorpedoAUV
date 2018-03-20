@@ -117,7 +117,7 @@
 	//Current Control
 	#define BSP_BOARD_REFx_TIMx               TIM3
 	#define BSP_BOARD_REFx_CHANNEL            TIM_CHANNEL_4 //Changed
-	#define BSP_BOARD_REFx_CCR                CCR1
+	#define BSP_BOARD_REFx_CCR                CCR4
 	#define BSP_BOARD_REFx_TS_ITR             TIM_TS_ITR1
 	#define BSP_BOARD_REFx_CLK_ENABLE()       __TIM3_CLK_ENABLE()
 	#define BSP_BOARD_REFx_CLK_DISABLE()      __TIM3_CLK_DISABLE()

@@ -181,14 +181,18 @@ unsigned long lastTime = 0;
 
 void loop()
 {
+#ifdef MANUAL_CONTROL
+    printStatusStruct(ESC_Fast_COMM(&ESC[5]));
+    delay(20);
     
+#else
+#endif
 
 
 ////    printESCState(ESCGetStatus(&ESC[0]));
     
     
-    printStatusStruct(ESC_Fast_COMM(&ESC[0]));
-    
+
 //    Serial.print("ver: ");
 //    Serial.println(gasGauge.testDataWriteToFlash());
 
@@ -213,40 +217,14 @@ void loop()
 //    Serial.print(quat.z(), 4);
 //    Serial.print("\n");
 //
-#ifdef MANUAL_CONTROL
+
     if(Serial.available())
     {
         readSerialCommand();
     }
 
-    if(loopCount%500==0)
-    {
-//        newState = ESCGetStatus(testEsc);
-//        if (newState!=lastState)
-//        {
-//            lastState = newState;
-//            Serial.print("new State = ");
-//            printESCState(newState);
-//        }
-    }
-#else
-    for (int i = 0; i<5;i++)
-    {
-        if (TIMEOUT>(lastTime-millis()) {
-            ESCSetSpeed(&ESC[i], thrusterSpeed[i]);
-        }
-        else
-        {
-            ESCStop(&ESC[i]);
-        }
-        
-    }
-            
-            
-    
-#endif
     loopCount++;
     loopCount = loopCount%1000;
-            delay(100);
+            
 }
             

@@ -238,6 +238,7 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
     GPIO_InitStruct.Speed = GPIO_SPEED_LOW;
     GPIO_InitStruct.Alternate = BSP_BOARD_REFx_AF;
     HAL_GPIO_Init(BSP_BOARD_REFx_PORT, &GPIO_InitStruct);
+		
     
     /* Stop TIM during Breakpoint */
     BSP_BOARD_REFx_FREEZE_DBGMCU();        
