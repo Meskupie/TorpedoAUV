@@ -63,6 +63,7 @@
 
 
 #include "SPI.h"
+#define FASTCOMM
 
 #define COMM_KEY  (0x5f49fbf9)
 
@@ -172,9 +173,9 @@ typedef union
 
 
 
-ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande,int16_t thrustSetPoint_mN);
+ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande);
 
-unsigned int ESC_Status_update_all();
+unsigned int ESC_update_all();
 unsigned int ESC_init(ESC_Struct* ESC_hande,int pin);
 unsigned int ESC_init_all(void);
 unsigned int ESCStart(ESC_Struct* ESC_hande);

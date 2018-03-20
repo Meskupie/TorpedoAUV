@@ -151,33 +151,33 @@ void readSerialCommand() {
                 }
                 break;
 
-            case 'D': // SET Direction
-                motor  = readIntegerSerial();
-                direction = readIntegerSerial();
-                if( motor>=0&& motor<6)
-                {
-                    ESCSetDirection(&ESC[motor], direction);
-                    Serial.print("motor: ");
-                    Serial.print(motor);
-                    Serial.print(" direction: ");
-                    Serial.println(direction);
-                }
-                else
-                {
-                    Serial.println("Invalid Motor index");
-                }
-            case 'S': // SET SPEED
-                motor  = readIntegerSerial();
-                speed = readIntegerSerial();
-                if( motor>=0&& motor<6)
-                {
-                    ESCSetSpeed(&ESC[motor], speed);
-                }
-                else
-                {
-                    Serial.println("Invalid Motor index");
-                }
-                break;
+//            case 'D': // SET Direction
+//                motor  = readIntegerSerial();
+//                direction = readIntegerSerial();
+//                if( motor>=0&& motor<6)
+//                {
+//                    ESCSetDirection(&ESC[motor], direction);
+//                    Serial.print("motor: ");
+//                    Serial.print(motor);
+//                    Serial.print(" direction: ");
+//                    Serial.println(direction);
+//                }
+//                else
+//                {
+//                    Serial.println("Invalid Motor index");
+//                }
+//            case 'S': // SET SPEED
+//                motor  = readIntegerSerial();
+//                speed = readIntegerSerial();
+//                if( motor>=0&& motor<6)
+//                {
+//                    ESCSetSpeed(&ESC[motor], speed);
+//                }
+//                else
+//                {
+//                    Serial.println("Invalid Motor index");
+//                }
+//                break;
             case 's': // get SPEED
                 motor = readIntegerSerial();
                 if( motor>=0&& motor<6)
@@ -318,7 +318,7 @@ void readSerialCommand() {
                 txUnion.statusStruct.swStateFront = swFront.updateButton();
                 txUnion.statusStruct.swStateCenter = swCenter.updateButton();
                 txUnion.statusStruct.swStateRear = swRear.updateButton();
-                ESC_Status_update_all();
+                //ESC_Status_update_all();
                 txUnion.statusStruct.motorStatus0 = ESC[0].runState;
                 txUnion.statusStruct.motorStatus1 = ESC[1].runState;
                 txUnion.statusStruct.motorStatus2 = ESC[2].runState;
@@ -373,6 +373,7 @@ void readSerialCommand() {
                     ESCSetThrust(&ESC[3], rxUnion.motorStruct.motorThrust3_mN);
                     ESCSetThrust(&ESC[4], rxUnion.motorStruct.motorThrust4_mN);
                     ESCSetThrust(&ESC[5], rxUnion.motorStruct.motorThrust5_mN);
+                    ESC_update_all();
                 }
                 break;
                 

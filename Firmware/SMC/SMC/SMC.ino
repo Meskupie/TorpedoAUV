@@ -187,7 +187,7 @@ void loop()
 ////    printESCState(ESCGetStatus(&ESC[0]));
     
     
-    printStatusStruct(ESC_Fast_COMM(&ESC[0],ESC[0].thrustSetPoint_mN));
+    printStatusStruct(ESC_Fast_COMM(&ESC[0]));
     
 //    Serial.print("ver: ");
 //    Serial.println(gasGauge.testDataWriteToFlash());
@@ -221,13 +221,13 @@ void loop()
 
     if(loopCount%500==0)
     {
-        newState = ESCGetStatus(testEsc);
-        if (newState!=lastState)
-        {
-            lastState = newState;
-            Serial.print("new State = ");
-            printESCState(newState);
-        }
+//        newState = ESCGetStatus(testEsc);
+//        if (newState!=lastState)
+//        {
+//            lastState = newState;
+//            Serial.print("new State = ");
+//            printESCState(newState);
+//        }
     }
 #else
     for (int i = 0; i<5;i++)
@@ -247,7 +247,6 @@ void loop()
 #endif
     loopCount++;
     loopCount = loopCount%1000;
-    delay(100);
-    
+            delay(100);
 }
             

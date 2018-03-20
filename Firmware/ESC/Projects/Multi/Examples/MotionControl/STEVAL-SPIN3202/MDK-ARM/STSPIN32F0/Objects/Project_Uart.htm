@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Objects\Project_Uart.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Objects\Project_Uart.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Mon Mar 19 20:24:13 2018
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5060528: Last Updated: Mon Mar 19 22:43:24 2018
 <BR><P>
 <H3>Maximum Stack Usage =        196 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -548,7 +548,7 @@ Global Symbols
 <LI><a href="#[be]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_WaitFifoStateUntilTimeout
 </UL>
 
-<P><STRONG><a name="[b6]"></a>HAL_IWDG_GetState</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, stm32f0xx_hal_iwdg.o(i.HAL_IWDG_GetState))
+<P><STRONG><a name="[b7]"></a>HAL_IWDG_GetState</STRONG> (Thumb, 4 bytes, Stack size 0 bytes, stm32f0xx_hal_iwdg.o(i.HAL_IWDG_GetState))
 <BR><BR>[Called By]<UL><LI><a href="#[b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_Communication_Task
 </UL>
 
@@ -683,7 +683,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_Communication_Task
 </UL>
 
-<P><STRONG><a name="[b7]"></a>HAL_SPI_GetState</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, stm32f0xx_hal_spi.o(i.HAL_SPI_GetState))
+<P><STRONG><a name="[b6]"></a>HAL_SPI_GetState</STRONG> (Thumb, 6 bytes, Stack size 0 bytes, stm32f0xx_hal_spi.o(i.HAL_SPI_GetState))
 <BR><BR>[Called By]<UL><LI><a href="#[b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;SPI_Communication_Task
 </UL>
 
@@ -1211,14 +1211,14 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> startup_stm32f031.o(RESET)
 </UL>
-<P><STRONG><a name="[b5]"></a>SPI_Communication_Task</STRONG> (Thumb, 150 bytes, Stack size 16 bytes, spi_ui.o(i.SPI_Communication_Task))
+<P><STRONG><a name="[b5]"></a>SPI_Communication_Task</STRONG> (Thumb, 148 bytes, Stack size 16 bytes, spi_ui.o(i.SPI_Communication_Task))
 <BR><BR>[Stack]<UL><LI>Max Depth = 96<LI>Call Chain = SPI_Communication_Task &rArr; MC_Set_Thrust &rArr; thrustToSpeed &rArr; __aeabi_ddiv
 </UL>
 <BR>[Calls]<UL><LI><a href="#[5b]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_IWDG_Start
 <LI><a href="#[5a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_IWDG_Refresh
-<LI><a href="#[b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_IWDG_GetState
+<LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_IWDG_GetState
 <LI><a href="#[6e]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_TransmitReceive_DMA
-<LI><a href="#[b7]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_GetState
+<LI><a href="#[b6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_GetState
 <LI><a href="#[b8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;HAL_SPI_FlushRxFifo
 <LI><a href="#[96]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_StopMotor
 <LI><a href="#[a5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;MC_StartMotor
