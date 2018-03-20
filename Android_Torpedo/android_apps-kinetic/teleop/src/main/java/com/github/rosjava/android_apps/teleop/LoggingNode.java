@@ -1,5 +1,9 @@
 package com.github.rosjava.android_apps.teleop;
 
+import android.util.Log;
+
+import org.ros.concurrent.CancellableLoop;
+import org.ros.message.MessageListener;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
@@ -19,7 +23,11 @@ import std_msgs.Int32MultiArray;
  */
 
 public class LoggingNode extends AbstractNodeMain {
-//    // Define system connections
+    // Define data
+    public boolean switch_front = false;
+    public boolean switch_center = false;
+    public boolean switch_rear = false;
+
 //
 //    // System messages
 //    private Subscriber<Int32> status_system_sub;
@@ -42,7 +50,7 @@ public class LoggingNode extends AbstractNodeMain {
 //    private Subscriber<Int32> embedded_battery_sop_pub;
 //    private Subscriber<Float64> embedded_battery_voltage_pub;
 //    private Subscriber<Float64> embedded_battery_current_pub;
-//    private Subscriber<Int32> embedded_reed_switches_pub;
+    private Subscriber<Int32> embedded_reed_switches_sub;
 //    private Subscriber<PointCloud> camera_targets_front_pub;
 //    private Subscriber<PointCloud> camera_targets_rear_pub;
 //
@@ -51,8 +59,6 @@ public class LoggingNode extends AbstractNodeMain {
 //
 //    private ParameterTree param_tree;
 
-
-
     @Override
     public GraphName getDefaultNodeName() {
         return GraphName.of("LoggingNode");
@@ -60,6 +66,30 @@ public class LoggingNode extends AbstractNodeMain {
 
     @Override
     public void onStart(ConnectedNode connectedNode) {
+        // Define system connections
+        final Subscriber<Int32> embedded_reed_switch_sub = connectedNode.newSubscriber("embedded_reed_switches", Int32._TYPE);
 
+        // Main loop
+        connectedNode.executeCancellableLoop(new CancellableLoop() {
+
+            @Override protected void setup() {
+            }
+
+            @Override
+            protected void loop() throws InterruptedException {
+                Thread.sleep(100);
+            }
+        });
+
+        // System state callback
+        embedded_reed_switch_sub.addMessageListener(new MessageListener<Int32>() {
+            @Override
+            public void onNewMessage(Int32 embedded_reed_switches_msg) {
+                int switch_status = embedded_reed_switches_msg.getData();
+                switch_front = (switch_status&4)==4;
+                switch_center = (switch_status&2)==2;
+                switch_rear = (switch_status&1)==1;
+            }
+        });
     }
 }

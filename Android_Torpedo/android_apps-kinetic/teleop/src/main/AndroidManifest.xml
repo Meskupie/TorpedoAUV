@@ -38,5 +38,6 @@
                 <action android:name="org.ros.android.NodeMainExecutorService" />
             </intent-filter>
         </service>
+
     </application>
 </manifest>

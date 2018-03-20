@@ -28,7 +28,7 @@ public class ControllerNode extends AbstractNodeMain{
     private Time time_state_reference;
     private Time time_status_system;
     private Duration timeout_state_reference = new Duration(0.1);
-    private Duration timeout_status_system= new Duration(0.1);
+    private Duration timeout_status_system= new Duration(0.06);
 
     private double[] input_thrust = new double[6];
     private double[] limits_thrusters_initial = new double[]{4,4,4,4,2,2};
@@ -67,10 +67,10 @@ public class ControllerNode extends AbstractNodeMain{
 
                 // Check timeouts
                 time_current = connectedNode.getCurrentTime();
-                if(time_current.compareTo(time_state_reference.add(timeout_state_reference)) == 1){
-                    if(status_system > 0){Log.e("ROV_ERROR", "Controller node: Timeout on state reference");}
-                    status_controller |= 2;
-                } else {status_controller &= ~2;}
+//                if(time_current.compareTo(time_state_reference.add(timeout_state_reference)) == 1){
+//                    if(status_system > 0){Log.e("ROV_ERROR", "Controller node: Timeout on state reference");}
+//                    status_controller |= 2;
+//                } else {status_controller &= ~2;}
                 if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
                     if(status_system > 0){Log.e("ROV_ERROR", "Controller node: Timeout on system state");}
                     status_controller |= 2;

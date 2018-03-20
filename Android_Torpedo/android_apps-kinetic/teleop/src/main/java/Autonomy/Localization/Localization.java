@@ -261,7 +261,7 @@ public class Localization {
     public double getFitness() {return pose_fitness;}
     public Vector3 getLinearVelocity() {return velocity_linear;}
     public Vector3 getAngularVelocity() {return velocity_angular;}
-    public int[] getAShape() {return new int[]{SIZE_INPUTS, SIZE_INPUTS};}
+    public int[] getAShape() {return new int[]{SIZE_STATES, SIZE_STATES};}
     public int[] getBShape() {return new int[]{SIZE_STATES, SIZE_INPUTS};}
 
     // ========= deprecated =========

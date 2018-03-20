@@ -17,6 +17,7 @@ public class MessageManager {
     public MsgSMCMotors msg_smc_motors;
     public MsgCameraTargets msg_front_targets;
     public MsgCameraTargets msg_rear_targets;
+    public MsgCameraType msg_camera_type;
 
     private int checksum_counter = 0;
 
@@ -76,15 +77,23 @@ public class MessageManager {
                         }
                     } else if (bit_size[i] < 8) {
                         if (bit_index + bit_size[i] <= raw.length * 8) {
-                            int shift = (8 - ((bit_index % 8) + bit_size[i]));
-                            if (shift >= 0) {
-                                int assembled = (raw[byte_index] >> shift) & ((1 << bit_size[i]) - 1);
+// This is the fix for that bit stuff order
+                            if( ((bit_index % 8) + bit_size[i]) <= 8){
+                                int assembled = (raw[byte_index] >> (bit_index % 8)) & ((1 << bit_size[i]) - 1);
                                 output[output_index] = assembled;
                                 output_index++;
                                 bit_index += bit_size[i];
                                 byte_index = bit_index / 8;
+// This code assumed opposite bit stuff order
+//                            int shift = (8 - ((bit_index % 8) + bit_size[i]));
+//                            if (shift >= 0) {
+//                                int assembled = (raw[byte_index] >> shift) & ((1 << bit_size[i]) - 1);
+//                                output[output_index] = assembled;
+//                                output_index++;
+//                                bit_index += bit_size[i];
+//                                byte_index = bit_index / 8;
                             } else {
-                                Log.d(TAG_ERROR, "Parser cant handle partial byte case (<8 overrun)");
+                                Log.d(TAG_ERROR, "Parser cant handle partial byte case (<8)");
                             }
                         } else {
                             Log.d(TAG_ERROR, "Parser overrun < 8");
@@ -147,7 +156,7 @@ public class MessageManager {
 
     public class MsgSMCSensors {
         // Parsing properties
-        private final int size_bytes = 33;
+        public final int size_bytes = 33;
         private final int size_values = 26;
         private int[] parsed;
         private int[] bit_size = new int[]{16,16,16,16, 8, 8,16, 8, 4, 3, 1, 1, 1};
@@ -198,7 +207,7 @@ public class MessageManager {
 
     public class MsgSMCMotors {
         // Parsing properties
-        private final int size_bytes = 13;
+        public final int size_bytes = 13;
         private final int size_values = 6;
         private byte[] raw = new byte[size_bytes+1];
         private int[] bit_size = new int[]{16};
@@ -229,18 +238,41 @@ public class MessageManager {
 
     public class MsgCameraTargets{
         // Parsing properties
-        private final int size_bytes = 0;
-        private final int size_values = 0;
+        public final int size_bytes = 31;
+        private final int size_values = 31;
         private byte[] raw;
         private int[] parsed = new int[size_values];
-        private int[] bit_size = new int[]{};
-        private int[] arr_size = new int[]{};
-        private double[] scale = new double[]{};
-        public final byte[] serial_request_tag = new byte[]{0x63}; //c
+        private int[] bit_size = new int[]{8,8,8,4,4,8,8,4,4,8,8,4,4,8,8,4,4,8,8,4,4,8,8,4,4,8,8,4,4,8,8,4,4,8,8,4,4,8,8,4,4};
+        private int[] arr_size = new int[]{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+        private double[] scale = new double[]{180.0/3.14159,180.0/3.14159,1,0.1,180.0/3.14159,180.0/3.14159,1,0.1,180.0/3.14159,180.0/3.14159,1,0.1,180.0/3.14159,180.0/3.14159,1,0.1,180.0/3.14159,180.0/3.14159,1,0.1,180.0/3.14159,180.0/3.14159,1,0.1,180.0/3.14159,180.0/3.14159,1,0.1,180.0/3.14159,180.0/3.14159,1,0.1,180.0/3.14159,180.0/3.14159,1,0.1,180.0/3.14159,180.0/3.14159,1,0.1};
+        private final byte[] serial_request_tag = new byte[]{0x63}; //c
 
+        // Data
+        public double[] azumuths = new double [10];
+        public double[] altitudes = new double[10];
+        public int[] ids = new int[10];
+        public double[] confidences = new double[10];
 
         public MsgCameraTargets(){}
 
+        public void parseData(byte[] raw){
+            parsed = parseRawBytes(raw,bit_size,arr_size,size_values);
+            for(int i = 0; i < azumuths.length; i++){
+                azumuths   [i] = parsed[i*4+0]*scale[i*4+0];
+                altitudes  [i] = parsed[i*4+1]*scale[i*4+1];
+                ids  [i] = (int)(parsed[i*4+2]*scale[i*4+2]);
+                confidences[i] = parsed[i*4+3]*scale[i*4+3];
+            }
+        }
+
+        public byte[] getRequest(){
+            return serial_request_tag;
+        }
+    }
+
+    public class MsgCameraType{
+        // Parsing properties
+        private final byte[] serial_request_tag = new byte[]{0x74}; //t
 
         public byte[] getRequest(){
             return serial_request_tag;

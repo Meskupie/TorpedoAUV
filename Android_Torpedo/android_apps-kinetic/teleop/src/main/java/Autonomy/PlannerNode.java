@@ -27,13 +27,16 @@ public class PlannerNode extends AbstractNodeMain {
     double[] state_reference = new double[12];
 
     private int status_system;
+    private int status_system_prev = 0;
     private int status_planner;
 
     private Time time_current;
+    private Time time_pipe_start;
     private Time time_status_system;
     private Time time_state_pose;
-    private Duration timeout_status_system = new Duration(0.04);
-    private Duration timeout_state_pose = new Duration(0.04);
+    private Duration leeway_pipe_start = new Duration(0.06);
+    private Duration timeout_status_system = new Duration(0.06);
+    private Duration timeout_state_pose = new Duration(0.1);
 
 
 
@@ -61,6 +64,7 @@ public class PlannerNode extends AbstractNodeMain {
             Int32 status_planner_msg = status_planner_pub.newMessage();
 
             @Override protected void setup() {
+                time_pipe_start = connectedNode.getCurrentTime();
                 time_status_system = connectedNode.getCurrentTime();
                 time_state_pose = connectedNode.getCurrentTime();
                 status_system = 0;
@@ -73,7 +77,11 @@ public class PlannerNode extends AbstractNodeMain {
                     status_planner |= 1;
                 } else {
                     status_planner &= ~1;
+                    if(status_system_prev < 2){
+                        time_pipe_start = connectedNode.getCurrentTime();
+                    }
                 }
+                status_system_prev = status_system;
 
                 // Check timeouts
                 time_current = connectedNode.getCurrentTime();
@@ -81,10 +89,10 @@ public class PlannerNode extends AbstractNodeMain {
                     if(status_system > 0){Log.e("ROV_ERROR", "Planner node: Timeout on system state");}
                     status_planner |= 2;
                 } else {status_planner &= ~2;}
-                if (time_current.compareTo(time_state_pose.add(timeout_state_pose)) == 1) {
-                    if(status_system > 0){Log.e("ROV_ERROR", "Planner node: Timeout on state pose");}
-                    status_planner |= 2;
-                } else {status_planner &= ~2;}
+//                if ((time_current.compareTo(time_state_pose.add(timeout_state_pose)) == 1) && ((status_planner&1)==0) && time_current.compareTo(time_pipe_start.add(leeway_pipe_start)) == 1) {
+//                    if(status_system > 0){Log.e("ROV_ERROR", "Planner node: Timeout on state pose");}
+//                    status_planner |= 2;
+//                } else {status_planner &= ~2;}
 
                 // Check if all data/params filled
                 if (!rov_planner.isReady()){
