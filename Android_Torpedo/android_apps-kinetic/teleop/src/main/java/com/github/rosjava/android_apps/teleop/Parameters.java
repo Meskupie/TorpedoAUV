@@ -19,6 +19,7 @@ public class Parameters {
     ArrayList<Double> data_B;
     ArrayList<Double> data_K;
     ArrayList<Double> data_map;
+    int data_run_mode;
 
     // Other
     private String path = "res/raw/";
@@ -32,6 +33,7 @@ public class Parameters {
         data_B = new ArrayList<>(SIZE_B);
         data_K = new ArrayList<>(SIZE_K);
         data_map = new ArrayList<>();
+        data_run_mode = 0;
     }
 
     public boolean updateDynamics(String _filename) {
@@ -100,10 +102,16 @@ public class Parameters {
         return true;
     }
 
+    public boolean updateRunMode(int _mode){
+        data_run_mode = _mode;
+        return true;
+    }
+
     // Accessors
     public ArrayList getDataA(){return data_A;}
     public ArrayList getDataB(){return data_B;}
     public ArrayList getDataK(){return data_K;}
     public ArrayList getDataMap(){return data_map;}
+    public int getRunMode(){return data_run_mode;}
 
 }

@@ -9,7 +9,9 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
+import android.view.InputDevice;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -22,11 +24,13 @@ import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 import com.github.rosjava.android_remocons.common_tools.apps.RosAppActivity;
 
+import org.ejml.simple.SimpleMatrix;
 import org.ros.android.view.VirtualJoystickView;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import Autonomy.ControllerNode;
@@ -34,6 +38,7 @@ import Autonomy.Localization.LocalizationNode;
 import Autonomy.PlannerNode;
 import Communication.CommunicationNode;
 import Communication.MessageManager;
+import Communication.ReedSwitchManager;
 import Communication.SerialWrite;
 import Communication.USBDeviceWrapper;
 
@@ -72,6 +77,10 @@ import Communication.USBDeviceWrapper;
 		private TextView batterySoc;
 		private LinearLayout viewContainer;
 
+		private ReedSwitchManager frontReedSwitch;
+		private ReedSwitchManager centerReedSwitch;
+		private ReedSwitchManager rearReedSwitch;
+
 		public MainActivity(){
 			// The RosActivity constructor configures the notification title and ticker messages.
 			super("android teleop", "android teleop");
@@ -106,6 +115,11 @@ import Communication.USBDeviceWrapper;
 			batterySoc = (TextView) findViewById(R.id.soc_info_value);
 			viewContainer = (LinearLayout) findViewById(R.id.view_container);
 
+			// Setup Reed switch manager
+			this.frontReedSwitch = new ReedSwitchManager(button_nav_top);
+			this.centerReedSwitch = new ReedSwitchManager(button_nav_middle);
+			this.rearReedSwitch = new ReedSwitchManager(button_nav_bottom);
+
 			onBeginCourseRun();
 
 			// Setup nodes
@@ -122,15 +136,27 @@ import Communication.USBDeviceWrapper;
 			usb_device_smc = initializeSerial(usb_device_smc);
 			communication_node.setUSBSMC(usb_device_smc);
 
-			// Setup USB Front Cam
-			usb_device_first_cam = new USBDeviceWrapper("First Camera",0x0525,0xa4aa);
-			usb_device_first_cam.callback = usb_callback_first_cam;
-			usb_device_first_cam = initializeSerial(usb_device_first_cam);
+//			// Setup USB Front Cam
+//			usb_device_first_cam = new USBDeviceWrapper("First Camera",0x0525,0xa4aa);
+//			usb_device_first_cam.callback = usb_callback_first_cam;
+//			usb_device_first_cam = initializeSerial(usb_device_first_cam);
+//
+//			// Setup USB Rear Cam
+//			usb_device_second_cam = new USBDeviceWrapper("Second Camera",0x0525,0xa4aa);
+//			usb_device_second_cam.callback = usb_callback_second_cam;
+//			usb_device_second_cam = initializeSerial(usb_device_second_cam);
 
-			// Setup USB Rear Cam
-			usb_device_second_cam = new USBDeviceWrapper("Second Camera",0x0525,0xa4aa);
-			usb_device_second_cam.callback = usb_callback_second_cam;
-			usb_device_second_cam = initializeSerial(usb_device_second_cam);
+			// Setup Game Controller
+			ArrayList controllerIds = getGameControllerIds();
+			if(controllerIds.size() == 0){
+				Log.d("ROV_ERROR", "Could not find joystick device");
+			}else if(controllerIds.size() == 1){
+				Log.d(TAG_LOG, "Input device found with id: "+controllerIds.get(0));
+			}else{
+				Log.d("ROV_ERROR", "Found too many input devices");
+			}
+
+
 
 		}
 
@@ -144,81 +170,23 @@ import Communication.USBDeviceWrapper;
 				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
 				java.net.InetAddress local_network_address = socket.getLocalAddress();
 				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(system_node,
-						nodeConfiguration.setNodeName("rov/system_node"));
+				NodeConfiguration nodeConfiguration = NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
+
+				// Start all nodes
+				nodeMainExecutor.execute(system_node, nodeConfiguration.setNodeName("rov/system_node"));
+				nodeMainExecutor.execute(communication_node, nodeConfiguration.setNodeName("rov/communication_node"));
+				nodeMainExecutor.execute(localization_node,	nodeConfiguration.setNodeName("rov/localization_node"));
+				nodeMainExecutor.execute(planner_node, nodeConfiguration.setNodeName("rov/planner_node"));
+				nodeMainExecutor.execute(controller_node, nodeConfiguration.setNodeName("rov/controller_node"));
+				nodeMainExecutor.execute(parameters_node, nodeConfiguration.setNodeName("rov/parameters_node"));
 			} catch (IOException e) {
 				System.out.println("Socket error: " + e.getMessage());
 			}
 
-			// Start Communication Node
-			try {
-				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-				java.net.InetAddress local_network_address = socket.getLocalAddress();
-				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(communication_node,
-						nodeConfiguration.setNodeName("rov/communication_node"));
-			} catch (IOException e) {
-				System.out.println("Socket error: " + e.getMessage());
-			}
-
-			// Start Localization Node
-			try {
-				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-				java.net.InetAddress local_network_address = socket.getLocalAddress();
-				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(localization_node,
-						nodeConfiguration.setNodeName("rov/localization_node"));
-			} catch (IOException e) {
-				System.out.println("Socket error: " + e.getMessage());
-			}
-
-			// Start Planner Node
-			try {
-				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-				java.net.InetAddress local_network_address = socket.getLocalAddress();
-				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(planner_node,
-						nodeConfiguration.setNodeName("rov/planner_node"));
-			} catch (IOException e) {
-				System.out.println("Socket error: " + e.getMessage());
-			}
-
-			// Start Controller Node
-			try {
-				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-				java.net.InetAddress local_network_address = socket.getLocalAddress();
-				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(controller_node,
-						nodeConfiguration.setNodeName("rov/controller_node"));
-			} catch (IOException e) {
-				System.out.println("Socket error: " + e.getMessage());
-			}
-
-			// Start Parameters Node
-			try {
-				java.net.Socket socket = new java.net.Socket(getMasterUri().getHost(), getMasterUri().getPort());
-				java.net.InetAddress local_network_address = socket.getLocalAddress();
-				socket.close();
-				NodeConfiguration nodeConfiguration =
-						NodeConfiguration.newPublic(local_network_address.getHostAddress(), getMasterUri());
-				nodeMainExecutor.execute(parameters_node,
-						nodeConfiguration.setNodeName("rov/parameters_node"));
-			} catch (IOException e) {
-				System.out.println("Socket error: " + e.getMessage());
-			}
 
 			// Set parameters
 			parameters_node.setDynamics("rough_controller_data.txt");
+			parameters_node.setRunMode(2);
 
 		}
 
@@ -398,6 +366,52 @@ import Communication.USBDeviceWrapper;
 			return device_wrapper;
 		}
 
+		// ================Control Device========================
+
+		public ArrayList getGameControllerIds() {
+			ArrayList gameControllerDeviceIds = new ArrayList();
+			int[] deviceIds = InputDevice.getDeviceIds();
+			for (int deviceId : deviceIds) {
+				InputDevice dev = InputDevice.getDevice(deviceId);
+				int sources = dev.getSources();
+
+
+				// Verify that the device has gamepad buttons, control sticks, or both.
+				boolean has_gamepad = ((sources & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD);
+				boolean has_joystick = ((sources & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK);
+				if (has_gamepad||has_joystick) {
+					// This device is a game controller. Store its device ID.
+					if (!gameControllerDeviceIds.contains(deviceId)) {
+						gameControllerDeviceIds.add(deviceId);
+					}
+				}
+			}
+			return gameControllerDeviceIds;
+		}
+
+		@Override
+		public boolean dispatchGenericMotionEvent(final MotionEvent event) {
+			Log.d(TAG_LOG,"EVENT!");
+			// Check that the event came from a game controller
+			if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
+					&& event.getAction() == MotionEvent.ACTION_MOVE) {
+//					InputDevice mInputDevice = event.getDevice();
+//					mInputDevice.getMotionRange(MotionEvent.AXIS_X, event.getSource()).getRange();
+
+				SimpleMatrix joy_state = new SimpleMatrix(6,1);
+				joy_state.set(0,0,event.getAxisValue(MotionEvent.AXIS_X));
+				joy_state.set(1,0,event.getAxisValue(MotionEvent.AXIS_Y));
+				joy_state.set(2,0,event.getAxisValue(MotionEvent.AXIS_Z));
+				joy_state.set(3,0,event.getAxisValue(MotionEvent.AXIS_RX));
+				joy_state.set(4,0,event.getAxisValue(MotionEvent.AXIS_RY));
+				joy_state.set(5,0,event.getAxisValue(MotionEvent.AXIS_RZ));
+
+				Log.d(TAG_LOG,"Joystick State, X:"+joy_state.get(0)+" Y:"+joy_state.get(1)+" Z:"+joy_state.get(2)+" RX"+joy_state.get(3)+" RY"+joy_state.get(4)+" RZ"+joy_state.get(5));
+
+				return true;
+			}
+			return MainActivity.super.onGenericMotionEvent(event);
+		}
 
 		// =======================UI=============================
 
@@ -423,10 +437,18 @@ import Communication.USBDeviceWrapper;
                             onEnableRun();
                         }
                     });
+                    frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onEnableRun();
+						}
+					});
 
                     button_nav_middle.setOnClickListener(null);
+                    centerReedSwitch.setOnClickListener(null);
 
                     button_nav_bottom.setOnClickListener(null);
+                    rearReedSwitch.setOnClickListener(null);
                 }
             }, 200);
         }
@@ -441,10 +463,13 @@ import Communication.USBDeviceWrapper;
 			pageState = Page_State.ENABLE_RUN;
             viewContainer.setBackgroundResource(R.drawable.outline_bg);
 
+
             resetButtonHandler();
 
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
+
+            	// HANDLER FOR BUTTON CLICKS
                 @Override
                 public void run() {
                     button_nav_middle.setOnClickListener(new View.OnClickListener() {
@@ -491,7 +516,47 @@ import Communication.USBDeviceWrapper;
                         }
                     });
 
-                    button_nav_bottom.setOnClickListener(new View.OnClickListener() {
+                    //SAME HANDLER FOR REED SWTICHES
+					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							Handler enableClick = new Handler();
+							enableClick.postDelayed(new Runnable() {
+								@Override
+								public void run() {
+									frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+										@Override
+										public void onTouch(View v, MotionEvent event) {
+
+											switch (event.getAction()) {
+												case MotionEvent.ACTION_DOWN:
+													break;
+												case MotionEvent.ACTION_UP:
+													onEnableRun();
+													break;
+											}
+										}
+									});
+								}
+							}, 2000);
+
+							frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+								@Override
+								public void onTouch(View v, MotionEvent event) {
+									switch (event.getAction()) {
+										case MotionEvent.ACTION_DOWN:
+											onWaitingForLock();
+											break;
+										case MotionEvent.ACTION_UP:
+											onEnableRun();
+											break;
+									}
+								}
+							});
+						}
+					});
+
+                    rearReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
                         @Override
                         public void onClick(View view) {
                             onBeginCourseRun();
@@ -499,37 +564,50 @@ import Communication.USBDeviceWrapper;
                     });
                 }
             }, 200);
-
 		}
 
         private void onWaitingForLock() {
+			header.setText(R.string.waiting_for_lock);
+			description.setText(R.string.waiting_for_lock_description);
+			makeButtonsVisible();
+			button_nav_top.setText(R.string.hold);
+			button_nav_middle.setVisibility(View.INVISIBLE);
+			button_nav_bottom.setVisibility(View.INVISIBLE);
+			pageState = Page_State.WAITING_FOR_LOCK;
+			viewContainer.setBackgroundResource(R.drawable.outline_bg);
+
+			button_nav_bottom.setOnClickListener(null);
+			rearReedSwitch.setOnClickListener(null);
+
             button_nav_top.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
 
-                    switch (event.getAction()) {
-                        case MotionEvent.ACTION_DOWN:
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            onEnableRun();
-                            break;
-                    }
+					switch (event.getAction()) {
+						case MotionEvent.ACTION_DOWN:
+							break;
+						case MotionEvent.ACTION_UP:
+							onEnableRun();
+							break;
+					}
 
-                    return true;
-                }
-            });
+					return true;
+				}
+			});
 
-            header.setText(R.string.waiting_for_lock);
-            description.setText(R.string.waiting_for_lock_description);
-            makeButtonsVisible();
-            button_nav_top.setText(R.string.hold);
-            button_nav_middle.setVisibility(View.INVISIBLE);
-            button_nav_bottom.setVisibility(View.INVISIBLE);
-            pageState = Page_State.WAITING_FOR_LOCK;
-            viewContainer.setBackgroundResource(R.drawable.outline_bg);
+			frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+				@Override
+				public void onTouch(View v, MotionEvent event) {
 
-            button_nav_bottom.setOnClickListener(null);
-
+					switch (event.getAction()) {
+						case MotionEvent.ACTION_DOWN:
+							break;
+						case MotionEvent.ACTION_UP:
+							onEnableRun();
+							break;
+					}
+				}
+			});
             //Testing to force view change
 //            Handler handler2 = new Handler();
 //            handler2.postDelayed(new Runnable() {
@@ -552,8 +630,10 @@ import Communication.USBDeviceWrapper;
 			viewContainer.setBackgroundResource(R.drawable.outline_bg_green);
 
 			button_nav_middle.setOnClickListener(null);
-
 			button_nav_bottom.setOnClickListener(null);
+
+			centerReedSwitch.setOnClickListener(null);
+			rearReedSwitch.setOnClickListener(null);
 
 			//Testing to force view change
 //            Handler handler = new Handler();
@@ -589,6 +669,13 @@ import Communication.USBDeviceWrapper;
                             resetButtonHandler();
                         }
                     });
+					frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onRunning();
+							resetButtonHandler();
+						}
+					});
 
                     button_nav_middle.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -596,6 +683,12 @@ import Communication.USBDeviceWrapper;
                             onBeginCourseRun();
                         }
                     });
+					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
 
                     button_nav_bottom.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -603,6 +696,12 @@ import Communication.USBDeviceWrapper;
                             onBeginCourseRun();
                         }
                     });
+					rearReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
                 }
             }, 200);
         }
@@ -629,6 +728,12 @@ import Communication.USBDeviceWrapper;
                             onBeginCourseRun();
                         }
                     });
+					frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
 
                     button_nav_middle.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -636,6 +741,12 @@ import Communication.USBDeviceWrapper;
                             onBeginCourseRun();
                         }
                     });
+					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
 
                     button_nav_bottom.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -643,6 +754,12 @@ import Communication.USBDeviceWrapper;
                             onBeginCourseRun();
                         }
                     });
+					rearReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
                 }
             }, 200);
 
@@ -661,6 +778,13 @@ import Communication.USBDeviceWrapper;
             button_nav_top.setOnTouchListener(null);
             button_nav_middle.setOnTouchListener(null);
             button_nav_bottom.setOnTouchListener(null);
+
+			frontReedSwitch.setOnClickListener(null);
+			centerReedSwitch.setOnClickListener(null);
+			rearReedSwitch.setOnClickListener(null);
+			frontReedSwitch.setOnTouchListener(null);
+			centerReedSwitch.setOnTouchListener(null);
+			rearReedSwitch.setOnTouchListener(null);
         }
 
 	}

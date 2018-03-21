@@ -2,7 +2,9 @@ package Autonomy;
 
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
 
+import org.ejml.simple.SimpleMatrix;
 import org.ros.concurrent.CancellableLoop;
 import org.ros.message.Duration;
 import org.ros.message.MessageListener;
@@ -21,10 +23,13 @@ import std_msgs.Float64MultiArray;
 import std_msgs.Int32;
 import visualization_msgs.Marker;
 
-public class PlannerNode extends AbstractNodeMain {
+public class PlannerNode extends AbstractNodeMain{
     private Planner rov_planner = new Planner();
 
     double[] state_reference = new double[12];
+
+    SimpleMatrix joy_input_cur = new SimpleMatrix(6,1);
+    SimpleMatrix joy_input_prev = new SimpleMatrix(6,1);
 
     private int status_system;
     private int status_system_prev = 0;
@@ -34,9 +39,11 @@ public class PlannerNode extends AbstractNodeMain {
     private Time time_pipe_start;
     private Time time_status_system;
     private Time time_state_pose;
+    private Time time_joy_input;
     private Duration leeway_pipe_start = new Duration(0.06);
     private Duration timeout_status_system = new Duration(0.06);
     private Duration timeout_state_pose = new Duration(0.1);
+    private Duration timeout_joy_input = new Duration(0.5);
 
 
 
@@ -149,4 +156,13 @@ public class PlannerNode extends AbstractNodeMain {
             }
         });
     }
+
+//    public boolean setJoystickInput(SimpleMatrix input){
+//        joy_input_cur = input;
+//        if(joy_input_cur != joy_input_prev){
+//            time_joy_input = time_current;
+//            joy_input_prev = joy_input_cur;
+//        }else
+//        rov_planner.set
+//    }
 }
