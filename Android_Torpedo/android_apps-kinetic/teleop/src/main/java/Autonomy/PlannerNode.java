@@ -43,9 +43,9 @@ public class PlannerNode extends AbstractNodeMain{
     private Time time_status_system;
     private Time time_state_pose;
     private Time time_joy_input;
-    private Duration leeway_pipe_start = new Duration(0.06);
-    private Duration timeout_status_system = new Duration(0.06);
-    private Duration timeout_state_pose = new Duration(0.1);
+    private Duration leeway_pipe_start = new Duration(0.15);
+    private Duration timeout_status_system = new Duration(0.15);
+    private Duration timeout_state_pose = new Duration(0.15);
     private Duration timeout_joy_input = new Duration(0.5);
 
 
@@ -58,7 +58,7 @@ public class PlannerNode extends AbstractNodeMain{
     @Override
     public void onStart(final ConnectedNode connectedNode) {
         // Define system connections
-        final Publisher<Int32> status_planner_pub = connectedNode.newPublisher("status_controller", Int32._TYPE);
+        final Publisher<Int32> status_planner_pub = connectedNode.newPublisher("status_planner", Int32._TYPE);
         final Subscriber<Int32> status_system_sub = connectedNode.newSubscriber("status_system", Int32._TYPE);
         final ParameterTree param_tree = connectedNode.getParameterTree();
         // Define data connections
@@ -124,7 +124,7 @@ public class PlannerNode extends AbstractNodeMain{
                 }
 
                 // Check if the system is ready to proceed
-                //TODO: check if we are close to the start position
+                //TODO: check if we are close to the start position and handle the 128 case
 
                 // Publish status
                 status_planner_msg.setData(status_planner);

@@ -59,10 +59,10 @@ public class LocalizationNode extends AbstractNodeMain{
     private Time time_camera_targets_front;
     private Time time_camera_targets_rear;
 
-    private Duration timeout_status_system = new Duration(0.06);
-    private Duration timeout_embedded_thrust = new Duration(0.1);
-    private Duration timeout_embedded_imu = new Duration(0.1);
-    private Duration timeout_embedded_depth = new Duration(0.1);
+    private Duration timeout_status_system = new Duration(0.15);
+    private Duration timeout_embedded_thrust = new Duration(0.15);
+    private Duration timeout_embedded_imu = new Duration(0.15);
+    private Duration timeout_embedded_depth = new Duration(0.15);
     private Duration timeout_camera_targets_front = new Duration(0.2);
     private Duration timeout_camera_targets_rear = new Duration(0.2);
 

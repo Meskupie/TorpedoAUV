@@ -26,17 +26,21 @@ public class CommunicationNode extends AbstractNodeMain {
     private int status_system;
     private int status_communication;
 
-    private boolean switch_front = false;
-    private boolean switch_center = false;
-    private boolean switch_rear = false;
+//    private boolean switch_front = false;
+//    private boolean switch_center = false;
+//    private boolean switch_rear = false;
+
+    public double ui_battery_current = 0.0;
+    public double ui_battery_voltage = 0.0;
+    public int ui_battery_soc = 0;
 
     private Time time_current;
     private Time time_input_thrust;
     private Time time_status_system;
     private Time time_embedded;
-    private Duration timeout_input_thrust = new Duration(0.1);
-    private Duration timeout_status_system= new Duration(0.06);
-    private Duration timeout_embedded = new Duration(0.1);
+    private Duration timeout_input_thrust = new Duration(0.15);
+    private Duration timeout_status_system= new Duration(0.15);
+    private Duration timeout_embedded = new Duration(0.15);
 
     private boolean ready_new_embedded = false;
 
@@ -89,7 +93,8 @@ public class CommunicationNode extends AbstractNodeMain {
     private USBDeviceWrapper usb_rear_cam = new USBDeviceWrapper();
 
     private MessageManager message_manager = new MessageManager();
-    private int temp = 0;
+
+    private String[] smc_status_enum = new String[]{"running","idle","startup","timeout","fault", "fault_IMU","fault battery","fault motors"};
 
 
     public CommunicationNode(){
@@ -154,7 +159,6 @@ public class CommunicationNode extends AbstractNodeMain {
             protected void loop() throws InterruptedException {
                 // Update USB devices
                 if((usb_smc.usbDevice != null)&&(usb_smc.serial != null)){
-                    Log.d("ROV_DEBUG", "USB device ready");
                     ready_usb_smc = true;
                 }
                 if((usb_front_cam.usbDevice != null)&&(usb_front_cam.serial != null)){
@@ -198,7 +202,7 @@ public class CommunicationNode extends AbstractNodeMain {
                 status_system = status_system_msg.getData();
                 // request data from systems
                 if(ready_usb_smc) {
-                    Log.d("ROV_LOG","Send is being queued");
+                    Log.d("ROV_SERIAL","Sending sensor request");
                     new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_sensors.getRequest()});
                 }
                 if(ready_usb_front_cam) {
@@ -216,10 +220,10 @@ public class CommunicationNode extends AbstractNodeMain {
             @Override
             public void onNewMessage(Float64MultiArray input_thrust_msg) {
                 time_input_thrust = connectedNode.getCurrentTime();
-                double[] input_thrust = input_thrust_msg.getData();
-
                 if (status_system >= 3) {
-                    message_manager.msg_smc_motors.input_thrust = input_thrust_msg.getData();
+                    double[] thrusts = input_thrust_msg.getData();
+                    message_manager.msg_smc_motors.input_thrust = thrusts;
+                    Log.d("ROV_SERIAL","Sending thrust command, FL:"+thrusts[0]+" FR:"+thrusts[1]+" RL:"+thrusts[2]+" RR:"+thrusts[3]+" FC:"+thrusts[4]+" RC:"+thrusts[5]);
                     new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_motors.getBuiltMsg()});
                 }
             }
@@ -260,9 +264,15 @@ public class CommunicationNode extends AbstractNodeMain {
         embedded_reed_switches_pub.publish(embedded_reed_switches_msg);
 
         //set up reed switch values
-        switch_front = message.switch_front;
-        switch_center = message.switch_center;
-        switch_rear = message.switch_rear;
+//        switch_front = message.switch_front;
+//        switch_center = message.switch_center;
+//        switch_rear = message.switch_rear;
+
+        ui_battery_current = message.battery_current;
+        ui_battery_voltage = message.battery_voltage;
+        ui_battery_soc = message.battery_SOC;
+
+        Log.d("ROV_LOG", "SMC Status: "+smc_status_enum[message.smc_status]+" Reed Switches: "+embedded_reed_switches_msg.getData());
 
         //test if onClicks/onTouches should activate
 
@@ -287,17 +297,17 @@ public class CommunicationNode extends AbstractNodeMain {
 
     }
 
-    public boolean getReedFront() {
-        return this.switch_front;
-    }
-
-    public boolean getReedCenter() {
-        return this.switch_center;
-    }
-
-    public boolean getReedRear() {
-        return this.switch_rear;
-    }
+//    public boolean getReedFront() {
+//        return this.switch_front;
+//    }
+//
+//    public boolean getReedCenter() {
+//        return this.switch_center;
+//    }
+//
+//    public boolean getReedRear() {
+//        return this.switch_rear;
+//    }
 
     // Mutators
     public void setUSBSMC(USBDeviceWrapper device) {

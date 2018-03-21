@@ -44,7 +44,7 @@ public class ReedSwitchManager {
                 this.onClickListener.onClick(navButton);
             }
         } else {
-            Log.d("Listener Error", " onClick listener for navigation buttons never set!");
+            Log.d("ROV_ERROR", " onClick listener for navigation buttons never set!");
         }
 
         // set on touch
@@ -64,7 +64,7 @@ public class ReedSwitchManager {
                 this.onTouchListener.onTouch(this.navButton, motionEvent);
             }
         } else {
-            Log.d("Listener Error", " OnTouch listener for navigation buttons never set!");
+            Log.d("ROV_ERROR", " OnTouch listener for navigation buttons never set!");
         }
 
         // update prev state

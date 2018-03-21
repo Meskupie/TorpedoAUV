@@ -2,6 +2,10 @@ package com.github.rosjava.android_apps.teleop;
 
 import android.util.Log;
 
+import org.ros.rosjava_geometry.Quaternion;
+import org.ros.rosjava_geometry.Transform;
+import org.ros.rosjava_geometry.Vector3;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,6 +25,7 @@ public class Parameters {
     private ArrayList<Double> data_map;
     private int param_run_mode;
     private int param_teleop_style;
+    private ArrayList<Double> param_initial_pose;
 
     // Other
     private String path = "res/raw/";
@@ -36,6 +41,7 @@ public class Parameters {
         data_map = new ArrayList<>();
         param_run_mode = 0;
         param_teleop_style = 0;
+        param_initial_pose = new ArrayList<>(7);
     }
 
     public boolean updateDynamics(String _filename) {
@@ -114,6 +120,18 @@ public class Parameters {
         return true;
     }
 
+    public boolean updateInitialPose(Transform _pose){
+        param_initial_pose = new ArrayList<>(7);
+        param_initial_pose.add(_pose.getTranslation().getX());
+        param_initial_pose.add(_pose.getTranslation().getY());
+        param_initial_pose.add(_pose.getTranslation().getZ());
+        param_initial_pose.add(_pose.getRotationAndScale().getX());
+        param_initial_pose.add(_pose.getRotationAndScale().getY());
+        param_initial_pose.add(_pose.getRotationAndScale().getZ());
+        param_initial_pose.add(_pose.getRotationAndScale().getW());
+        return true;
+    }
+
     // Accessors
     public ArrayList getDataA(){return data_A;}
     public ArrayList getDataB(){return data_B;}
@@ -121,4 +139,5 @@ public class Parameters {
     public ArrayList getDataMap(){return data_map;}
     public int getRunMode(){return param_run_mode;}
     public int getTeleopStyle(){return param_teleop_style;}
+    public ArrayList getInitialPose(){return param_initial_pose;}
 }

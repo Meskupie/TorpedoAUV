@@ -40,7 +40,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/state"
+            android:id="@+id/run_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/outline_bg"
@@ -207,7 +207,7 @@
                 android:id="@+id/current_info_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0.4A"
+                android:text="---A"
                 android:textColor="@android:color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -231,7 +231,7 @@
                 android:id="@+id/soc_info_heading"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Battery SOC:"
+                android:text="Battery Voltage:"
                 android:textColor="@android:color/white"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -241,7 +241,7 @@
                 android:id="@+id/soc_info_value"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="65%"
+                android:text="0.0V"
                 android:textColor="@android:color/white"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

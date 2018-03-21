@@ -27,8 +27,8 @@ public class ControllerNode extends AbstractNodeMain{
     private Time time_current;
     private Time time_state_reference;
     private Time time_status_system;
-    private Duration timeout_state_reference = new Duration(0.1);
-    private Duration timeout_status_system= new Duration(0.06);
+    private Duration timeout_state_reference = new Duration(0.15);
+    private Duration timeout_status_system= new Duration(0.15);
 
     private double[] input_thrust = new double[6];
     private double[] limits_thrusters_initial = new double[]{4,4,4,4,2,2};
@@ -115,6 +115,7 @@ public class ControllerNode extends AbstractNodeMain{
                     Float64MultiArray input_thrust_msg = input_thrust_pub.newMessage();
                     if(status_system <= 3){ // We should be sending 0s
                         input_thrust = new double[6];
+                        input_thrust_msg.setData(input_thrust);
                         input_thrust_pub.publish(input_thrust_msg);
                     }else{ // We should be outputting data
                         rov_controller.setStateReference(state_reference_msg.getData());
@@ -125,6 +126,7 @@ public class ControllerNode extends AbstractNodeMain{
                                     input_thrust[i] = Math.max(input_thrust[i],limits_thrusters_initial[i]);
                                 }
                             }
+                            input_thrust_msg.setData(input_thrust);
                             input_thrust_pub.publish(input_thrust_msg);
                         }else{
                             Log.d("ROV_ERROR","Controller Node: Evaluation of controller failed");

@@ -17,6 +17,8 @@ public class Controller {
 
     double[] input_thrust = new double[6];
     double[] state_reference = new double[12];
+    double[] input_thrust_max = new double[]{15,15,15,15,10,10};
+    double[] input_thrust_min = new double[]{-15,-15,-15,-15,-10,-10};
 
     private final int SIZE_STATES = 12;
     private final int SIZE_INPUTS = 6;
@@ -32,12 +34,10 @@ public class Controller {
 
     public boolean computeInputThrust (){
         if(ready_controller&&ready_state_reference){
-            for(int i = 0; i < SIZE_STATES; i++){
-                state_reference_mat.set(1,i,state_reference[i]);
-            }
+            state_reference_mat = new SimpleMatrix(12,1,false,state_reference);
             input_thrust_mat = lqr_K_mat.mult(state_reference_mat);
             for(int i = 0; i < SIZE_INPUTS; i++){
-                input_thrust[i] = input_thrust_mat.get(i);
+                input_thrust[i] = Math.min(Math.max(input_thrust_mat.get(i),input_thrust_min[i]),input_thrust_max[1]);
             }
             ready_state_reference = false;
             return true;
