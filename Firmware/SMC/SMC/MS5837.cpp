@@ -206,8 +206,8 @@ float MS5837::temperature() {
 float MS5837::depth() {
     return (pressure(MS5837::Pa)-101300)/(fluidDensity*9.80665);
 }
-uint16_t MS5837::depth_mm() {
-    return (uint16_t) MS5837::depth()*1000;
+int16_t MS5837::depth_mm() {
+    return (uint16_t) (MS5837::depth()*1000.0);
 }
 
 float MS5837::altitude() {

@@ -88,7 +88,7 @@ public:
 	 *  liquids only. Uses density that is set for fresh or seawater.
 	 */
 	float depth();
-    uint16_t depth_mm();
+    int16_t depth_mm();
 
 	/** Altitude returned in meters (valid for operation in air only).
 	 */

@@ -36,8 +36,8 @@ debounce::initButton(uint32_t pin,uint32_t mode)
 boolean debounce::updateButton()
 {
     update(digitalRead(_buttonPin));
-    if (_lastEstimate>_threshold) return true;
-    return false;
+    if (_lastEstimate>_threshold) return false;
+    return true;
 }
 
 float debounce::update(float input)

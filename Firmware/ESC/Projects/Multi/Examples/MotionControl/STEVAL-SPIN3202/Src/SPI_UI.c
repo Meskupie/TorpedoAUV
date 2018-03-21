@@ -94,6 +94,7 @@ int16_t speedToThrust(int16_t speed)
 	thrust =  (int16_t)(0.0928 * (speedDub));
 	return thrust;
 }
+
 int16_t referenceToCurrent(int16_t reference)
 {
     int32_t currentReferenceTHDS = (reference*1000)>>UPPER_OUT_SHIFT;
