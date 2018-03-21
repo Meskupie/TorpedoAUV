@@ -145,7 +145,7 @@
 /*!< ********************* Hall sensors **************************************/
 #if defined(HALL_SENSORS)
 #define START_COUNTER_STEPS_DECREMENTATION   8
-#define NUMBER_OF_STARTS                     3
+#define NUMBER_OF_STARTS                     10
 #define HALL_KO_SUCCESSIVE_MAX              60
 #define MAX_SPEED                        20000      /*!< Motor rated max speed */
 #define STEP_DURATION_MINIMUM 					((SYSCLOCK_FREQUENCY*10/((LF_TIMX_PSC+1)*NUM_POLE_PAIRS*MAX_SPEED))>>1)
@@ -190,7 +190,7 @@
 #define ACC                              10000     /*!< Mechanical acceleration rate (setting available in manual mode, LOAD_TYPE = 0) */
 #define MINIMUM_ACC                        500     /*!< Mechanical acceleration rate for BIG load application */
 //#define NUMBER_OF_STEPS                  20000    /*!< Number of elements for motor start-UP (max value 65535)*///
-#define NUMBER_OF_STEPS                  2    /*!< Number of elements for motor start-UP (max value 65535)*/
+#define NUMBER_OF_STEPS                  	100    /*!< Number of elements for motor start-UP (max value 65535)*/
 #define TIME_FOR_ALIGN                     500     /*!< Time for alignment (msec)*/
 #define BUTTON_DELAY                      1000     /*!< Delay time to enable push button for new command (1 = 1msec)*/
 #define NUMBER_ZCR                          12     /*!< Number of zero crossing event during the startup for closed loop control begin */

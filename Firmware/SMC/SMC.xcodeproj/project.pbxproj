@@ -740,6 +740,7 @@
 		AA2A180228174807AA0003BB /* TimerOne.h in Sources */ = {isa = PBXBuildFile; fileRef = AAAA180228174807AA0003BB /* TimerOne.h */; };
 		AA2A180228174807AA0003BD /* ClickEncoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAAA180228174807AA0003BD /* ClickEncoder.cpp */; };
 		AA2A180228174807AA0003BE /* ClickEncoder.h in Sources */ = {isa = PBXBuildFile; fileRef = AAAA180228174807AA0003BE /* ClickEncoder.h */; };
+		BE069E53206190EE001DE385 /* MS5837.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE069E52206190EE001DE385 /* MS5837.cpp */; };
 		BE25E7B72047691A0077EB2E /* SMC.ino in Sources */ = {isa = PBXBuildFile; fileRef = BE95E7B72047691A0077EB2E /* SMC.ino */; };
 		BE45BFD920520A420075F0CF /* debounce.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE45BFD720520A420075F0CF /* debounce.cpp */; };
 		BE70D82A204FB81700CDD9B6 /* BQ34110.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE70D828204FB81600CDD9B6 /* BQ34110.cpp */; };
@@ -1482,6 +1483,8 @@
 		AAAA180228174807AA0003BB /* TimerOne.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TimerOne.h; sourceTree = "<group>"; };
 		AAAA180228174807AA0003BD /* ClickEncoder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ClickEncoder.cpp; sourceTree = "<group>"; };
 		AAAA180228174807AA0003BE /* ClickEncoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClickEncoder.h; sourceTree = "<group>"; };
+		BE069E51206190ED001DE385 /* MS5837.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MS5837.h; sourceTree = "<group>"; };
+		BE069E52206190EE001DE385 /* MS5837.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MS5837.cpp; sourceTree = "<group>"; };
 		BE45BFD720520A420075F0CF /* debounce.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = debounce.cpp; sourceTree = "<group>"; };
 		BE45BFD820520A420075F0CF /* debounce.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = debounce.h; sourceTree = "<group>"; };
 		BE70D809204FA0E600CDD9B6 /* ISSUE_TEMPLATE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = ISSUE_TEMPLATE.md; sourceTree = "<group>"; };
@@ -3905,6 +3908,8 @@
 			children = (
 				BE70D829204FB81700CDD9B6 /* BQ34110.h */,
 				BE70D828204FB81600CDD9B6 /* BQ34110.cpp */,
+				BE069E52206190EE001DE385 /* MS5837.cpp */,
+				BE069E51206190ED001DE385 /* MS5837.h */,
 				BE70D827204FAB1600CDD9B6 /* Adafruit_BNO055.h */,
 				BE95E7882047691A0077EB2E /* main.cpp */,
 				BE95E78A2047691A0077EB2E /* Makefile */,
@@ -4207,6 +4212,9 @@
 		BE95E7702047691A0077EB2E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				KnownAssetTags = (
+					New,
+				);
 				LastUpgradeCheck = 0910;
 				ORGANIZATIONNAME = "Alex Bondarenko";
 				TargetAttributes = {
@@ -4955,6 +4963,7 @@
 				AA2A180228174807AA000328 /* wl_definitions.h in Sources */,
 				AA2A180228174807AA00032D /* conf_access.h in Sources */,
 				AA2A180228174807AA00032E /* conf_at45dbx.h in Sources */,
+				BE069E53206190EE001DE385 /* MS5837.cpp in Sources */,
 				AA2A180228174807AA000334 /* arduino.h in Sources */,
 				AA2A180228174807AA000335 /* led.c in Sources */,
 				AA2A180228174807AA000336 /* led.h in Sources */,

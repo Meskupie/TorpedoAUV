@@ -20,11 +20,12 @@
 
 // Library header
 #include "SMC_SERIAL.h"
-
+#define MATLAB_MODE
 #define FASTCOMM
 #define SERIAL_READ Serial.read
 #define SERIAL_AVAILABLE Serial.available
 #define STOP_ALL_MOTORS for (int i = 0; i<6;i++) ESCStop(&ESC[i]);
+#define HOST_TIMEOUT_MS (500)
 
 hostUpdateStruct_transmit_union txUnion;
 hostUpdateStruct_receive_union rxUnion;
@@ -35,12 +36,11 @@ char queryType = 'X';
 int motor = 0;
 long speed = 0;
 long thrust = 0;
+
 uint16_t current = 0;
 int8_t direction = 0;
 
 extern ESC_Struct ESC[];
-
-
 
 void printESCState(int state)
 {
@@ -98,13 +98,13 @@ void printESCState(int state)
             
         case WD_RESET:
             Serial.print("WD_RESET\n");
-            break;          
+            break;
     }
 }
 
 void printStatusStruct(ESC_StatusStruct printStruct)
 {
-    Serial.println("*****************");
+    Serial.println("asd;ifalskdjfasdkjf;akjsdf;");
     Serial.print("speed Set Point: ");
     Serial.println(printStruct.speedSetPoint);
     Serial.print("speed Measured: ");
@@ -120,6 +120,7 @@ void printStatusStruct(ESC_StatusStruct printStruct)
 }
 
 // Code
+
 
 void readSerialCommand() {
     // Check for serial message
@@ -150,43 +151,18 @@ void readSerialCommand() {
                     Serial.print("Invalid index");
                 }
                 break;
-
-//            case 'D': // SET Direction
-//                motor  = readIntegerSerial();
-//                direction = readIntegerSerial();
-//                if( motor>=0&& motor<6)
-//                {
-//                    ESCSetDirection(&ESC[motor], direction);
-//                    Serial.print("motor: ");
-//                    Serial.print(motor);
-//                    Serial.print(" direction: ");
-//                    Serial.println(direction);
-//                }
-//                else
-//                {
-//                    Serial.println("Invalid Motor index");
-//                }
-//            case 'S': // SET SPEED
-//                motor  = readIntegerSerial();
-//                speed = readIntegerSerial();
-//                if( motor>=0&& motor<6)
-//                {
-//                    ESCSetSpeed(&ESC[motor], speed);
-//                }
-//                else
-//                {
-//                    Serial.println("Invalid Motor index");
-//                }
-//                break;
+                
             case 's': // get SPEED
                 motor = readIntegerSerial();
                 if( motor>=0&& motor<6)
                 {
-                    speed = ESCGetSpeed(&ESC[motor]);
+                    
+#ifndef MATLAB_MODE
                     Serial.print("motor: ");
                     Serial.print(motor);
                     Serial.print(" speed: ");
-                    Serial.println(speed);
+#endif
+                    Serial.println(ESCGetSpeed(&ESC[motor]));
                 }
                 else
                 {
@@ -194,6 +170,8 @@ void readSerialCommand() {
                 }
                 
                 break;
+                
+                
             case 'T': // SET Thrust
                 motor  = readIntegerSerial();
                 thrust = readIntegerSerial();
@@ -210,11 +188,12 @@ void readSerialCommand() {
                 motor = readIntegerSerial();
                 if( motor>=0&& motor<6)
                 {
-                    speed = ESCGetThrust(&ESC[motor]);
+#ifndef MATLAB_MODE
                     Serial.print("motor: ");
                     Serial.print(motor);
-                    Serial.print(" speed: ");
-                    Serial.println(speed);
+                    Serial.print(" thrust: ");
+#endif
+                    Serial.println(ESCGetThrust(&ESC[motor]));
                 }
                 else
                 {
@@ -227,31 +206,37 @@ void readSerialCommand() {
                 speed = readIntegerSerial();
                 if( motor>=0&& motor<6)
                 {
-//                (&ESC[motor], speed);
-//                    Serial.print("motor: ");
-//                    Serial.print(motor);
-//                    Serial.print(" speed: ");
-//                    Serial.println(speed);
+                    //                (&ESC[motor], speed);
+                    //                    Serial.print("motor: ");
+                    //                    Serial.print(motor);
+                    //                    Serial.print(" speed: ");
+                    //                    Serial.println(speed);
                 }
                 else
                 {
                     Serial.println("Invalid Motor index");
                 }
                 break;
-            case 'c': // get Current
-                motor  = readIntegerSerial();
+            case 'c': // get current
+                motor = readIntegerSerial();
                 if( motor>=0&& motor<6)
                 {
-                    ESCGetCurrent(&ESC[motor]);
+#ifndef MATLAB_MODE
                     Serial.print("motor: ");
                     Serial.print(motor);
-                    Serial.print(" speed: ");
-                    Serial.println(speed);
+                    Serial.print(" Current: ");
+#endif
+                    Serial.println(ESCGetCurrent(&ESC[motor]));
                 }
                 else
                 {
                     Serial.println("Invalid Motor index");
                 }
+                break;
+            case 'd': // get Depth
+                Serial.println(depthSensor.depth_mm());
+                break;
+                
                 break;
             case 'i': // Get Status
                 motor  = readIntegerSerial();
@@ -267,25 +252,6 @@ void readSerialCommand() {
                 }
                 break;
                 
-            case ' ': // STOP ALL
-                for (int i = 0; i<6;i++) ESCStop(&ESC[i]);
-                break;
-                
-                case 'R':
-                motor  = readIntegerSerial();
-                if( motor>=0&& motor<6)
-                {
-                    ESCReset(&ESC[motor]);
-                    Serial.print("motor: ");
-                    Serial.print(motor);
-                    Serial.println(" reset: ");
-                }
-                else
-                {
-                    Serial.println("Invalid Motor index");
-                }
-                
-                break;
             case 'w': // get struct
                 motor  = readIntegerSerial();
                 if( motor>=0&& motor<6)
@@ -297,7 +263,7 @@ void readSerialCommand() {
                     Serial.println("Invalid Motor index");
                 }
                 break;
-            
+                
                 
             case 'b':
                 Serial.print("Voltage: ");
@@ -307,6 +273,10 @@ void readSerialCommand() {
                 break;
                 
             case 'q': // get system Update Struct
+                if ((timeLastHostContact+HOST_TIMEOUT_MS)<millis()&& smc_curent_status == System_running) {
+                    smc_curent_status = System_Timeout;
+                }
+                txUnion.statusStruct.SMC_Status = smc_curent_status;
                 txUnion.statusStruct.battVoltage_mV = gasGauge.getVoltage();
                 txUnion.statusStruct.battCurrent_mA = gasGauge.getCurrent();
                 txUnion.statusStruct.ambientTemperature_C = IMU.getTemp();
@@ -315,9 +285,14 @@ void readSerialCommand() {
                 txUnion.statusStruct.imu_y = castQuatToUint16(quat.y());
                 txUnion.statusStruct.imu_z = castQuatToUint16(quat.z());
                 txUnion.statusStruct.imu_w = castQuatToUint16(quat.w());
+                
                 txUnion.statusStruct.swStateFront = swFront.updateButton();
                 txUnion.statusStruct.swStateCenter = swCenter.updateButton();
                 txUnion.statusStruct.swStateRear = swRear.updateButton();
+                
+                depthSensor.readAsync();
+                txUnion.statusStruct.depth_m = depthSensor.depth_mm();
+                
                 //ESC_Status_update_all();
                 txUnion.statusStruct.motorStatus0 = ESC[0].runState;
                 txUnion.statusStruct.motorStatus1 = ESC[1].runState;
@@ -366,18 +341,69 @@ void readSerialCommand() {
             case 'M': // Set Motor
                 Serial.readBytes(rxUnion.stuctRaw, sizeof(rxUnion));
                 //if (rxCheckSum(rxUnion))
-                {
-                    ESCSetThrust(&ESC[0], rxUnion.motorStruct.motorThrust0_mN);
-                    ESCSetThrust(&ESC[1], rxUnion.motorStruct.motorThrust1_mN);
-                    ESCSetThrust(&ESC[2], rxUnion.motorStruct.motorThrust2_mN);
-                    ESCSetThrust(&ESC[3], rxUnion.motorStruct.motorThrust3_mN);
-                    ESCSetThrust(&ESC[4], rxUnion.motorStruct.motorThrust4_mN);
-                    ESCSetThrust(&ESC[5], rxUnion.motorStruct.motorThrust5_mN);
-                    ESC_update_all();
+            {
+                timeLastHostContact = millis();
+                switch (smc_curent_status) {
+                    case System_Timeout:
+                        if (rxUnion.motorStruct.motorThrust0_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust1_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust2_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust3_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust4_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust5_mN ==0)
+                        {
+                            smc_curent_status = System_Startup;
+                        }
+                        break;
+                    case System_Idle:
+                        if (rxUnion.motorStruct.motorThrust0_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust1_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust2_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust3_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust4_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust5_mN ==0)
+                        {
+                            smc_curent_status = System_Startup;
+                        }
+                        break;
+                    case System_Startup:
+                        if (rxUnion.motorStruct.motorThrust0_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust1_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust2_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust3_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust4_mN ==0 &&
+                            rxUnion.motorStruct.motorThrust5_mN ==0)
+                        {
+                            //ESC_Stop_all();
+                            if (0)//TODO: implement Battery Fault
+                            {
+                                smc_curent_status = System_Fault_Battery;
+                            }
+                            else if (0)
+                            {
+                                smc_curent_status = System_Fault_Motors;
+                            }
+                            else
+                            {
+                                smc_curent_status = System_running;
+                            }
+                        }
+                        break;
+                    case System_running:
+                        ESCSetThrust(&ESC[0], rxUnion.motorStruct.motorThrust0_mN);
+                        ESCSetThrust(&ESC[1], rxUnion.motorStruct.motorThrust1_mN);
+                        ESCSetThrust(&ESC[2], rxUnion.motorStruct.motorThrust2_mN);
+                        ESCSetThrust(&ESC[3], rxUnion.motorStruct.motorThrust3_mN);
+                        ESCSetThrust(&ESC[4], rxUnion.motorStruct.motorThrust4_mN);
+                        ESCSetThrust(&ESC[5], rxUnion.motorStruct.motorThrust5_mN);
+                        ESC_update_all();
+                        break;
+                        
                 }
+            }
                 break;
                 
-            case '\n': // Set Motor
+            case '\n':
                 // do nothing
                 break;
             default:

@@ -60,6 +60,29 @@ unsigned int ESC_update_all()
     {
         ESC_Fast_COMM(&ESC[i]);
     }
+    return 0;
+}
+unsigned int ESC_Stop_all()
+{
+    for(int i = 0; i< 6; i++)
+    {
+        ESCStop(&ESC[i]);
+        ESC_Fast_COMM(&ESC[i]);
+    }
+    return 0;
+}
+unsigned int ESC_Check_all()
+{
+    for(int i = 0; i< 6; i++)
+    {
+        if(ESC[i].runState == COMM_FAILURE)return 1;
+        if(ESC[i].runState == SPEEDFBKERROR)return 2;
+        if(ESC[i].runState == OVERCURRENT)return 3;
+        if(ESC[i].runState == STARTUP_FAILURE)return 4;
+        if(ESC[i].runState == STARTUP_BEMF_FAILURE)return 5;
+        if(ESC[i].runState == LF_TIMER_FAILURE)return 6;
+    }
+    return 0;
 }
 
 unsigned int ESC_init(ESC_Struct* ESC_hande,int pin)
@@ -180,7 +203,7 @@ int16_t ESCGetThrust(ESC_Struct* ESC_hande)
     #endif
     
 }
-uint16_t ESCGetSpeed(ESC_Struct* ESC_hande)
+int16_t ESCGetSpeed(ESC_Struct* ESC_hande)
 {
     #ifndef FASTCOMM
     uint16_t speed = 0;
@@ -304,9 +327,9 @@ ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande)
         newCommandStruct.commandStruct.state = 0;
         newCommandStruct.commandStruct.thrust_mN = 0;
     }
-    Serial.print("setting thrust to: ");
-    
-    Serial.println(newCommandStruct.commandStruct.thrust_mN);
+//    Serial.print("setting thrust to: ");
+//    
+//    Serial.println(newCommandStruct.commandStruct.thrust_mN);
     digitalWrite(ESC_hande->pin, LOW);
     for (int i = 0;i<sizeof(newStatusStruct); i++)
     {

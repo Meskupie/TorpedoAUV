@@ -38,13 +38,13 @@ APP_LIBS_LIST = SPI WIRE
 #	Adafruit_STMPE610 Arduino-PID-Library Encoder MAX6675 TimerOne 
 #	encoder-arduino 
 #
-USER_LIBS_LIST = ArduinoJSON Adafruit_BNO055 Adafruit_Sensor
+USER_LIBS_LIST = ArduinoJSON Adafruit_BNO055 Adafruit_Sensor 
 
 # List local libraries here
 # !!! Help: http://bit.ly/2juEP91
 # default = empty = all
 #
-LOCAL_LIBS_LIST = ESC SMC_SERIAL BQ34110 debounce
+LOCAL_LIBS_LIST = ESC SMC_SERIAL BQ34110 debounce MS5837
 
 # List core, application and user's libraries to be excluded
 # !!! Help: http://bit.ly/2AijUOI

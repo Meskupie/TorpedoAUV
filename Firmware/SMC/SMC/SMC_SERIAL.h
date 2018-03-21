@@ -52,34 +52,46 @@
 #error Platform not defined
 #endif // end IDE
 
+
+
+#ifndef SMC_SERIAL____FILEEXTENSION___
 #include "ESC.h"
 #include "BQ34110.h"
 #include "Adafruit_BNO055.h"
 #include "debounce.h"
-#ifndef SMC_SERIAL____FILEEXTENSION___
+#include "MS5837.h"
 ///
 /// @brief	Release
 ///
 #define SMC_SERIAL____FILEEXTENSION___
-
+extern MS5837 depthSensor;
 extern BQ34110 gasGauge;
 extern Adafruit_BNO055 IMU;
 extern debounce swFront;
 extern debounce swCenter;
 extern debounce swRear;
-
 typedef enum
 {
-    System_Idle,                               /* 0 */
-    System_Startup,                            /* 1 */
-    System_Fault
+    System_running,         /* 0 */
+    System_Idle,            /* 1 */
+    System_Startup,         /* 2 */
+    System_Timeout,         /* 3 */
+    System_Fault,           /* 4 */
+    System_Fault_IMU,       /* 5 */
+    System_Fault_Battery,   /* 6 */
+    System_Fault_Motors,    /* 7 */
+    
 } SystemRunState;
+
+extern SystemRunState smc_curent_status;
+
+//Host Timeout
+extern uint32_t timeLastHostContact;
 
 typedef struct
 {
-    
     uint16_t battVoltage_mV:16;
-    uint16_t depth_m : 16;
+    int16_t depth_m : 16;
     int16_t imu_x : 16;
     int16_t imu_y : 16;
     int16_t imu_z : 16;
@@ -106,6 +118,7 @@ typedef struct
     uint8_t swStateRear : 1;
     uint8_t _filler:2;
 }hostUpdateStruct_transmit_t; //length 33 bytes
+
 typedef union
 {
     hostUpdateStruct_transmit_t statusStruct;

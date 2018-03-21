@@ -1591,7 +1591,6 @@ void MC_Set_Thrust(int16_t thrust_mN)
 #ifdef SPEED_RAMP  
   PI_parameters.ReferenceToBeUpdated++;
   SIXSTEP_parameters.speed_target = thrustToSpeed(thrust_mN);
-	
 #else  
   PI_parameters.Reference = thrustToSpeed(thrust_mN);
   SIXSTEP_parameters.speed_target = PI_parameters.Reference;

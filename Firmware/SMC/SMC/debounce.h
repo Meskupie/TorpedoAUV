@@ -72,7 +72,7 @@ private:
     float debounce::update(float input);
     uint32_t _buttonPin;
     float _lastEstimate = 0;
-    const float _lambda = 0.013; // calculated for a 100ms response time at 50hz
+    const float _lambda = 0.4; // calculated for a 100ms response time at 50hz
     const float _threshold = 0.5;
 };
 
