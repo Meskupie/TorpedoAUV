@@ -1,5 +1,5 @@
 1.000000
-0.020000
+0.050000
 0.000000
 0.000000
 0.000000
@@ -11,7 +11,11 @@
 0.000000
 0.000000
 0.000000
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+1.000000
+=======
 0.933333
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt
 0.000000
 0.000000
 0.000000
@@ -25,7 +29,7 @@
 0.000000
 0.000000
 1.000000
-0.020000
+0.050000
 0.000000
 0.000000
 0.000000
@@ -37,7 +41,11 @@
 0.000000
 0.000000
 0.000000
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+1.000000
+=======
 0.933333
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt
 0.000000
 0.000000
 0.000000
@@ -51,7 +59,7 @@
 0.000000
 0.000000
 1.000000
-0.020000
+0.050000
 0.000000
 0.000000
 0.000000
@@ -63,7 +71,11 @@
 0.000000
 0.000000
 0.000000
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+1.000000
+=======
 0.933333
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt
 0.000000
 0.000000
 0.000000
@@ -77,7 +89,7 @@
 0.000000
 0.000000
 1.000000
-0.020000
+0.050000
 0.000000
 0.000000
 0.000000
@@ -89,7 +101,11 @@
 0.000000
 0.000000
 0.000000
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+1.000000
+=======
 -0.256637
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt
 0.000000
 0.000000
 0.000000
@@ -103,7 +119,7 @@
 0.000000
 0.000000
 1.000000
-0.020000
+0.050000
 0.000000
 0.000000
 0.000000
@@ -115,7 +131,11 @@
 0.000000
 0.000000
 0.000000
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+1.000000
+=======
 -0.077117
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt
 0.000000
 0.000000
 0.000000
@@ -129,7 +149,7 @@
 0.000000
 0.000000
 1.000000
-0.020000
+0.050000
 0.000000
 0.000000
 0.000000
@@ -141,7 +161,11 @@
 0.000000
 0.000000
 0.000000
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+1.000000
+=======
 -0.077117
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt
 
 0.000000
 0.000000
@@ -149,10 +173,17 @@
 0.000000
 0.000000
 0.000000
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+0.015662
+0.015662
+0.015662
+0.015662
+=======
 0.006265
 0.006265
 0.006265
 0.006265
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt
 0.000000
 0.000000
 0.000000
@@ -161,12 +192,21 @@
 0.000000
 0.000000
 0.000000
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+0.005700
+-0.005700
+-0.005700
+0.005700
+-0.016489
+0.016489
+=======
 0.002280
 -0.002280
 -0.002280
 0.002280
 -0.000908
 0.000908
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt
 0.000000
 0.000000
 0.000000
@@ -177,18 +217,23 @@
 0.000000
 0.000000
 0.000000
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+-0.002425
+-0.002425
+=======
 0.006605
 0.006605
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt
 0.000000
 0.000000
 0.000000
 0.000000
 0.000000
 0.000000
-0.020673
-0.020673
--0.020673
--0.020673
+0.079107
+0.079107
+-0.079107
+-0.079107
 0.000000
 0.000000
 0.000000
@@ -197,25 +242,82 @@
 0.000000
 0.000000
 0.000000
-0.003225
--0.003225
-0.003225
--0.003225
--0.069217
-0.066648
+0.003762
+-0.003762
+0.003762
+-0.003762
+0.006092
+-0.027858
 0.000000
 0.000000
 0.000000
 0.000000
 0.000000
 0.000000
-0.083013
--0.083013
-0.083013
--0.083013
-0.000000
--0.000000
+0.101483
+-0.101483
+0.101483
+-0.101483
+-0.109712
+0.109712
 
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+8.822200
+3.980000
+1.725500
+2.931600
+-7.172700
+-13.777100
+1.139600
+0.966800
+3.653700
+3.934300
+0.950500
+0.750100
+8.822200
+3.980000
+-1.725500
+-2.931600
+7.172700
+13.777100
+1.139600
+0.966800
+-3.653700
+-3.934300
+-0.950500
+-0.750100
+8.822200
+3.980000
+-4.859200
+-4.584000
+2.198000
+5.281400
+-1.139600
+-0.966800
+0.298300
+-0.996200
+1.152800
+1.020800
+8.822200
+3.980000
+4.859200
+4.584000
+-2.198000
+-5.281400
+-1.139600
+-0.966800
+-0.298300
+0.996200
+-1.152800
+-1.020800
+0.000000
+0.000000
+-5.344700
+-3.041500
+-19.791600
+-27.907100
+-0.000000
+=======
 23.978400
 4.264600
 48.013200
@@ -276,8 +378,26 @@
 0.149100
 0.175100
 -0.002900
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt
 -0.000000
+-0.245600
+0.696000
+-1.729000
+-1.309000
 -0.000000
+<<<<<<< HEAD:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/test.txt
+-0.000000
+1.840500
+0.497700
+-10.506100
+-12.134700
+0.000000
+0.000000
+-8.347500
+-4.924700
+1.648800
+1.252200
+=======
 3.171000
 0.628300
 34.389400
@@ -288,3 +408,4 @@
 -0.142700
 -0.174300
 0.002700
+>>>>>>> f72e222d74b3e89e91c040eb28d8333111f83338:Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/rough_controller_2.txt

@@ -63,4 +63,35 @@ for i = 1:length(Xb)
 end
 
 plot3(Xb(1,:),Xb(2,:),Xb(3,:),'*r',Xex(1,:),Xex(2,:),Xex(3,:),'*b',Xa(1,:),Xa(2,:),Xa(3,:),'*k',Xc(1,:),Xc(2,:),Xc(3,:),'*g');
+%%
+q_old = rotm2quat(Rba);
+
+angle = acos((Rba(1,1)+Rba(2,2)+Rba(3,3)-1)/2);
+axis(1,1) = Rba(3,2)-Rba(2,3);
+axis(2,1) = Rba(1,3)-Rba(3,1);
+axis(3,1) = Rba(2,1)-Rba(1,2);
+axis = (1/(2*sin(angle)))*axis;
+q_new(1,1) = cos(angle/2);
+q_new(1,2) = axis(1,1)*sin(angle/2);
+q_new(1,3) = axis(2,1)*sin(angle/2);
+q_new(1,4) = axis(3,1)*sin(angle/2);
+
+scale = 0.5;
+[Veig,Deig] = eig(Rba);
+Rab_scaled = real(Veig*(Deig^scale)*inv(Veig));
+q_scaled_old = rotm2quat(Rab_scaled);
+
+
+q_scaled_new(1,1) = cos(angle*scale/2);
+q_scaled_new(1,2) = axis(1,1)*sin(angle*scale/2);
+q_scaled_new(1,3) = axis(2,1)*sin(angle*scale/2);
+q_scaled_new(1,4) = axis(3,1)*sin(angle*scale/2);
+
+
+
+
+
+
+
+
 

@@ -1541,6 +1541,7 @@ void MC_Set_Speed(uint16_t speed_value)
   SIXSTEP_parameters.speed_target = PI_parameters.Reference;
 #endif
 }
+
 /** @defgroup thrustToSpeed    thrustToSpeed
   *  @{
     * @brief convert a thrust request to a speed setpoint
@@ -1549,16 +1550,14 @@ void MC_Set_Speed(uint16_t speed_value)
 */
 int16_t thrustToSpeed(int16_t thrust_mN)
 {
-    
     uint16_t speed_value;
-    double thrust_N = thrust_mN/1000.0;
-    if (thrust_mN >10)
+    if (thrust_mN >200)
     {
-        speed_value =  (int16_t)(10933 * sqrt((thrust_N)*0.1186));
+        speed_value =  (int16_t)((1.0/THRUST_FORWARD_C1) * sqrt((thrust_mN)*(1.0/THRUST_FORWARD_C0)));
     }
-    else if (thrust_mN <-10)
+    else if (thrust_mN <-200)
     {
-        speed_value =  (int16_t)(-10933 * sqrt((-thrust_N)*0.1186));
+        speed_value =  (int16_t)((1.0/THRUST_BACKWARD_C1) * sqrt((thrust_mN)*(1.0/THRUST_BACKWARD_C0)));
     }
     else
     {
@@ -1566,6 +1565,19 @@ int16_t thrustToSpeed(int16_t thrust_mN)
     }
     return speed_value;
 }
+int16_t speedToThrust(int16_t speed)
+{
+    double speed_d = (double) speed;
+    if(speed>0)
+    {
+        return (int16_t) (THRUST_FORWARD_C0*((speed_d*THRUST_FORWARD_C1)*(speed_d*THRUST_FORWARD_C1)));
+    }
+    else
+    {
+        return (int16_t) (THRUST_BACKWARD_C0*((speed_d*THRUST_BACKWARD_C1)*(speed_d*THRUST_BACKWARD_C1)));
+    }
+}
+
 int16_t thrustToDirection(int16_t thrust_mN)
 {
     if (thrust_mN >0)
