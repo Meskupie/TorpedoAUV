@@ -37,10 +37,21 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "SPI_UI.h"
+
+
+#define FASTCOMM
+#define WATCHDOG
+
+#ifdef FASTCOMM
+#define COMM_KEY  (0x5f49fbf9)
+#define RX_BUFFER_SIZE 96
+#else
 #define RX_BUFFER_SIZE 3
+#endif
 #ifdef ROV
 
 extern SPI_HandleTypeDef hspi1;
+extern IWDG_HandleTypeDef hiwdg;
 
 extern SIXSTEP_Base_InitTypeDef SIXSTEP_parameters;      /*!< Main SixStep structure*/
 extern SIXSTEP_PI_PARAM_InitTypeDef_t PI_parameters;     /*!< SixStep PI regulator structure*/
@@ -55,7 +66,11 @@ uint16_t new16BitValue;
 uint16_t current_TEST = 101;
 uint16_t tempSpeed;
 ESC_StatusStructUnion statusStructUnion;
+ESC_CommandStructUnion commandStructUnion;
+uint8_t currentlyRunning = 0;
+
 uint8_t SPI_Recived_DUMP[20];
+
 int sendError;
 
 /** @defgroup UART_Communication_Task    UART_Communication_Task
@@ -69,6 +84,7 @@ void SPI_Send_16BIT(uint16_t data)
     txData[1] = (uint8_t)data& 0x0f;
     HAL_SPI_TransmitReceive(&hspi1,(uint8_t*)txData,SPI_Recived_DUMP,2,100);
 }
+
 int16_t speedToThrust(int16_t speed)
 {
 	int16_t thrust;
@@ -79,20 +95,96 @@ int16_t speedToThrust(int16_t speed)
 	return thrust;
 }
 
+int16_t referenceToCurrent(int16_t reference)
+{
+    int32_t currentReferenceTHDS = (reference*1000)>>UPPER_OUT_SHIFT;
+    int currentSenseVoltage =  (2*OC_THRESHOLD-(((1000 -currentReferenceTHDS)*REFERENCE_PWM_HIGH_VOLTAGE)/REFERENCE_PWM_DIVIDER_RATIO));
+    return (((currentSenseVoltage*1000)/SENSE_GAIN)*1000)/SENSE_RESISTOR;
+}
+
+#ifdef FASTCOMM
 void SPI_Communication_Task()
 {
-    while(__HAL_SPI_GET_FLAG(&hspi1,SPI_FLAG_RXNE));
-    switch(HAL_SPI_Receive(&hspi1,(uint8_t*)SPI_Receive_Buffer,RX_BUFFER_SIZE,100))
+    statusStructUnion.statusStruct.speedSetPoint = PI_parameters.Reference;
+    statusStructUnion.statusStruct.speedMeasured = SIXSTEP_parameters.speed_fdbk_filtered;
+    statusStructUnion.statusStruct.runState = SIXSTEP_parameters.STATUS;
+    statusStructUnion.statusStruct.direction = SIXSTEP_parameters.CW_CCW;
+	#ifndef VOLTAGE_MODE
+		statusStructUnion.statusStruct.currentMeasured = referenceToCurrent(SIXSTEP_parameters.current_reference);
+	#endif
+    HAL_SPI_TransmitReceive_DMA(&hspi1,statusStructUnion.stuctRaw,commandStructUnion.stuctRaw,sizeof(statusStructUnion));
+    while (HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_BUSY_TX_RX);
+    
+    if (commandStructUnion.commandStruct.comms_key == COMM_KEY)
+    {
+#ifdef WATCHDOG
+        if(HAL_IWDG_GetState(&hiwdg) == HAL_IWDG_STATE_READY)
+        {
+            HAL_IWDG_Start(&hiwdg);
+            if (__HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST)==1)
+            {
+                SIXSTEP_parameters.STATUS = WD_RESET;
+            }
+        }
+        else
+        {
+            HAL_IWDG_Refresh(&hiwdg);
+        }
+#endif
+        if(currentlyRunning != commandStructUnion.commandStruct.state)
+        {
+            if(commandStructUnion.commandStruct.state ==1)
+            {
+                MC_StartMotor();
+                currentlyRunning = 1;
+                MC_Set_Thrust(commandStructUnion.commandStruct.thrust_mN);
+            }
+            else if (commandStructUnion.commandStruct.state ==0)
+            {
+                MC_StopMotor();
+                currentlyRunning = 0;
+            }
+        }
+        else
+        {
+            MC_Set_Thrust(commandStructUnion.commandStruct.thrust_mN);
+        }
+    }
+    else
+    {
+        HAL_SPI_FlushRxFifo(&hspi1);
+    }
+}
+#else
+void SPI_Communication_Task()
+{
+
+   while(__HAL_SPI_GET_FLAG(&hspi1,SPI_FLAG_RXNE)==1) // wait for new data
+	 {
+		 if(__HAL_SPI_GET_FLAG(&hspi1,SPI_FLAG_OVR) == 1)
+		 {
+			 __HAL_SPI_CLEAR_OVRFLAG(&hspi1);
+		 }
+	 }
+    switch(HAL_SPI_Receive(&hspi1,(uint8_t*)SPI_Receive_Buffer,RX_BUFFER_SIZE,500))
     {
         case HAL_OK:
-            
+  
             switch (SPI_Receive_Buffer[0]) {
+								case ESC_CMD_COM_SYNC_ERROR:
+									while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY)
+									{
+									}
+									//HAL_Delay(20);
+									HAL_SPI_FlushRxFifo(&hspi1);
+								break;
                 case ESC_CMD_Stop:
                     MC_StopMotor();
                     break;
                 case ESC_CMD_Start:
                     MC_StartMotor();
                     break;
+								
                     //                case ESC_CMD_GetTemperature:
                     //                    //HAL_SPI_Transmit(&hspi1, (uint8_t*)temperature,1,1000);
                     
@@ -167,6 +259,19 @@ void SPI_Communication_Task()
                     break;
                     
                 case ESC_CMD_GetStatusStruct:
+//										if(HAL_IWDG_GetState(&hiwdg) == HAL_IWDG_STATE_READY)
+//										{
+//											HAL_IWDG_Start(&hiwdg);
+//											
+//											if (__HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST)==1)
+//												{
+//													SIXSTEP_parameters.STATUS = WD_RESET;
+//												}
+//										}
+//										else
+//										{
+//											HAL_IWDG_Refresh(&hiwdg);
+//										}
                     statusStructUnion.statusStruct.speedSetPoint = PI_parameters.Reference;
                     statusStructUnion.statusStruct.speedMeasured = SIXSTEP_parameters.speed_fdbk_filtered;
                     statusStructUnion.statusStruct.runState = SIXSTEP_parameters.STATUS;
@@ -181,11 +286,16 @@ void SPI_Communication_Task()
                     
                    //HAL_SPI_Transmit(&hspi1,statusStructUnion.stuctRaw,sizeof(statusStructUnion),10);
 									 
-									 HAL_SPI_TransmitReceive(&hspi1,statusStructUnion.stuctRaw,SPI_Recived_DUMP,sizeof(statusStructUnion),10);
-								
-     
-          
-   
+										
+									 //HAL_SPI_Transmit_DMA(&hspi1,statusStructUnion.stuctRaw,sizeof(statusStructUnion));
+									 //HAL_SPI_TransmitReceive_DMA(&hspi1,statusStructUnion.stuctRaw,SPI_Recived_DUMP,sizeof(statusStructUnion));
+									 //HAL_SPI_TransmitReceive_DMA(&hspi1,statusStructUnion.stuctRaw,SPI_Recived_DUMP,sizeof(statusStructUnion));
+									 HAL_SPI_TransmitReceive(&hspi1,statusStructUnion.stuctRaw,SPI_Recived_DUMP,sizeof(statusStructUnion),50);
+									 //HAL_SPI_TransmitReceive(&hspi1,(uint8_t *)statusStructUnion.stuctRaw,(uint8_t *)SPI_Recived_DUMP,sizeof(statusStructUnion),5);
+									 while(HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY)
+									{
+									}
+									HAL_SPI_FlushRxFifo(&hspi1);
                     break;
                     
                 default:
@@ -196,7 +306,8 @@ void SPI_Communication_Task()
             //my_printf("\n");
             break;
         case HAL_TIMEOUT:
-            
+					HAL_SPI_FlushRxFifo(&hspi1);
+				
             break;
             
         case HAL_ERROR:
@@ -209,7 +320,7 @@ void SPI_Communication_Task()
     }
     
 }
-
+#endif
 
 #endif
 

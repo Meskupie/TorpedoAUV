@@ -34,6 +34,7 @@ dependencies {
     compile 'org.ros.rosjava_messages:std_msgs:0.5.10'
     compile 'com.github.felHR85:UsbSerial:4.5.2'
 
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
 }
 
 apply plugin: 'com.android.application'
@@ -43,10 +44,12 @@ android {
     buildToolsVersion "25.0.2"
 
     defaultConfig {
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 22
+        multiDexEnabled true
         versionCode 2
         versionName "1.0.0"
+
     }
     productFlavors {
         kinetic {

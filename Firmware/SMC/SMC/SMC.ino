@@ -85,6 +85,7 @@
 #include <utility/imumaths.h>
 #include "BQ34110.h"
 #include "debounce.h"
+#include "MS5837.h"
 
 
 
@@ -98,15 +99,20 @@ extern ESC_Struct ESC[];
 
 #define TIMEOUT (1000)
 
-#define MANUAL_CONTROL
+//#define MANUAL_CONTROL
 
 #define BNO055_SAMPLERATE_DELAY_MS (100)
+
+#define MATLAB_MODE
+
 
 
 
 
 Adafruit_BNO055 IMU = Adafruit_BNO055();
 BQ34110 gasGauge = BQ34110();
+MS5837 depthSensor = MS5837();
+
 
 // Define variables and constants
 int currChar = 0;
@@ -129,18 +135,41 @@ debounce swFront;
 debounce swCenter;
 debounce swRear;
 
+SystemRunState smc_curent_status;
 
+//Host Timeout
+uint32_t timeLastHostContact;
 
+// Add loop code
 
+int loopCount = 0;
 
+int16_t thrusterSpeed[6];
+unsigned long lastTime = 0;
 // Functions
+
 void reedSwitchInit()
 {
     swFront.initButton(PIN_REED_SW_FRONT,INPUT_PULLUP);
     swCenter.initButton(PIN_REED_SW_CENTER,INPUT_PULLUP);
     swRear.initButton(PIN_REED_SW_REAR,INPUT_PULLUP);
 }
-
+bool IMUError()
+{
+    uint8_t system_status;
+    uint8_t self_test_result;
+    uint8_t systemError;
+    IMU.getSystemStatus(&system_status, &self_test_result, &systemError);
+    if(1
+       &&(system_status ==5)
+       &&(self_test_result==0x0F)
+       &&(systemError ==0)
+       )
+    {
+        return false;
+    }
+    return true;
+}
 
 // Add setup code
 
@@ -148,45 +177,51 @@ void setup()
 {
     // ESC Init
     ESC_init_all();
+    smc_curent_status = System_Idle;
     // IMU Init
     IMU.begin();
     IMU.setExtCrystalUse(true);
     // Gas Guage init
     gasGauge.begin();
     
+    //TODO: figure out why IMU self test doesnt work
+//
+//    if(IMUError())
+//    {
+//        smc_curent_status = System_Fault_IMU;
+//    }
+//
     // serial init
     Serial.begin(BAUD_RATE);
-    Serial.println("Hello!");
+    //Serial.println("Hello!");
     // reed swich Init
     reedSwitchInit();
-    
+    depthSensor.init();
+    depthSensor.read();
+
 }
-
-ESC_RUN_STATE lastState = STOP;
-ESC_RUN_STATE newState =STOP;
-ESC_Struct* testEsc = &ESC[0];
-
-
-// Add loop code
-
-int loopCount = 0;
-char frontDelimiter = '<';
-char endDelimiter = '>';
-char jsonData[255];
-
-int16_t thrusterSpeed[6];
-
-unsigned long lastTime = 0;
 
 void loop()
 {
+#ifdef MANUAL_CONTROL
+    printStatusStruct(ESC_Fast_COMM(&ESC[4]));
+    delay(20);
     
+#else
+#endif
+    
+#ifdef MATLAB_MODE
+    depthSensor.readAsync();
+    ESC_update_all();
+    delay(5);
+#else
+#endif
 
 
 ////    printESCState(ESCGetStatus(&ESC[0]));
     
-    printStatusStruct(ESCGetStatusStruct(&ESC[3 ]));
     
+
 //    Serial.print("ver: ");
 //    Serial.println(gasGauge.testDataWriteToFlash());
 
@@ -211,41 +246,14 @@ void loop()
 //    Serial.print(quat.z(), 4);
 //    Serial.print("\n");
 //
-#ifdef MANUAL_CONTROL
+
     if(Serial.available())
     {
         readSerialCommand();
     }
 
-    if(loopCount%500==0)
-    {
-        newState = ESCGetStatus(testEsc);
-        if (newState!=lastState)
-        {
-            lastState = newState;
-            Serial.print("new State = ");
-            printESCState(newState);
-        }
-    }
-#else
-    
-    for (int i = 0; i<5;i++)
-    {
-        if (TIMEOUT>(lastTime-millis()) {
-            ESCSetSpeed(&ESC[i], thrusterSpeed[i]);
-        }
-        else
-        {
-            ESCStop(&ESC[i]);
-        }
-        
-    }
-            
-            
-    
-#endif
     loopCount++;
     loopCount = loopCount%1000;
-    delay(100);
-    
+
 }
+            

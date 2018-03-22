@@ -3,10 +3,16 @@ package com.github.rosjava.android_apps.teleop;
 import android.util.Log;
 
 import org.ros.concurrent.CancellableLoop;
+import org.ros.message.Duration;
+import org.ros.message.MessageListener;
+import org.ros.message.Time;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
 import org.ros.node.parameter.ParameterTree;
+import org.ros.node.topic.Publisher;
+import org.ros.node.topic.Subscriber;
+import org.ros.rosjava_geometry.Transform;
 import org.yaml.snakeyaml.nodes.Node;
 
 import java.io.BufferedReader;
@@ -23,32 +29,76 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
 
+import std_msgs.Int32;
+
 /**
  * Created by meskupie on 06/03/18.
  */
 
 public class ParametersNode extends AbstractNodeMain {
-    // update booleans
-    private boolean update_dynamics;
+    private Parameters params = new Parameters();
 
-    // parameters class
-    private Parameters params;
+    private Time time_current;
+    private Time time_status_system;
+    private Time time_start;
+    private Duration timeout_status_system= new Duration(0.1);
+    private Duration startup_delay = new Duration(2.5);
+
+    private int status_system;
+    private int status_parameters;
+
+    // Update booleans
+    private boolean update_dynamics = false;
+    private boolean update_map = false;
+    private boolean update_run_mode = false;
+    private boolean update_teleop_style = false;
+    private boolean update_initial_pose = false;
 
 
-    public ParametersNode(){
-        // set updates to false
-        update_dynamics = false;
-
-        // parameter class object
-        params = new Parameters();
-    }
+    public ParametersNode(){}
 
     public boolean setDynamics(String _filename){
         if(!params.updateDynamics(_filename)){
-            Log.e("ROV_ERROR", "Unable to update dynamics");
+            Log.e("ROV_ERROR", "Parameters node: Failure reading dynamics");
             return false;
         }
         update_dynamics = true;
+        return true;
+    }
+
+    public boolean setMap(String _filename){
+        if(!params.updateMap(_filename)){
+            Log.e("ROV_ERROR", "Parameters node: Failure reading map");
+            return false;
+        }
+        update_map = true;
+        return true;
+    }
+
+    public boolean setRunMode(int _mode){
+        if(!params.updateRunMode(_mode)){
+            Log.e("ROV_ERROR", "Parameters node: Failure updating run mode");
+            return false;
+        }
+        update_run_mode = true;
+        return true;
+    }
+
+    public boolean setTeleopStyle(int _mode){
+        if(!params.updateTeleopStyle(_mode)){
+            Log.e("ROV_ERROR", "Parameters node: Failure updating teleop style");
+            return false;
+        }
+        update_teleop_style = true;
+        return true;
+    }
+
+    public boolean setInitialPose(Transform pose){
+        if(!params.updateInitialPose(pose)){
+            Log.e("ROV_ERROR", "Parameters node: Failure updating initial pose");
+            return false;
+        }
+        update_initial_pose = true;
         return true;
     }
 
@@ -58,22 +108,75 @@ public class ParametersNode extends AbstractNodeMain {
     }
 
     @Override
-    public void onStart(ConnectedNode connectedNode) {
-
+    public void onStart(final ConnectedNode connectedNode) {
+        final Publisher<Int32> status_parameters_pub = connectedNode.newPublisher("status_parameters", Int32._TYPE);
+        final Subscriber<Int32> status_system_sub = connectedNode.newSubscriber("status_system", Int32._TYPE);
         final ParameterTree param_tree = connectedNode.getParameterTree();
 
         connectedNode.executeCancellableLoop(new CancellableLoop() {
+            Int32 status_parameters_msg = status_parameters_pub.newMessage();
+
+            @Override
+            protected void setup(){
+                time_status_system = connectedNode.getCurrentTime();
+                time_start = connectedNode.getCurrentTime();
+            }
+
             @Override
             protected void loop() throws InterruptedException {
-                // Test to see if data has been modified
-                if(update_dynamics){
-                    param_tree.set("/dynamics_A",params.getData_A());
-                    param_tree.set("/dynamics_B",params.getData_B());
-                    param_tree.set("/controller_K",params.getData_K());
-                    update_dynamics = false;
-                }
+                // Check compliance
+                if(status_system <= 1){
+                    status_parameters |= 1;
+                } else {status_parameters &= ~1;}
 
-                Thread.sleep(1000);
+                // Check timeouts
+                time_current = connectedNode.getCurrentTime();
+                if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
+                    if(status_system > 0){Log.e("ROV_ERROR", "Parameters node: Timeout on system state");}
+                    status_parameters |= 2;
+                } else { status_parameters &= ~2;}
+
+                status_parameters_msg.setData(status_parameters);
+                status_parameters_pub.publish(status_parameters_msg);
+
+                Thread.sleep(500);
+
+                if(time_current.compareTo(time_start.add(startup_delay)) == 1) {
+                    if (status_parameters == 1) {
+                        // Update any parameters that have been modified
+                        if (update_dynamics) {
+                            param_tree.set("/dynamics_A", params.getDataA());
+                            param_tree.set("/dynamics_B", params.getDataB());
+                            param_tree.set("/controller_K", params.getDataK());
+                            update_dynamics = false;
+                        }
+                        if (update_map) {
+                            param_tree.set("/planner_map", params.getDataMap());
+                            update_map = false;
+                        }
+                        if (update_run_mode) {
+                            param_tree.set("/run_mode", params.getRunMode());
+                            update_run_mode = false;
+                        }
+                        if (update_teleop_style) {
+                            param_tree.set("/teleop_style", params.getTeleopStyle());
+                            update_teleop_style = false;
+                        }
+                        if (update_initial_pose) {
+                            param_tree.set("/initial_pose", params.getInitialPose());
+                            update_initial_pose = false;
+                        }
+                    }
+                }
+            }
+        });
+
+        // System state callback
+        status_system_sub.addMessageListener(new MessageListener<Int32>() {
+            @Override
+            public void onNewMessage(Int32 status_system_msg) {
+                time_status_system = connectedNode.getCurrentTime();
+                status_system = status_system_msg.getData();
             }
         });
 

@@ -69,6 +69,7 @@ void SPI_Communication_Task(void);
   */
 typedef enum
 {
+		ESC_CMD_COM_SYNC_ERROR,
     ESC_CMD_Stop,
     ESC_CMD_Start,
     ESC_CMD_GetTemperature,
@@ -102,6 +103,21 @@ typedef union
     ESC_StatusStruct statusStruct;
     uint8_t stuctRaw[sizeof(ESC_StatusStruct)];
 } ESC_StatusStructUnion;
+
+typedef struct
+{
+	uint16_t thrust_mN:16;
+	uint8_t state:8;
+	uint8_t filler :8;
+	uint32_t comms_key :32;
+	uint32_t filler2 :32;
+}ESC_CommandStruct;
+
+typedef union
+{
+    ESC_CommandStruct commandStruct;
+    uint8_t stuctRaw[sizeof(ESC_CommandStruct)];
+} ESC_CommandStructUnion;
 
 
 /**

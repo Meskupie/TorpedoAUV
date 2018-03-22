@@ -4,4 +4,23 @@
     <string name="app_name">Teleop</string>
     <string name="camera_topic">compressed_image</string>
     <string name="joystick_topic">cmd_vel</string>
+    <string name="enable_run_description">Bring ROV to starting pose. Enable by pressing buttons \"First\" and \"Hold\" in order within 2 seconds of each other. \n\nContinue holding, on enable hold, position the ROV to its starting position and release \"Hold"\. </string>
+    <string name="begin_course_run">Begin Run</string>
+    <string name="begin_course_run_description">Torpedo will follow a fixed path through a known map</string>
+    <string name="begin">Begin</string>
+    <string name="next">Next</string>
+    <string name="back">Back</string>
+    <string name="first">First</string>
+    <string name="hold">Hold</string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="enable_run">Enable Run</string>
+    <string name="waiting_for_lock">Waiting for Lock</string>
+    <string name="waiting_for_lock_description">Localization is attempting to find pose.\n\nMove ROV closer to start position.</string>
+    <string name="position_locked">Initialize Position Hold</string>
+    <string name="position_locked_description">Move to starting position\n\n\nThe ROV must be within the following before releasing hold:\n\n0.0075m in translation\n10 degrees in rotation</string>
+    <string name="ready">Ready</string>
+    <string name="ready_to_launch">Ready to Launch</string>
+    <string name="armed">ARMED</string>
+    <string name="running">RUNNING</string>
 </resources>

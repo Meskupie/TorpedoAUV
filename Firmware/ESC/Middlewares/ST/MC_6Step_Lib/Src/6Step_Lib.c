@@ -83,6 +83,7 @@ extern ADC_HandleTypeDef ADCx;
 #ifdef HALL_SENSORS
 uint16_t H1, H2, H3;
 uint8_t hallStatus;
+uint16_t hall_capture_adjusted;
 #endif
 #ifdef BEMF_RECORDING
 #define BEMF_ARRAY_SIZE 400
@@ -235,8 +236,11 @@ void MC_SixStep_Init_main_data(void);
   */
 void MC_SixStep_TABLE(uint8_t step_number)
 { 
+
+
+	
 #if (GPIO_COMM!=0)
-  HAL_GPIO_TogglePin(GPIO_PORT_COMM,GPIO_CH_COMM);  
+  //HAL_GPIO_TogglePin(GPIO_PORT_COMM,GPIO_CH_COMM);  
 #endif
 #if (defined(DELTA_6STEP_TABLE) && defined(COMPLEMENTARY_DRIVE) && !defined(HALL_SENSORS))
   switch (step_number)
@@ -385,6 +389,7 @@ void MC_SixStep_TABLE(uint8_t step_number)
     break;
   }
 #elif (defined(HALL_SENSORS))
+
   switch (step_number)
   { 
     case 1:
@@ -599,6 +604,7 @@ void MC_SixStep_NEXT_step(int32_t Reference)
 #else
 void MC_SixStep_NEXT_step(int32_t Reference)
 {
+	
   H1 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0);
   H2 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_1);
   H3 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2);    
@@ -607,6 +613,8 @@ void MC_SixStep_NEXT_step(int32_t Reference)
   {
     if(Reference > 0)
     {
+//			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+//			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
       switch (hallStatus)
       {
         case 2:
@@ -1087,22 +1095,45 @@ void MC_TIMx_SixStep_CommutationEvent()
 #endif
   }  
 #ifndef FIXED_HALL_DELAY
+
 	H1 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0);
   H2 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_1);
   H3 = HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_2);    
   hallStatus = (H1 << 2) | (H2 << 1) | H3; 
+	
+//		HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+//			HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
+	
+	if(SIXSTEP_parameters.speed_fdbk >0) //FORWARD
+	{
 
-		if (hallStatus == 3||hallStatus == 5||hallStatus == 6)
-		{
-				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);
-				HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);   			
-			SIXSTEP_parameters.commutation_delay = (SIXSTEP_parameters.hall_capture>>1) - COMMUTATION_DELAY_RISE_TIME_STEP;    
+		if (hallStatus == 3||hallStatus == 5||hallStatus == 6) // RISING TO FALLING
+		{  			
+			
+			hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH);
+			SIXSTEP_parameters.commutation_delay =  ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_H);
 		}
-		else 
+		else //FALLING TO RISING 
 		{
-			SIXSTEP_parameters.commutation_delay = (SIXSTEP_parameters.hall_capture>>1)  - COMMUTATION_DELAY_FALL_TIME_STEP;
+			hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL);
+			SIXSTEP_parameters.commutation_delay = ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_L);
+			
 		}
-
+	}
+	else
+	{
+		if (hallStatus == 3||hallStatus == 5||hallStatus == 6) //FALLING TO RISING
+		{ 
+		hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_LH);
+		SIXSTEP_parameters.commutation_delay =  ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_H);
+		
+		}
+		else  // RISING TO FALLING
+		{
+		hall_capture_adjusted = (SIXSTEP_parameters.hall_capture+HALL_OFFSET_HL);
+		SIXSTEP_parameters.commutation_delay = ((int)(hall_capture_adjusted*HALL_PHASE_GAP))+((hall_capture_adjusted>>1) - HALL_OFFSET_L);
+		}
+	}
 #endif
   __HAL_TIM_SetCompare(&LF_TIMx,TIM_CHANNEL_2,SIXSTEP_parameters.commutation_delay);
 }
@@ -1535,6 +1566,18 @@ int16_t thrustToSpeed(int16_t thrust_mN)
     }
     return speed_value;
 }
+int16_t thrustToDirection(int16_t thrust_mN)
+{
+    if (thrust_mN >0)
+    {
+        return 1;
+    }
+    else
+		{
+			return 0;
+		}
+
+}
 
 /** @defgroup MC_Set_Thrust    MC_Set_Thrust
   *  @{
@@ -1544,6 +1587,7 @@ int16_t thrustToSpeed(int16_t thrust_mN)
 */
 void MC_Set_Thrust(int16_t thrust_mN)
 {
+		SIXSTEP_parameters.CW_CCW = thrustToDirection(thrust_mN);
 #ifdef SPEED_RAMP  
   PI_parameters.ReferenceToBeUpdated++;
   SIXSTEP_parameters.speed_target = thrustToSpeed(thrust_mN);
@@ -2110,7 +2154,7 @@ void MC_SixStep_ARR_Bemf(uint8_t up_bemf)
     if(SIXSTEP_parameters.SPEED_VALIDATED!=FALSE) 
     {
 #if (GPIO_ZERO_CROSS!=0)
-      HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);         
+//      HAL_GPIO_TogglePin(GPIO_PORT_ZCR,GPIO_CH_ZCR);         
 #endif     
       if(cnt_bemf_event> BEMF_CNT_EVENT_MAX)
       {

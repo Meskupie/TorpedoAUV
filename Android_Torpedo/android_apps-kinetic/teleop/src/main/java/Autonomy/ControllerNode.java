@@ -1,8 +1,7 @@
-package com.github.rosjava.android_apps.teleop;
+package Autonomy;
 
 import android.util.Log;
 
-import org.ejml.simple.SimpleMatrix;
 import org.ros.concurrent.CancellableLoop;
 import org.ros.message.Duration;
 import org.ros.message.MessageListener;
@@ -10,8 +9,6 @@ import org.ros.message.Time;
 import org.ros.namespace.GraphName;
 import org.ros.node.AbstractNodeMain;
 import org.ros.node.ConnectedNode;
-import org.ros.node.Node;
-import org.ros.node.NodeMain;
 import org.ros.node.parameter.ParameterListener;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
@@ -20,10 +17,7 @@ import org.ros.node.topic.Subscriber;
 import java.util.ArrayList;
 
 import std_msgs.Float64MultiArray;
-import std_msgs.Int16;
 import std_msgs.Int32;
-import std_msgs.Int8;
-import std_msgs.UInt8;
 
 public class ControllerNode extends AbstractNodeMain{
     private Controller rov_controller = new Controller();
@@ -33,11 +27,11 @@ public class ControllerNode extends AbstractNodeMain{
     private Time time_current;
     private Time time_state_reference;
     private Time time_status_system;
-    private Duration timeout_state_reference = new Duration(0.1);
-    private Duration timeout_status_system= new Duration(0.1);
+    private Duration timeout_state_reference = new Duration(0.15);
+    private Duration timeout_status_system= new Duration(0.15);
 
     private double[] input_thrust = new double[6];
-    private double[] limits_thrusters_initial = new double[]{4,4,4,4,2,2};
+    private double[] limits_thrusters_initial = new double[]{2,2,2,2,1,1};
 
     @Override
     public GraphName getDefaultNodeName() {
@@ -73,12 +67,12 @@ public class ControllerNode extends AbstractNodeMain{
 
                 // Check timeouts
                 time_current = connectedNode.getCurrentTime();
-                if(time_current.compareTo(time_state_reference.add(timeout_state_reference)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Controller node: Timeout on state reference");}
-                    status_controller |= 2;
-                } else {status_controller &= ~2;}
+//                if(time_current.compareTo(time_state_reference.add(timeout_state_reference)) == 1){
+//                    if(status_system > 0){Log.e("ROV_ERROR", "Controller node: Timeout on state reference");}
+//                    status_controller |= 2;
+//                } else {status_controller &= ~2;}
                 if(time_current.compareTo(time_status_system.add(timeout_status_system)) == 1){
-                    if(status_system >= 0){Log.e("ROV_ERROR", "Controller node: Timeout on system state");}
+                    if(status_system > 0){Log.e("ROV_ERROR", "Controller node: Timeout on system state");}
                     status_controller |= 2;
                 } else { status_controller &= ~2;}
 
@@ -121,6 +115,7 @@ public class ControllerNode extends AbstractNodeMain{
                     Float64MultiArray input_thrust_msg = input_thrust_pub.newMessage();
                     if(status_system <= 3){ // We should be sending 0s
                         input_thrust = new double[6];
+                        input_thrust_msg.setData(input_thrust);
                         input_thrust_pub.publish(input_thrust_msg);
                     }else{ // We should be outputting data
                         rov_controller.setStateReference(state_reference_msg.getData());
@@ -128,9 +123,10 @@ public class ControllerNode extends AbstractNodeMain{
                             input_thrust = rov_controller.getInputThrust();
                             if(status_system == 4){ // We should limit our outputs
                                 for(int i = 0; i < input_thrust.length; i++){
-                                    input_thrust[i] = Math.max(input_thrust[i],limits_thrusters_initial[i]);
+                                    input_thrust[i] = Math.min(input_thrust[i],Math.max(-input_thrust[i],limits_thrusters_initial[i]));
                                 }
                             }
+                            input_thrust_msg.setData(input_thrust);
                             input_thrust_pub.publish(input_thrust_msg);
                         }else{
                             Log.d("ROV_ERROR","Controller Node: Evaluation of controller failed");

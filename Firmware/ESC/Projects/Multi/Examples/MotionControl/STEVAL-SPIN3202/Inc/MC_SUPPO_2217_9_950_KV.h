@@ -145,18 +145,41 @@
 /*!< ********************* Hall sensors **************************************/
 #if defined(HALL_SENSORS)
 #define START_COUNTER_STEPS_DECREMENTATION   8
-#define NUMBER_OF_STARTS                     3
+#define NUMBER_OF_STARTS                     10
 #define HALL_KO_SUCCESSIVE_MAX              60
 #define MAX_SPEED                        20000      /*!< Motor rated max speed */
 #define STEP_DURATION_MINIMUM 					((SYSCLOCK_FREQUENCY*10/((LF_TIMX_PSC+1)*NUM_POLE_PAIRS*MAX_SPEED))>>1)
-#define COMMUTATION_DELAY_RISE_TIME				(50) // uS 
-//#define COMMUTATION_DELAY_RISE_TIME_STEP	(((SYSCLOCK_FREQUENCY)/(LF_TIMX_PSC+1))*(COMMUTATION_DELAY_RISE_TIME*1E-6))
-#define COMMUTATION_DELAY_HALL_RISE_STEP 	(138)
-#define COMMUTATION_DELAY_HALL_FALL_STEP 	(20)
-#define COMMUTATION_DELAY_SHIFT 					(-102)
 
-#define COMMUTATION_DELAY_RISE_TIME_STEP	(COMMUTATION_DELAY_HALL_RISE_STEP+COMMUTATION_DELAY_SHIFT)
-#define COMMUTATION_DELAY_FALL_TIME_STEP 	(COMMUTATION_DELAY_HALL_FALL_STEP+COMMUTATION_DELAY_SHIFT)
+#define LF_TIM_uS_TO_STEP(time) 				((int)(time/(1E6/(SYSCLOCK_FREQUENCY / (LF_TIMX_PSC+1)))))
+
+#define HALL_RISE_TIME				(54) // uS 
+#define HALL_FALL_TIME				(20) // uS 
+
+#define HALL_OFFSET_HL				LF_TIM_uS_TO_STEP(HALL_RISE_TIME-HALL_FALL_TIME)
+#define HALL_OFFSET_LH				LF_TIM_uS_TO_STEP(HALL_FALL_TIME-HALL_RISE_TIME)
+
+#define HALL_OFFSET_H					LF_TIM_uS_TO_STEP(HALL_RISE_TIME)
+#define HALL_OFFSET_L					LF_TIM_uS_TO_STEP(HALL_FALL_TIME)
+
+#define HALL_PHASE_GAP 				 (-0.1)
+
+
+
+//#define COMMUTATION_DELAY_HALL_RISE_STEP 	(138)
+//#define COMMUTATION_DELAY_HALL_FALL_STEP 	(20)
+//#define COMMUTATION_DELAY_SHIFT 					(220)
+////#define COMMUTATION_DELAY_SHIFT_REVERSE 	(-102)
+//#define COMMUTATION_DELAY_SHIFT_REVERSE 	(220)
+
+
+//#define COMMUTATION_DELAY_RISE_TIME_STEP	(COMMUTATION_DELAY_HALL_RISE_STEP+COMMUTATION_DELAY_SHIFT)
+//#define COMMUTATION_DELAY_FALL_TIME_STEP 	(COMMUTATION_DELAY_HALL_FALL_STEP+COMMUTATION_DELAY_SHIFT)
+//#define COMMUTATION_DELAY_RISE_TIME_STEP_REVERSE	(COMMUTATION_DELAY_HALL_RISE_STEP+COMMUTATION_DELAY_SHIFT_REVERSE)
+//#define COMMUTATION_DELAY_FALL_TIME_STEP_REVERSE 	(COMMUTATION_DELAY_HALL_FALL_STEP+COMMUTATION_DELAY_SHIFT_REVERSE)
+
+//#define COMMUTATION_DELAY_WIDTH_ADJUST 	(COMMUTATION_DELAY_HALL_RISE_STEP-COMMUTATION_DELAY_HALL_FALL_STEP)
+//#define COMMUTATION_DELAY_ADJUST_HL 	(COMMUTATION_DELAY_HALL_RISE_STEP-COMMUTATION_DELAY_HALL_FALL_STEP)
+//#define COMMUTATION_DELAY_ADJUST_LH 	(COMMUTATION_DELAY_HALL_FALL_STEP-COMMUTATION_DELAY_HALL_RISE_STEP)
 
 #if defined(FIXED_HALL_DELAY)
 #define COMMUTATION_DELAY                  40
@@ -164,10 +187,10 @@
 #endif
 
 /*!< ********************* Open loop control *********************************/
-#define ACC                              20000     /*!< Mechanical acceleration rate (setting available in manual mode, LOAD_TYPE = 0) */
+#define ACC                              10000     /*!< Mechanical acceleration rate (setting available in manual mode, LOAD_TYPE = 0) */
 #define MINIMUM_ACC                        500     /*!< Mechanical acceleration rate for BIG load application */
 //#define NUMBER_OF_STEPS                  20000    /*!< Number of elements for motor start-UP (max value 65535)*///
-#define NUMBER_OF_STEPS                  1    /*!< Number of elements for motor start-UP (max value 65535)*/
+#define NUMBER_OF_STEPS                  	100    /*!< Number of elements for motor start-UP (max value 65535)*/
 #define TIME_FOR_ALIGN                     500     /*!< Time for alignment (msec)*/
 #define BUTTON_DELAY                      1000     /*!< Delay time to enable push button for new command (1 = 1msec)*/
 #define NUMBER_ZCR                          12     /*!< Number of zero crossing event during the startup for closed loop control begin */
