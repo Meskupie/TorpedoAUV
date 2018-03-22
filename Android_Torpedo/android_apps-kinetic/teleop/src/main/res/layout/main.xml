@@ -26,7 +26,7 @@
             android:background="#ff404040"
             android:gravity="right"
             android:orientation="vertical"
-            android:visibility="gone"/>
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/app_header"
@@ -34,7 +34,7 @@
             android:layout_height="wrap_content"
             android:text="Torpedo AUV"
             android:textColor="@android:color/white"
-            android:textSize="30sp"
+            android:textSize="36sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -138,30 +138,35 @@
         android:id="@+id/view_container"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_margin="10dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="0dp"
         android:background="@drawable/outline_bg"
         android:orientation="vertical"
         android:padding="10dp"
         app:layout_constraintBottom_toTopOf="@+id/battery_container"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toEndOf="@+id/nav_buttons"
-        app:layout_constraintTop_toBottomOf="@+id/header_content">
+        app:layout_constraintTop_toBottomOf="@+id/header_content"
+        app:layout_constraintVertical_bias="1.0">
 
         <TextView
             android:id="@+id/header"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="64dp"
             android:layout_marginTop="20dip"
             android:text="Begin Course Run"
             android:textColor="@android:color/white"
-            android:textSize="25sp"
+            android:textSize="30sp"
             tools:layout_constraintLeft_creator="1"
             tools:layout_constraintRight_creator="1" />
 
         <TextView
             android:id="@+id/description"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_height="252dp"
             android:layout_marginTop="10dp"
             android:background="@drawable/outline_bg"
             android:paddingBottom="30dip"
@@ -169,7 +174,37 @@
             android:paddingStart="10dip"
             android:paddingTop="15dip"
             android:text="Torpedo will follow a fixed path through a known map\n\n\n\n\n\n\n\n\n\n"
-            android:textColor="@android:color/white" />
+            android:textColor="@android:color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/translation_target"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_marginTop="10dip"
+            android:background="@drawable/outline_bg_red"
+            android:paddingEnd="10dip"
+            android:paddingStart="10dip"
+            android:text="Error  X:00.00  Y:00.00  Z:00.00"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            tools:layout_constraintLeft_creator="1"
+            tools:layout_constraintRight_creator="1" />
+
+        <TextView
+            android:id="@+id/rotation_target"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_marginTop="10dip"
+            android:background="@drawable/outline_bg_red"
+            android:paddingEnd="10dip"
+            android:paddingStart="10dip"
+            android:text="Error  R:0.000  P:0.000  Y:0.000"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            tools:layout_constraintLeft_creator="1"
+            tools:layout_constraintRight_creator="1" />
+
     </LinearLayout>
 
     <android.support.constraint.ConstraintLayout
@@ -199,6 +234,7 @@
                 android:layout_height="wrap_content"
                 android:text="Current Draw:"
                 android:textColor="@android:color/white"
+                android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -209,6 +245,7 @@
                 android:layout_height="wrap_content"
                 android:text="---A"
                 android:textColor="@android:color/white"
+                android:textSize="18sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -233,6 +270,7 @@
                 android:layout_height="wrap_content"
                 android:text="Battery Voltage:"
                 android:textColor="@android:color/white"
+                android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -243,6 +281,7 @@
                 android:layout_height="wrap_content"
                 android:text="0.0V"
                 android:textColor="@android:color/white"
+                android:textSize="18sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

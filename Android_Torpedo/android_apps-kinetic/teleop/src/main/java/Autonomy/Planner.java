@@ -18,11 +18,18 @@ public class Planner {
 
     private double TRANSLATION_RATE = 0.05;
     private double ROTATION_RATE = 0.1;
+    private double TRANSLATION_EPSILON = 0.075;
+    private double ROTATION_EPSILON = 0.15;
 
     private Transform pose_current = new Transform(new Vector3(0,0,0), new Quaternion(0,0,0,1));
     private Transform pose_initial = new Transform(new Vector3(0,0,0), new Quaternion(0,0,0,1));
     private Transform pose_reference = new Transform(new Vector3(0,0,0),new Quaternion(0,0,0,1));
     private double[] state_reference = new double[12];
+
+    public Vector3 translation_initial_error = new Vector3(0,0,0);
+    public Vector3 rotation_initial_error = new Vector3(0,0,0);
+    public boolean ready_initial_translation = false;
+    public boolean ready_initial_rotation = false;
 
     private boolean ready_planner = false;
     private boolean ready_pose = false;
@@ -59,6 +66,16 @@ public class Planner {
 
     public void reset(){
         pose_reference = pose_initial;
+    }
+
+    public boolean isClose(){
+        Transform delta = pose_current.invert().multiply(pose_reference);
+        translation_initial_error = delta.getTranslation();
+        ready_initial_translation = (Math.abs(translation_initial_error.getZ()) <= TRANSLATION_EPSILON);
+        MyQuaternion euler_rotation_error = new MyQuaternion(delta.getRotationAndScale());
+        rotation_initial_error = new Vector3(euler_rotation_error.getRoll(),euler_rotation_error.getPitch(),euler_rotation_error.getYaw());
+        ready_initial_rotation = (Math.abs(rotation_initial_error.getX()) <= ROTATION_EPSILON) && (Math.abs(rotation_initial_error.getX()) <= ROTATION_EPSILON) && (Math.abs(rotation_initial_error.getX()) <= ROTATION_EPSILON);
+        return ready_initial_translation && ready_initial_rotation;
     }
 
     private boolean myIsReady(){

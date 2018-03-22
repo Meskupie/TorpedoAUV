@@ -76,6 +76,8 @@ import Communication.USBDeviceWrapper;
 		private TextView description;
 		private LinearLayout viewContainer;
 		private Handler monitorUIHandler;
+		private TextView translation_target;
+		private TextView rotation_target;
 
 		private TextView currentDraw;
 		private TextView batterySoc;
@@ -148,6 +150,8 @@ import Communication.USBDeviceWrapper;
 			batterySoc = (TextView) findViewById(R.id.soc_info_value);
 			runState = (TextView) findViewById(R.id.run_state);
 			viewContainer = (LinearLayout) findViewById(R.id.view_container);
+			translation_target = (TextView) findViewById(R.id.translation_target);
+			rotation_target = (TextView) findViewById(R.id.rotation_target);
 			//UI updater
 			monitorUIHandler = new Handler();
 			monitorUI.run();
@@ -223,7 +227,7 @@ import Communication.USBDeviceWrapper;
 			//Defining a Callback which triggers whenever data is read.
 			@Override
 			public void onReceivedData(byte[] arg0) {
-				Log.d("ROV_SERIAL","received "+arg0.length+" bytes now");
+				//Log.d("ROV_SERIAL","received "+arg0.length+" bytes now");
 				if (arg0.length == message_manager.msg_smc_sensors.size_bytes) {
 					message_manager.msg_smc_sensors.parseData(arg0);
 					communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);
@@ -426,6 +430,8 @@ import Communication.USBDeviceWrapper;
 			button_nav_bottom.setText(R.string.back);
 			pageState = page_state.BEGIN_COURSE_RUN;
             viewContainer.setBackgroundResource(R.drawable.outline_bg);
+            translation_target.setVisibility(View.INVISIBLE);
+            rotation_target.setVisibility(View.INVISIBLE);
             try {
 				system_node.setDesiredState(1);
 			}catch(Exception e){}
@@ -475,6 +481,8 @@ import Communication.USBDeviceWrapper;
 			button_nav_bottom.setText(R.string.back);
 			pageState = page_state.ENABLE_RUN;
             viewContainer.setBackgroundResource(R.drawable.outline_bg);
+			translation_target.setVisibility(View.INVISIBLE);
+			rotation_target.setVisibility(View.INVISIBLE);
 			system_node.setDesiredState(1);
 
             resetButtonHandler();
@@ -601,6 +609,8 @@ import Communication.USBDeviceWrapper;
 			button_nav_bottom.setVisibility(View.INVISIBLE);
 			pageState = page_state.WAITING_FOR_LOCK;
 			viewContainer.setBackgroundResource(R.drawable.outline_bg);
+			translation_target.setVisibility(View.INVISIBLE);
+			rotation_target.setVisibility(View.INVISIBLE);
 			system_node.setDesiredState(2);
 
 			button_nav_bottom.setOnClickListener(null);
@@ -657,7 +667,9 @@ import Communication.USBDeviceWrapper;
 			button_nav_middle.setVisibility(View.INVISIBLE);
 			button_nav_bottom.setVisibility(View.INVISIBLE);
 			pageState = page_state.POSITION_LOCKED;
-			viewContainer.setBackgroundResource(R.drawable.outline_bg_green);
+			viewContainer.setBackgroundResource(R.drawable.outline_bg);
+			translation_target.setVisibility(View.VISIBLE);
+			rotation_target.setVisibility(View.VISIBLE);
 			system_node.setDesiredState(3);
 
 			button_nav_top.setOnTouchListener(new View.OnTouchListener() {
@@ -725,6 +737,8 @@ import Communication.USBDeviceWrapper;
             button_nav_bottom.setText(R.string.stop);
             pageState = page_state.READY_TO_LAUNCH;
             viewContainer.setBackgroundResource(R.drawable.outline_bg_green);
+			translation_target.setVisibility(View.INVISIBLE);
+			rotation_target.setVisibility(View.INVISIBLE);
 			system_node.setDesiredState(4);
 
             resetButtonHandler();
@@ -783,6 +797,8 @@ import Communication.USBDeviceWrapper;
             button_nav_bottom.setText(R.string.stop);
             pageState = page_state.RUNNING;
             viewContainer.setBackgroundResource(R.drawable.outline_bg_green);
+			translation_target.setVisibility(View.INVISIBLE);
+			rotation_target.setVisibility(View.INVISIBLE);
 			system_node.setDesiredState(5);
 
             resetButtonHandler();
@@ -860,14 +876,28 @@ import Communication.USBDeviceWrapper;
 					//currentDraw;
 					batterySoc.setText(String.valueOf(((double)((int)(communication_node.ui_battery_voltage*100)))/100).concat("V"));
 					runState.setText(run_states[system_node.status_system+1]);
-					if(system_node.status_system > 1){
+					if(system_node.status_system >= 1){
 						runState.setBackgroundResource(R.drawable.outline_bg_green);
 					}else if(system_node.status_system == 0){
 						runState.setBackgroundResource(R.drawable.outline_bg_blue);
 					}else{
 						runState.setBackgroundResource(R.drawable.outline_bg_red);
 					}
-
+					Vector3 trans_targ = planner_node.rov_planner.translation_initial_error;
+					Vector3 rot_targ = planner_node.rov_planner.rotation_initial_error;
+					Log.d(TAG,String.format("Dist to target  X:%2.2f  Y:%2.2f  Z:%2.2f",trans_targ.getX(),trans_targ.getY(),trans_targ.getY()));
+					translation_target.setText(String.format("Dist to target  X:%2.2f  Y:%2.2f  Z:%2.2f",trans_targ.getX(),trans_targ.getY(),trans_targ.getY()));
+					rotation_target.setText(String.format("Dist to target  R:%1.3f  P:%1.3f  W:%1.3f",rot_targ.getX(),rot_targ.getY(),rot_targ.getY()));
+					if(planner_node.rov_planner.ready_initial_translation){
+						translation_target.setBackgroundResource(R.drawable.outline_bg_green);
+					}else{
+						translation_target.setBackgroundResource(R.drawable.outline_bg_red);
+					}
+					if(planner_node.rov_planner.ready_initial_rotation){
+						rotation_target.setBackgroundResource(R.drawable.outline_bg_green);
+					}else{
+						rotation_target.setBackgroundResource(R.drawable.outline_bg_red);
+					}
 					//##### update stuff #####
 				} finally {
 					monitorUIHandler.postDelayed(monitorUI, 50);

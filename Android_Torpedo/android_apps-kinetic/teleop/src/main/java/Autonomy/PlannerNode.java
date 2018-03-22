@@ -27,7 +27,7 @@ import std_msgs.Int32;
 import visualization_msgs.Marker;
 
 public class PlannerNode extends AbstractNodeMain{
-    private Planner rov_planner = new Planner();
+    public Planner rov_planner = new Planner();
 
     double[] state_reference = new double[12];
 
@@ -124,7 +124,11 @@ public class PlannerNode extends AbstractNodeMain{
                 }
 
                 // Check if the system is ready to proceed
-                //TODO: check if we are close to the start position and handle the 128 case
+                if (!rov_planner.isClose()){
+                    status_planner |= 128;
+                }else{
+                    status_planner &= ~128;
+                }
 
                 // Publish status
                 status_planner_msg.setData(status_planner);
