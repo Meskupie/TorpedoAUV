@@ -81,6 +81,24 @@
 #define ESC_INDEX_FL 4
 #define ESC_INDEX_RL 5
 
+#define ESC_DIRECTION_FR (-1) //1 for forward -1 for reverse
+#define ESC_DIRECTION_RR (-1)
+#define ESC_DIRECTION_FC (-1)
+#define ESC_DIRECTION_RC (-1)
+#define ESC_DIRECTION_FL (-1)
+#define ESC_DIRECTION_RL (-1)
+
+#define ESC_DEADBAND_FR (250) //1 for forward -1 for reverse
+#define ESC_DEADBAND_RR (250)
+#define ESC_DEADBAND_FC (250)
+#define ESC_DEADBAND_RC (250)
+#define ESC_DEADBAND_FL (250)
+#define ESC_DEADBAND_RL (250)
+
+#define ESC_DEADBAND_U (250)
+#define ESC_DEADBAND_L (50)
+
+
 
 
 
@@ -128,6 +146,7 @@ typedef enum
 typedef struct
 {
     uint8_t pin;
+    uint16_t deadband;
     int16_t speedSetPoint;
     ESC_RUN_STATE runState;
     int16_t thrustSetPoint_mN;
@@ -136,23 +155,34 @@ typedef struct
     int16_t currentMeasured;
     uint8_t temperature;
     uint8_t direction;
+    int8_t flipMotor;
 }ESC_Struct;
+
+//typedef struct
+//{
+//    int32_t speedSetPoint : 32;
+//    int32_t speedMeasured : 32;
+//    int16_t currentMeasured :16;
+//    uint8_t temperature:8;
+//    ESC_RUN_STATE runState : 7;
+//    uint8_t direction:1;
+//}ESC_StatusStruct;
 
 typedef struct
 {
-    int32_t speedSetPoint : 32;
-    int32_t speedMeasured : 32;
-    int16_t currentMeasured :16;
+    int16_t speedSetPoint_rpm : 16;
+    int16_t speedMeasured_rpm : 16;
+    int16_t thrustMeasured_mN : 16;
+    int16_t currentMeasured_mA :16;
     uint8_t temperature:8;
     ESC_RUN_STATE runState : 7;
     uint8_t direction:1;
 }ESC_StatusStruct;
-
 typedef struct
 {
     uint16_t thrust_mN:16;
     uint8_t state:8;
-    uint8_t filler :8;
+    uint8_t thrusterType :8;
     uint32_t comms_key :32;
     uint32_t filler2 :32;
 }ESC_CommandStruct;
@@ -176,7 +206,7 @@ typedef union
 ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande);
 
 unsigned int ESC_update_all();
-unsigned int ESC_init(ESC_Struct* ESC_hande,int pin);
+unsigned int ESC_init(ESC_Struct* ESC_hande,int pin,int8_t flip,int16_t deadband);
 unsigned int ESC_init_all(void);
 unsigned int ESC_check_all();
 unsigned int ESCStart(ESC_Struct* ESC_hande);
