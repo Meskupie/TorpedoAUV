@@ -26,6 +26,7 @@
 #define SERIAL_AVAILABLE Serial.available
 #define STOP_ALL_MOTORS for (int i = 0; i<6;i++) ESCStop(&ESC[i]);
 #define HOST_TIMEOUT_MS (500)
+//#define PRO_MICRO
 
 hostUpdateStruct_transmit_union txUnion;
 hostUpdateStruct_receive_union rxUnion;
@@ -104,13 +105,15 @@ void printESCState(int state)
 
 void printStatusStruct(ESC_StatusStruct printStruct)
 {
-    Serial.println("asd;ifalskdjfasdkjf;akjsdf;");
+    Serial.println("**************************");
     Serial.print("speed Set Point: ");
-    Serial.println(printStruct.speedSetPoint);
+    Serial.println(printStruct.speedSetPoint_rpm);
     Serial.print("speed Measured: ");
-    Serial.println(printStruct.speedMeasured);
+    Serial.println(printStruct.speedMeasured_rpm);
     Serial.print("current Measured: ");
-    Serial.println(printStruct.currentMeasured);
+    Serial.println(printStruct.currentMeasured_mA);
+    Serial.print("thrust Measured: ");
+    Serial.println(printStruct.thrustMeasured_mN);
     Serial.print("temp: ");
     Serial.println(printStruct.temperature);
     Serial.print("run state: ");
@@ -272,6 +275,7 @@ void readSerialCommand() {
                 Serial.println(gasGauge.getCurrent());
                 break;
                 
+#ifndef PRO_MICRO
             case 'q': // get system Update Struct
                 if ((timeLastHostContact+HOST_TIMEOUT_MS)<millis()&& smc_curent_status == System_running) {
                     smc_curent_status = System_Timeout;
@@ -301,14 +305,44 @@ void readSerialCommand() {
                 txUnion.statusStruct.motorStatus4 = ESC[4].runState;
                 txUnion.statusStruct.motorStatus5 = ESC[5].runState;
                 //TODO: find how to map current to thrust
-                txUnion.statusStruct.motorThrust0_mN = ESC[0].currentMeasured;
-                txUnion.statusStruct.motorThrust1_mN = ESC[1].currentMeasured;
-                txUnion.statusStruct.motorThrust2_mN = ESC[2].currentMeasured;
-                txUnion.statusStruct.motorThrust3_mN = ESC[3].currentMeasured;
-                txUnion.statusStruct.motorThrust4_mN = ESC[4].currentMeasured;
-                txUnion.statusStruct.motorThrust5_mN = ESC[5].currentMeasured;
+                txUnion.statusStruct.motorThrust0_mN = ESC[0].thrustMeasured_mN;
+                txUnion.statusStruct.motorThrust1_mN = ESC[1].thrustMeasured_mN;
+                txUnion.statusStruct.motorThrust2_mN = ESC[2].thrustMeasured_mN;
+                txUnion.statusStruct.motorThrust3_mN = ESC[3].thrustMeasured_mN;
+                txUnion.statusStruct.motorThrust4_mN = ESC[4].thrustMeasured_mN;
+                txUnion.statusStruct.motorThrust5_mN = ESC[5].thrustMeasured_mN;
                 Serial.write(txUnion.stuctRaw, sizeof(txUnion));
                 break;
+#else
+            case 'q': // get system Update Struct
+                txUnion.statusStruct.battVoltage_mV =12000;
+                txUnion.statusStruct.battCurrent_mA = 0;
+                txUnion.statusStruct.ambientTemperature_C = 40;
+                txUnion.statusStruct.imu_x = 0;
+                txUnion.statusStruct.imu_y = 0;
+                txUnion.statusStruct.imu_z = 0;
+                txUnion.statusStruct.imu_w = (1<<15)-1;
+                txUnion.statusStruct.swStateFront = 0;
+                txUnion.statusStruct.swStateCenter = 0;
+                txUnion.statusStruct.swStateRear = 0;
+                txUnion.statusStruct.motorStatus0 = RUN;
+                txUnion.statusStruct.motorStatus1 = START;
+                txUnion.statusStruct.motorStatus2 = STOP;
+                txUnion.statusStruct.motorStatus3 = STARTUP;
+                txUnion.statusStruct.motorStatus4 = STARTUP_FAILURE;
+                txUnion.statusStruct.motorStatus5 = STARTUP_BEMF_FAILURE;
+                //TODO: find how to map current to thrust
+                txUnion.statusStruct.motorThrust0_mN = 0;
+                txUnion.statusStruct.motorThrust1_mN = 0;
+                txUnion.statusStruct.motorThrust2_mN = 0;
+                txUnion.statusStruct.motorThrust3_mN = 0;
+                txUnion.statusStruct.motorThrust4_mN = 0;
+                txUnion.statusStruct.motorThrust5_mN = 0;
+                txUnion.statusStruct.SMC_Status = System_running;
+                Serial.write(txUnion.stuctRaw, sizeof(txUnion));
+                break;
+                
+#endif
                 
             case 'm': // get system Update Struct
                 txUnion.statusStruct.battVoltage_mV =12345;
@@ -337,7 +371,7 @@ void readSerialCommand() {
                 txUnion.statusStruct.SMC_Status = System_Fault;
                 Serial.write(txUnion.stuctRaw, sizeof(txUnion));
                 break;
-                
+
             case 'M': // Set Motor
                 Serial.readBytes(rxUnion.stuctRaw, sizeof(rxUnion));
                 //if (rxCheckSum(rxUnion))

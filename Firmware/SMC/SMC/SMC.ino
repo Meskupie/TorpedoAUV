@@ -103,7 +103,7 @@ extern ESC_Struct ESC[];
 
 #define BNO055_SAMPLERATE_DELAY_MS (100)
 
-#define MATLAB_MODE
+//#define MATLAB_MODE
 
 
 
@@ -180,6 +180,8 @@ void setup()
     smc_curent_status = System_Idle;
     // IMU Init
     IMU.begin();
+    IMU.setAxisRemap(0x21);  //flip X and Y
+    IMU.setAxisSign(0x02); // invert Z
     IMU.setExtCrystalUse(true);
     // Gas Guage init
     gasGauge.begin();
@@ -204,7 +206,7 @@ void setup()
 void loop()
 {
 #ifdef MANUAL_CONTROL
-    printStatusStruct(ESC_Fast_COMM(&ESC[4]));
+    printStatusStruct(ESC_Fast_COMM(&ESC[0]));
     delay(20);
     
 #else

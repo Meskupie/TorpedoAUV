@@ -88,15 +88,18 @@ typedef enum
 		ESC_CMD_GetThrust,
 		ESC_CMD_SetThrust
 } ESC_COMMAND;
+
 typedef struct
 {
-    int32_t speedSetPoint : 32;
-    int32_t speedMeasured : 32;
-    int16_t currentMeasured :16;
+    int16_t speedSetPoint_rpm : 16;
+    int16_t speedMeasured_rpm : 16;
+    int16_t thrustMeasured_mN : 16;
+    int16_t currentMeasured_mA :16;
     uint8_t temperature:8;
     SIXSTEP_Base_SystStatus_t runState : 7;
     uint8_t direction:1;
 }ESC_StatusStruct;
+
 
 typedef union
 {

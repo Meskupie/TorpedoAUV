@@ -32,7 +32,7 @@
 
 ESC_Struct ESC[6];
 
-unsigned int ESC_init(ESC_Struct* ESC_hande,int pin);
+unsigned int ESC_init(ESC_Struct* ESC_hande,int pin,int8_t flip,int16_t deadband);
 unsigned int ESC_init_all(void);
 unsigned int ESCStart(ESC_Struct* ESC_hande);
 unsigned int ESCStop(ESC_Struct* ESC_hande);
@@ -46,12 +46,12 @@ unsigned int ESC_init_all()
     SPI.begin();
     SPI.setBitOrder(MSBFIRST);
     SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
-    ESC_init(&ESC[ESC_INDEX_FL],ESC_PIN_FL);
-    ESC_init(&ESC[ESC_INDEX_FR],ESC_PIN_FR);
-    ESC_init(&ESC[ESC_INDEX_FC],ESC_PIN_FC);
-    ESC_init(&ESC[ESC_INDEX_RL],ESC_PIN_RL);
-    ESC_init(&ESC[ESC_INDEX_RR],ESC_PIN_RR);
-    ESC_init(&ESC[ESC_INDEX_RC],ESC_PIN_RC);
+    ESC_init(&ESC[ESC_INDEX_FL],ESC_PIN_FL,ESC_DIRECTION_FL,ESC_DEADBAND_FL);
+    ESC_init(&ESC[ESC_INDEX_FR],ESC_PIN_FR,ESC_DIRECTION_FR,ESC_DEADBAND_FR);
+    ESC_init(&ESC[ESC_INDEX_FC],ESC_PIN_FC,ESC_DIRECTION_FC,ESC_DEADBAND_FC);
+    ESC_init(&ESC[ESC_INDEX_RL],ESC_PIN_RL,ESC_DIRECTION_RL,ESC_DEADBAND_RL);
+    ESC_init(&ESC[ESC_INDEX_RR],ESC_PIN_RR,ESC_DIRECTION_RR,ESC_DEADBAND_RR);
+    ESC_init(&ESC[ESC_INDEX_RC],ESC_PIN_RC,ESC_DIRECTION_RC,ESC_DEADBAND_RC);
 }
 
 unsigned int ESC_update_all()
@@ -85,13 +85,14 @@ unsigned int ESC_Check_all()
     return 0;
 }
 
-unsigned int ESC_init(ESC_Struct* ESC_hande,int pin)
+unsigned int ESC_init(ESC_Struct* ESC_hande,int pin,int8_t flip,int16_t deadband)
 {
     ESC_hande->pin = pin;
     ESC_hande->thrustSetPoint_mN = 0;
+    ESC_hande->flipMotor = flip;
+    ESC_hande->deadband = deadband;
     pinMode(pin, OUTPUT);
     digitalWrite(ESC_hande->pin, HIGH);
-    
     return 0;
 }
 
@@ -282,7 +283,7 @@ unsigned int ESCGetStatus(ESC_Struct* ESC_hande )
 
 ESC_StatusStruct ESCGetStatusStruct(ESC_Struct* ESC_hande )
 {
-    ESC_StatusStructUnion newData;
+    ESC_StatusStructUnion newStatusStruct;
     digitalWrite(ESC_hande->pin, LOW);
     SPI.transfer(ESC_CMD_GetStatusStruct);
     SPI.transfer(0);
@@ -290,16 +291,18 @@ ESC_StatusStruct ESCGetStatusStruct(ESC_Struct* ESC_hande )
     digitalWrite(ESC_hande->pin, HIGH);
     delayMicroseconds(SPI_COMMS_DELAY_MICROSECONDS);
     digitalWrite(ESC_hande->pin, LOW);
-    for (int i = 0;i<sizeof(newData); i++)
+    for (int i = 0;i<sizeof(newStatusStruct); i++)
     {
-        newData.stuctRaw[i] = SPI.transfer(0);
+        newStatusStruct.stuctRaw[i] = SPI.transfer(0);
     }
     digitalWrite(ESC_hande->pin, HIGH);
-    ESC_hande->currentMeasured = newData.statusStruct.currentMeasured;
-    ESC_hande->runState = newData.statusStruct.runState;
-    ESC_hande->speedSetPoint = newData.statusStruct.speedSetPoint;
-    ESC_hande->speedMeasured = newData.statusStruct.speedMeasured;
-    return newData.statusStruct;
+    ESC_hande->currentMeasured = newStatusStruct.statusStruct.currentMeasured_mA;
+    ESC_hande->runState = newStatusStruct.statusStruct.runState;
+    ESC_hande->speedSetPoint = ESC_hande->flipMotor*newStatusStruct.statusStruct.speedSetPoint_rpm;
+    ESC_hande->speedMeasured = ESC_hande->flipMotor*newStatusStruct.statusStruct.speedMeasured_rpm;
+    ESC_hande->thrustMeasured_mN = newStatusStruct.statusStruct.thrustMeasured_mN;
+    
+    return newStatusStruct.statusStruct;
 }
 
 unsigned int ESCReset(ESC_Struct* ESC_hande)
@@ -317,10 +320,21 @@ ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande)
     ESC_StatusStructUnion newStatusStruct;
     ESC_CommandStructUnion newCommandStruct;
     newCommandStruct.commandStruct.comms_key = COMM_KEY;
-    if ((ESC_hande->thrustSetPoint_mN>MINIMUM_THRUST) || ESC_hande->thrustSetPoint_mN <(-MINIMUM_THRUST))
+    if ((ESC_hande->thrustSetPoint_mN>=ESC_DEADBAND_U) || ESC_hande->thrustSetPoint_mN <=(-ESC_DEADBAND_U))
     {
         newCommandStruct.commandStruct.state = 1;
-        newCommandStruct.commandStruct.thrust_mN = ESC_hande->thrustSetPoint_mN;
+        newCommandStruct.commandStruct.thrust_mN = ESC_hande->flipMotor*(ESC_hande->thrustSetPoint_mN);
+    }
+    else if(ESC_hande->thrustSetPoint_mN<ESC_DEADBAND_U&&ESC_hande->thrustSetPoint_mN>=ESC_DEADBAND_L) //below deadband pos
+    {
+        newCommandStruct.commandStruct.state = 1;
+        newCommandStruct.commandStruct.thrust_mN = ESC_hande->flipMotor*ESC_hande->deadband;
+
+    }
+    else if(ESC_hande->thrustSetPoint_mN>(-ESC_DEADBAND_U)&&ESC_hande->thrustSetPoint_mN<=-ESC_DEADBAND_L)//below deadband neg
+    {
+        newCommandStruct.commandStruct.state = 1;
+        newCommandStruct.commandStruct.thrust_mN = ESC_hande->flipMotor*(-ESC_hande->deadband);
     }
     else
     {
@@ -336,10 +350,11 @@ ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande)
         newStatusStruct.stuctRaw[i] = SPI.transfer(newCommandStruct.stuctRaw[i]);
     }
     digitalWrite(ESC_hande->pin, HIGH);
-    ESC_hande->currentMeasured = newStatusStruct.statusStruct.currentMeasured;
+    ESC_hande->currentMeasured = newStatusStruct.statusStruct.currentMeasured_mA;
     ESC_hande->runState = newStatusStruct.statusStruct.runState;
-    ESC_hande->speedSetPoint = newStatusStruct.statusStruct.speedSetPoint;
-    ESC_hande->speedMeasured = newStatusStruct.statusStruct.speedMeasured;
+    ESC_hande->speedSetPoint = ESC_hande->flipMotor*newStatusStruct.statusStruct.speedSetPoint_rpm;
+    ESC_hande->speedMeasured = ESC_hande->flipMotor*newStatusStruct.statusStruct.speedMeasured_rpm;
+    ESC_hande->thrustMeasured_mN = newStatusStruct.statusStruct.thrustMeasured_mN;
     ESC_hande->temperature = newStatusStruct.statusStruct.temperature;
     ESC_hande->direction =newStatusStruct.statusStruct.direction;
     return newStatusStruct.statusStruct;

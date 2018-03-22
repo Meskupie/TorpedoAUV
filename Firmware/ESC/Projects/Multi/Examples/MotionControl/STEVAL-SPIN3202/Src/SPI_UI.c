@@ -59,6 +59,7 @@ extern void CMD_Parser(char* pCommandString);
 extern void MC_Set_PI_param(SIXSTEP_PI_PARAM_InitTypeDef_t *);
 extern void MC_StartMotor(void);
 extern void MC_StopMotor(void);
+extern int16_t speedToThrust(int16_t speed);
 
 
 uint8_t SPI_Receive_Buffer[RX_BUFFER_SIZE];
@@ -85,15 +86,15 @@ void SPI_Send_16BIT(uint16_t data)
     HAL_SPI_TransmitReceive(&hspi1,(uint8_t*)txData,SPI_Recived_DUMP,2,100);
 }
 
-int16_t speedToThrust(int16_t speed)
-{
-	int16_t thrust;
-	double speedDub = speed;
-	speedDub *= 0.00096416;
-	speedDub *= speedDub;
-	thrust =  (int16_t)(0.0928 * (speedDub));
-	return thrust;
-}
+//int16_t speedToThrust(int16_t speed)
+//{
+//	int16_t thrust;
+//	double speedDub = speed;
+//	speedDub *= 0.00096416;
+//	speedDub *= speedDub;
+//	thrust =  (int16_t)(0.0928 * (speedDub));
+//	return thrust;
+//}
 
 int16_t referenceToCurrent(int16_t reference)
 {
@@ -105,13 +106,15 @@ int16_t referenceToCurrent(int16_t reference)
 #ifdef FASTCOMM
 void SPI_Communication_Task()
 {
-    statusStructUnion.statusStruct.speedSetPoint = PI_parameters.Reference;
-    statusStructUnion.statusStruct.speedMeasured = SIXSTEP_parameters.speed_fdbk_filtered;
+    statusStructUnion.statusStruct.speedSetPoint_rpm = (int16_t) PI_parameters.Reference;
+    statusStructUnion.statusStruct.speedMeasured_rpm = (int16_t) SIXSTEP_parameters.speed_fdbk_filtered;
+		#ifndef VOLTAGE_MODE
+		statusStructUnion.statusStruct.currentMeasured_mA = (int16_t) referenceToCurrent(SIXSTEP_parameters.current_reference);
+		#endif
+		statusStructUnion.statusStruct.thrustMeasured_mN = speedToThrust(statusStructUnion.statusStruct.speedMeasured_rpm);
     statusStructUnion.statusStruct.runState = SIXSTEP_parameters.STATUS;
     statusStructUnion.statusStruct.direction = SIXSTEP_parameters.CW_CCW;
-	#ifndef VOLTAGE_MODE
-		statusStructUnion.statusStruct.currentMeasured = referenceToCurrent(SIXSTEP_parameters.current_reference);
-	#endif
+
     HAL_SPI_TransmitReceive_DMA(&hspi1,statusStructUnion.stuctRaw,commandStructUnion.stuctRaw,sizeof(statusStructUnion));
     while (HAL_SPI_GetState(&hspi1) == HAL_SPI_STATE_BUSY_TX_RX);
     
