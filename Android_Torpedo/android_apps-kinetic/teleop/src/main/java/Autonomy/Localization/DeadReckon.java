@@ -49,7 +49,7 @@ public class DeadReckon {
     private boolean ready_depth = false;
 
     private Time time_last_update;
-    private double time_update_period = 0.02;
+    private double time_update_period = 0.05;
 
     // Data
     private SimpleMatrix data_thrust = new SimpleMatrix(6,1);
@@ -120,7 +120,7 @@ public class DeadReckon {
                 pose_estimate = pose_inertial_cur;
                 Vector3 temp_pos = pose_estimate.getTranslation();
                 MyQuaternion temp_rot = new MyQuaternion(pose_estimate.getRotationAndScale());
-                Log.d("DEBUG_MSG","Robot Pose, X:"+temp_pos.getX()+" Y:"+temp_pos.getY()+" Z:"+temp_pos.getZ()+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
+                //Log.d("DEBUG_MSG","Robot Pose, X:"+temp_pos.getX()+" Y:"+temp_pos.getY()+" Z:"+temp_pos.getZ()+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
 
                 // Reset the body pose
                 Transform delta_final = pose_inertial_prev.invert().multiply(pose_inertial_cur);
@@ -173,7 +173,6 @@ public class DeadReckon {
         pose_inertial_prev = pose_inertial_cur;
         return !ready_pose_lock;
     }
-
 
     // ================= boring stuff ====================
 

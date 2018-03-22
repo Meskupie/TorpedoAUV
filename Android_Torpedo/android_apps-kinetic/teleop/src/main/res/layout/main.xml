@@ -158,6 +158,7 @@
             android:layout_height="64dp"
             android:layout_marginTop="20dip"
             android:text="Begin Course Run"
+            android:gravity="center"
             android:textColor="@android:color/white"
             android:textSize="30sp"
             tools:layout_constraintLeft_creator="1"

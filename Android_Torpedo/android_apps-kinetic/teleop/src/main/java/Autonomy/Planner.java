@@ -16,8 +16,10 @@ import Autonomy.MyQuaternion;
 
 public class Planner {
 
-    private double TRANSLATION_RATE = 0.05;
-    private double ROTATION_RATE = 0.1;
+    //private double TRANSLATION_RATE = 0.05;
+    //private double ROTATION_RATE = 0.1;
+    private double TRANSLATION_RATE = 1;
+    private double ROTATION_RATE = 0.25;
     private double TRANSLATION_EPSILON = 0.075;
     private double ROTATION_EPSILON = 0.15;
 
@@ -33,7 +35,7 @@ public class Planner {
 
     private boolean ready_planner = false;
     private boolean ready_pose = false;
-    //private boolean ready_path = false;
+    private boolean ready_path = false;
     private boolean ready_initial_pose = false;
     private boolean ready_run_mode = false;
     private boolean ready_teleop_style = false;
@@ -46,6 +48,9 @@ public class Planner {
 
     public boolean calculateReference(){
         //pose_reference = new Transform(new Vector3(0,0,0),new Quaternion(0,0,0,1));
+        Vector3 temp_pos = pose_reference.getTranslation();
+        MyQuaternion temp_rot = new MyQuaternion(pose_reference.getRotationAndScale());
+        //Log.d("ROV_STATE",String.format("X:%2.2f  Y:%2.2f  Z:%2.2f  R:%1.3f  P:%1.3f  W:%1.3f",temp_pos.getX(),temp_pos.getY(),temp_pos.getZ(),temp_rot.getRoll(),temp_rot.getPitch(),temp_rot.getYaw()));
         if(ready_pose) {
             Transform delta = pose_current.invert().multiply(pose_reference);
             Vector3 delta_pos = delta.getTranslation();
@@ -69,12 +74,19 @@ public class Planner {
     }
 
     public boolean isClose(){
+//        Vector3 temp_pos = pose_current.getTranslation();
+//        MyQuaternion temp_rot = new MyQuaternion(pose_current.getRotationAndScale());
+//        Log.d("DEBUG_MSG","Robot Pose, X:"+temp_pos.getX()+" Y:"+temp_pos.getY()+" Z:"+temp_pos.getZ()+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
+//        Vector3 temp_ref_pos = pose_reference.getTranslation();
+//        MyQuaternion temp_ref_rot = new MyQuaternion(pose_reference.getRotationAndScale());
+//        Log.d("DEBUG_MSG","Robot Ref , X:"+temp_ref_pos.getX()+" Y:"+temp_ref_pos.getY()+" Z:"+temp_ref_pos.getZ()+" Roll:"+temp_ref_rot.getRoll()+" Pitch:"+temp_ref_rot.getPitch()+" Yaw:"+temp_ref_rot.getYaw());
         Transform delta = pose_current.invert().multiply(pose_reference);
         translation_initial_error = delta.getTranslation();
         ready_initial_translation = (Math.abs(translation_initial_error.getZ()) <= TRANSLATION_EPSILON);
         MyQuaternion euler_rotation_error = new MyQuaternion(delta.getRotationAndScale());
         rotation_initial_error = new Vector3(euler_rotation_error.getRoll(),euler_rotation_error.getPitch(),euler_rotation_error.getYaw());
         ready_initial_rotation = (Math.abs(rotation_initial_error.getX()) <= ROTATION_EPSILON) && (Math.abs(rotation_initial_error.getX()) <= ROTATION_EPSILON) && (Math.abs(rotation_initial_error.getX()) <= ROTATION_EPSILON);
+        //Log.d("DEBUG_MSG",""+pose_current.getTranslation().getZ()+"  "+Math.abs(translation_initial_error.getZ())+"  "+Math.abs(rotation_initial_error.getX())+"  "+Math.abs(rotation_initial_error.getY())+"  "+Math.abs(rotation_initial_error.getZ()));
         return ready_initial_translation && ready_initial_rotation;
     }
 
@@ -154,6 +166,7 @@ public class Planner {
 
     public boolean setInitialPoseData(Transform _pose_initial){
         pose_initial = _pose_initial;
+        pose_reference = pose_initial;
         ready_initial_pose = true;
         ready_planner = myIsReady();
         return ready_initial_pose;

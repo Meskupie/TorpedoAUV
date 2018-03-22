@@ -185,8 +185,8 @@ import Communication.USBDeviceWrapper;
 			// Set parameters
 			parameters_node.setDynamics("rough_controller_2.txt");
 			parameters_node.setRunMode(2);
-			parameters_node.setTeleopStyle(0);
-			parameters_node.setInitialPose(new Transform(new Vector3(0,0,0.1),new Quaternion(0,0,0,1)));
+			parameters_node.setTeleopStyle(3);
+			parameters_node.setInitialPose(new Transform(new Vector3(0,0,0.05),new Quaternion(0,0,0,1)));
 		}
 
 		@Override
@@ -401,6 +401,7 @@ import Communication.USBDeviceWrapper;
 		@Override
 		public boolean dispatchGenericMotionEvent(final MotionEvent event) {
 			// Check that the event came from a game controller
+			// Log.d("ROV_STATE","event");
 			if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
 					&& event.getAction() == MotionEvent.ACTION_MOVE) {
 //					InputDevice mInputDevice = event.getDevice();it l
@@ -414,6 +415,9 @@ import Communication.USBDeviceWrapper;
 				joy_state.set(4,0,( 1)*event.getAxisValue(MotionEvent.AXIS_RX));
 				joy_state.set(5,0,( 1)*event.getAxisValue(MotionEvent.AXIS_RZ));
 
+				//Log.d("ROV_JOY",String.format("X:%2.2f  Y:%2.2f  Z:%2.2f  R:%1.3f  P:%1.3f  W:%1.3f",joy_state.get(0),joy_state.get(1),joy_state.get(2),joy_state.get(3),joy_state.get(4),joy_state.get(5)));
+				planner_node.setJoystickInput(joy_state);
+
 				return true;
 			}
 			return MainActivity.super.onGenericMotionEvent(event);
@@ -424,7 +428,7 @@ import Communication.USBDeviceWrapper;
 		private void onBeginCourseRun(){
 			header.setText(R.string.begin_course_run);
 			description.setText(R.string.begin_course_run_description);
-			makeButtonsVisible();
+			makeVisible();
 			button_nav_top.setText(R.string.begin);
 			button_nav_middle.setText(R.string.next);
 			button_nav_bottom.setText(R.string.back);
@@ -475,7 +479,7 @@ import Communication.USBDeviceWrapper;
 		private void onEnableRun(){
 			header.setText(R.string.enable_run);
 			description.setText(R.string.enable_run_description);
-			makeButtonsVisible();
+			makeVisible();
 			button_nav_top.setText(R.string.hold);
 			button_nav_middle.setText(R.string.first);
 			button_nav_bottom.setText(R.string.back);
@@ -603,7 +607,7 @@ import Communication.USBDeviceWrapper;
         private void onWaitingForLock() {
 			header.setText(R.string.waiting_for_lock);
 			description.setText(R.string.waiting_for_lock_description);
-			makeButtonsVisible();
+			makeVisible();
 			button_nav_top.setText(R.string.hold);
 			button_nav_middle.setVisibility(View.INVISIBLE);
 			button_nav_bottom.setVisibility(View.INVISIBLE);
@@ -662,7 +666,7 @@ import Communication.USBDeviceWrapper;
 		private void onPositionLocked() {
 			header.setText(R.string.position_locked);
 			description.setText(R.string.position_locked_description);
-			makeButtonsVisible();
+			makeVisible();
 			button_nav_top.setText(R.string.hold);
 			button_nav_middle.setVisibility(View.INVISIBLE);
 			button_nav_bottom.setVisibility(View.INVISIBLE);
@@ -731,7 +735,7 @@ import Communication.USBDeviceWrapper;
 		private void onReadyToLaunch(){
             header.setText(R.string.ready_to_launch);
             description.setText(R.string.armed);
-            makeButtonsVisible();
+            makeVisible();
             button_nav_top.setText(R.string.start);
             button_nav_middle.setText(R.string.stop);
             button_nav_bottom.setText(R.string.stop);
@@ -791,10 +795,11 @@ import Communication.USBDeviceWrapper;
 		private void onRunning(){
             header.setText(R.string.running);
             description.setText(null);
-            makeButtonsVisible();
+            makeVisible();
             button_nav_top.setText(R.string.stop);
             button_nav_middle.setText(R.string.stop);
             button_nav_bottom.setText(R.string.stop);
+			description.setVisibility(View.INVISIBLE);
             pageState = page_state.RUNNING;
             viewContainer.setBackgroundResource(R.drawable.outline_bg_green);
 			translation_target.setVisibility(View.INVISIBLE);
@@ -847,10 +852,11 @@ import Communication.USBDeviceWrapper;
 
         }
 
-		private void makeButtonsVisible(){
+		private void makeVisible(){
             button_nav_top.setVisibility(View.VISIBLE);
             button_nav_middle.setVisibility(View.VISIBLE);
             button_nav_bottom.setVisibility(View.VISIBLE);
+			description.setVisibility(View.VISIBLE);
         }
 
         private void resetButtonHandler(){
@@ -885,9 +891,10 @@ import Communication.USBDeviceWrapper;
 					}
 					Vector3 trans_targ = planner_node.rov_planner.translation_initial_error;
 					Vector3 rot_targ = planner_node.rov_planner.rotation_initial_error;
-					Log.d(TAG,String.format("Dist to target  X:%2.2f  Y:%2.2f  Z:%2.2f",trans_targ.getX(),trans_targ.getY(),trans_targ.getY()));
-					translation_target.setText(String.format("Dist to target  X:%2.2f  Y:%2.2f  Z:%2.2f",trans_targ.getX(),trans_targ.getY(),trans_targ.getY()));
-					rotation_target.setText(String.format("Dist to target  R:%1.3f  P:%1.3f  W:%1.3f",rot_targ.getX(),rot_targ.getY(),rot_targ.getY()));
+					//Log.d(TAG,String.format("Dist to target  X:%2.2f  Y:%2.2f  Z:%2.2f",trans_targ.getX(),trans_targ.getY(),trans_targ.getZ()));
+					//Log.d(TAG,String.format("Dist to target  R:"+rot_targ.getX()+"  P:"+rot_targ.getY()+"  W:"+rot_targ.getZ()));
+					translation_target.setText(String.format("Dist to target  X:%1.3f  Y:%1.3f  Z:%1.3f",trans_targ.getX(),trans_targ.getY(),trans_targ.getZ()));
+					rotation_target.setText(String.format("Dist to target  R:%1.3f  P:%1.3f  W:%1.3f",rot_targ.getX(),rot_targ.getY(),rot_targ.getZ()));
 					if(planner_node.rov_planner.ready_initial_translation){
 						translation_target.setBackgroundResource(R.drawable.outline_bg_green);
 					}else{
@@ -898,7 +905,6 @@ import Communication.USBDeviceWrapper;
 					}else{
 						rotation_target.setBackgroundResource(R.drawable.outline_bg_red);
 					}
-					//##### update stuff #####
 				} finally {
 					monitorUIHandler.postDelayed(monitorUI, 50);
 				}

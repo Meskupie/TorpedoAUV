@@ -141,25 +141,28 @@ public class PlannerNode extends AbstractNodeMain{
         state_pose_pub.addMessageListener(new MessageListener<geometry_msgs.Transform>() {
             @Override
             public void onNewMessage(geometry_msgs.Transform pose_msg) {
+                // Setup planner input
+                Vector3 position = new Vector3(pose_msg.getTranslation().getX(), pose_msg.getTranslation().getY(), pose_msg.getTranslation().getZ());
+                Quaternion attitude = new Quaternion(pose_msg.getRotation().getX(), pose_msg.getRotation().getY(), pose_msg.getRotation().getZ(), pose_msg.getRotation().getW());
+                Transform pose = new Transform(position, attitude);
+                // Update pose
+                rov_planner.setPose(pose);
                 if((status_planner&127) == 0) { // We should be good to output
                     Float64MultiArray state_reference_msg = state_reference_pub.newMessage();
-                    if (status_system <= 3) {
+                    if (status_system <= 2) {
                         state_reference = new double[12];
                         state_reference_msg.setData(state_reference);
                         state_reference_pub.publish(state_reference_msg);
                     } else {
-                        // Setup planner input
-                        Vector3 position = new Vector3(pose_msg.getTranslation().getX(), pose_msg.getTranslation().getY(), pose_msg.getTranslation().getZ());
-                        Quaternion attitude = new Quaternion(pose_msg.getRotation().getX(), pose_msg.getRotation().getY(), pose_msg.getRotation().getZ(), pose_msg.getRotation().getW());
-                        Transform pose = new Transform(position, attitude);
-                        // Update pose, attempt reference calculation
-                        rov_planner.setPose(pose);
-                        if (rov_planner.calculateReference()) {
-                            state_reference = rov_planner.getStateReference();
-                            state_reference_msg.setData(state_reference);
-                            state_reference_pub.publish(state_reference_msg);
-                        } else {
-                            Log.d("ROV_ERROR", "Planner: Failed to calculate controller reference");
+                        // Attempt reference calculation
+                        if (status_system > 3) {
+                            if (rov_planner.calculateReference()) {
+                                state_reference = rov_planner.getStateReference();
+                                state_reference_msg.setData(state_reference);
+                                state_reference_pub.publish(state_reference_msg);
+                            } else {
+                                Log.d("ROV_ERROR", "Planner: Failed to calculate controller reference");
+                            }
                         }
                     }
                 }

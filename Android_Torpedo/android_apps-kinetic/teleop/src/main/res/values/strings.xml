@@ -18,7 +18,7 @@
     <string name="waiting_for_lock">Waiting for Lock</string>
     <string name="waiting_for_lock_description">Localization is attempting to find pose.\n\nMove ROV closer to start position.</string>
     <string name="position_locked">Initialize Position Hold</string>
-    <string name="position_locked_description">Move to starting position\n\n\n The ROV must be within the following before releasing hold:\n\n0.0075m in translation\n 10 degrees in rotation</string>
+    <string name="position_locked_description">Move to starting position\n\n\nThe ROV must be within the following before releasing hold:\n\n0.0075m in translation\n10 degrees in rotation</string>
     <string name="ready">Ready</string>
     <string name="ready_to_launch">Ready to Launch</string>
     <string name="armed">ARMED</string>

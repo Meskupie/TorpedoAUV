@@ -33,6 +33,7 @@ public class CommunicationNode extends AbstractNodeMain {
     public double ui_battery_current = 0.0;
     public double ui_battery_voltage = 0.0;
     public int ui_battery_soc = 0;
+    public double ui_depth = 0.0;
 
     private Time time_current;
     private Time time_input_thrust;
@@ -238,7 +239,7 @@ public class CommunicationNode extends AbstractNodeMain {
         embedded_imu_msg.setY(message.imu.getY());
         embedded_imu_msg.setZ(message.imu.getZ());
         embedded_imu_msg.setW(message.imu.getW());
-        embedded_depth_msg.setData(0);//TODO: CHANGE THIS BACK TO: message.depth);
+        embedded_depth_msg.setData(message.depth);
         embedded_temperature_msg.setData(message.temperature);
         embedded_thrust_msg.setData(message.motor_thrust);
         embedded_controller_states_msg.setData(message.motor_status);
@@ -269,6 +270,7 @@ public class CommunicationNode extends AbstractNodeMain {
         ui_battery_current = message.battery_current;
         ui_battery_voltage = message.battery_voltage;
         ui_battery_soc = message.battery_SOC;
+        ui_depth = message.depth;
 
         //Log.d("ROV_LOG", "SMC Status: "+smc_status_enum[message.smc_status]+" Reed Switches: "+embedded_reed_switches_msg.getData());
     }
