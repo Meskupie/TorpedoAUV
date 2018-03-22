@@ -35,8 +35,8 @@ public class DeadReckon {
     private boolean ready_pose_lock = false;
     private int imu_data_count = 0;
     private double imu_initial_yaw;
-    private Transform transform_imu_fixed = new Transform(new Vector3(0, 0, 0), MyQuaternion.createFromEuler(3.14159, 0, (3.14159/2.0)));
-    private Transform transform_imu = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 1, 0, 0));
+    private Transform transform_imu_fixed = new Transform(new Vector3(0, 0, 0), MyQuaternion.createFromEuler(Math.PI, 0,0));
+    private Transform transform_imu = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1));
     private Transform transform_depth = new Transform(new Vector3(-0.1255,0.0125,-0.031), new Quaternion(0,0,0,1));
 
     // State machine
@@ -49,12 +49,12 @@ public class DeadReckon {
     private boolean ready_depth = false;
 
     private Time time_last_update;
-    private double time_update_period = 0.02;
+    private double time_update_period = 0.05;
 
     // Data
-    private SimpleMatrix data_thrust;
-    private Quaternion data_imu;
-    private double data_depth;
+    private SimpleMatrix data_thrust = new SimpleMatrix(6,1);
+    private Quaternion data_imu = new Quaternion(0,0,0,1);
+    private double data_depth = 0;
 
     // Particle Filter
     private SimpleMatrix param_A_mat = new SimpleMatrix(SIZE_STATES, SIZE_STATES);
@@ -68,8 +68,9 @@ public class DeadReckon {
         if(ready_localization){
             if(readySensors()) {
                 // Average the IMU data to build an initial base orientation
+                Transform imu_data_transform = (transform_imu_fixed).invert().multiply(new Transform(new Vector3(0,0,0),data_imu));
                 double ewma_rate = 0.05;
-                double imu_yaw = new MyQuaternion(data_imu).getYaw();
+                double imu_yaw = new MyQuaternion(imu_data_transform.getRotationAndScale()).getYaw();
                 if (imu_data_count == 0) {
                     imu_initial_yaw = imu_yaw;
                     ready_pose_lock = false;
@@ -81,13 +82,18 @@ public class DeadReckon {
                         ready_pose_lock = false;
                     }
                 }
-                Transform transform_imu_yaw = new Transform(new Vector3(0, 0, 0), MyQuaternion.createFromEuler(3.14159, 0, imu_initial_yaw));
-                transform_imu = transform_imu_fixed.multiply(transform_imu_yaw).invert();
+                Transform transform_imu_yaw = new Transform(new Vector3(0, 0, 0), MyQuaternion.createFromEuler(0, 0, imu_initial_yaw));
+                transform_imu = (transform_imu_fixed).multiply(transform_imu_yaw).invert();
+//                MyQuaternion temp_rot = new MyQuaternion(transform_imu.getRotationAndScale());
+//                Log.d("DEBUG_MSG","Transform IMU, Roll: "+temp_rot.getRoll()+" Pitch: "+temp_rot.getPitch()+" Yaw: "+temp_rot.getYaw());
                 imu_data_count++;
 
                 // Set the various poses
-                pose_body_cur = new SimpleMatrix(12,0);
+                pose_body_cur = new SimpleMatrix(12,1);
                 pose_body_prev = pose_body_cur;
+                pose_inertial_cur = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1));
+                pose_inertial_prev = pose_inertial_cur;
+
                 // Resolve pose with sensor data
                 this.resolvePose();
 
@@ -98,10 +104,10 @@ public class DeadReckon {
     }
 
     public Boolean attemptUpdate(Time time_call){
-        pose_inertial_cur = transform_imu.multiply(new Transform(new Vector3(0, 0, 0), data_imu));
 
         if(ready_localization) {
             if(readySensors()) {
+
                 // Propagate pose through motion model
                 pose_body_cur = param_A_mat.mult(pose_body_prev).plus(param_B_mat.mult(data_thrust));
                 Transform delta = new Transform(new Vector3(pose_body_cur.get(0),pose_body_cur.get(2),pose_body_cur.get(4)), MyQuaternion.createFromEuler(pose_body_cur.get(6),pose_body_cur.get(8),pose_body_cur.get(10)));
@@ -112,8 +118,9 @@ public class DeadReckon {
 
                 // Final estimate
                 pose_estimate = pose_inertial_cur;
+                Vector3 temp_pos = pose_estimate.getTranslation();
                 MyQuaternion temp_rot = new MyQuaternion(pose_estimate.getRotationAndScale());
-                Log.d("DEBUG_MSG","Robot Orientation, Roll: "+temp_rot.getRoll()+" Pitch: "+temp_rot.getPitch()+" Yaw: "+temp_rot.getYaw());
+                //Log.d("DEBUG_MSG","Robot Pose, X:"+temp_pos.getX()+" Y:"+temp_pos.getY()+" Z:"+temp_pos.getZ()+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
 
                 // Reset the body pose
                 Transform delta_final = pose_inertial_prev.invert().multiply(pose_inertial_cur);
@@ -121,6 +128,7 @@ public class DeadReckon {
                 MyQuaternion rot = new MyQuaternion(delta_final.getRotationAndScale());
 
                 // Set body velocities
+                pose_body_cur = new SimpleMatrix(12,1);
                 pose_body_cur.set(1,0,trans.getX()/UPDATE_PERIOD);
                 pose_body_cur.set(3,0,trans.getY()/UPDATE_PERIOD);
                 pose_body_cur.set(5,0,trans.getZ()/UPDATE_PERIOD);
@@ -159,9 +167,12 @@ public class DeadReckon {
         imu_initial_yaw = 0;
         imu_data_count = 0;
         ready_pose_lock = false;
+        pose_body_cur = new SimpleMatrix(12,1);
+        pose_body_prev = pose_body_cur;
+        pose_inertial_cur = new Transform(new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 1));
+        pose_inertial_prev = pose_inertial_cur;
         return !ready_pose_lock;
     }
-
 
     // ================= boring stuff ====================
 
@@ -209,6 +220,9 @@ public class DeadReckon {
     }
     public boolean setAData(SimpleMatrix A) {
         param_A_mat = A;
+//        for(int i = 0; i < 12; i++){
+//            Log.d("DEBUG_MSG","A matrix: "+param_A_mat.get(i,0)+" "+param_A_mat.get(i,1)+" "+param_A_mat.get(i,2)+" "+param_A_mat.get(i,3)+" "+param_A_mat.get(i,4)+" "+param_A_mat.get(i,5)+" "+param_A_mat.get(i,6)+" "+param_A_mat.get(i,7)+" "+param_A_mat.get(i,8)+" "+param_A_mat.get(i,9)+" "+param_A_mat.get(i,10)+" "+param_A_mat.get(i,11));
+//        }
         ready_A = true;
         ready_localization = myIsReady();
         return ready_A;
@@ -216,6 +230,9 @@ public class DeadReckon {
     public boolean setBData(SimpleMatrix B) {
         param_B_mat = B;
         ready_B = true;
+//        for(int i = 0; i < 12; i++){
+//            Log.d("DEBUG_MSG","A matrix: "+param_B_mat.get(i,0)+" "+param_B_mat.get(i,1)+" "+param_B_mat.get(i,2)+" "+param_B_mat.get(i,3)+" "+param_B_mat.get(i,4)+" "+param_B_mat.get(i,5));
+//        }
         ready_localization = myIsReady();
         return ready_B;
     }

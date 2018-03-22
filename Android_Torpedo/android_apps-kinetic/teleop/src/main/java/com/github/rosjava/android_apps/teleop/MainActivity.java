@@ -9,7 +9,6 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.Menu;
@@ -28,6 +27,9 @@ import org.ejml.simple.SimpleMatrix;
 import org.ros.android.view.VirtualJoystickView;
 import org.ros.node.NodeConfiguration;
 import org.ros.node.NodeMainExecutor;
+import org.ros.rosjava_geometry.Quaternion;
+import org.ros.rosjava_geometry.Transform;
+import org.ros.rosjava_geometry.Vector3;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,7 +41,6 @@ import Autonomy.PlannerNode;
 import Communication.CommunicationNode;
 import Communication.MessageManager;
 import Communication.ReedSwitchManager;
-import Communication.SerialWrite;
 import Communication.USBDeviceWrapper;
 
 	public class MainActivity extends RosAppActivity {
@@ -66,16 +67,22 @@ import Communication.USBDeviceWrapper;
 
 		// UI stuff
 		private VirtualJoystickView virtualJoystickView;
-		public enum Page_State{BEGIN_COURSE_RUN, ENABLE_RUN, WAITING_FOR_LOCK, POSITION_LOCKED, READY_TO_LAUNCH, RUNNING}        //Enum created for all page titles
-		public Page_State pageState = Page_State.BEGIN_COURSE_RUN;               //state to track current page
+		public enum page_state {BEGIN_COURSE_RUN, ENABLE_RUN, WAITING_FOR_LOCK, POSITION_LOCKED, READY_TO_LAUNCH, RUNNING}        //Enum created for all page titles
+		public page_state pageState = page_state.BEGIN_COURSE_RUN;               //state to track current page
 		private Button button_nav_bottom;
 		private Button button_nav_middle;
 		private Button button_nav_top;
 		private TextView header;
 		private TextView description;
+		private LinearLayout viewContainer;
+		private Handler monitorUIHandler;
+		private TextView translation_target;
+		private TextView rotation_target;
+
 		private TextView currentDraw;
 		private TextView batterySoc;
-		private LinearLayout viewContainer;
+		private TextView runState;
+		private String[] run_states = new String[]{"Error","Init","Idle","Lock","Arm","Hold","Run"};
 
 		private ReedSwitchManager frontReedSwitch;
 		private ReedSwitchManager centerReedSwitch;
@@ -94,33 +101,10 @@ import Communication.USBDeviceWrapper;
 			setMainWindowResource(R.layout.main);
 			super.onCreate(savedInstanceState);
 
-//		text = (TextView) findViewById(R.id.textOut);
-//		text.setMovementMethod(new ScrollingMovementMethod());
-
-//			backButton = (Button) findViewById(R.id.button_nav_bottom);
-//			backButton.setOnClickListener(new View.OnClickListener() {
-//				@Override
-//				public void onClick(View view) {
-//					onBackPressed();
-//				}
-//			});
-
-			//UI Stuff
-			button_nav_bottom = (Button) findViewById(R.id.button_nav_bottom);
-			button_nav_middle = (Button) findViewById(R.id.button_nav_middle);
-			button_nav_top = (Button) findViewById(R.id.button_nav_top);
-			header = (TextView) findViewById(R.id.header);
-			description = (TextView) findViewById(R.id.description);
-			currentDraw = (TextView) findViewById(R.id.current_info_value);
-			batterySoc = (TextView) findViewById(R.id.soc_info_value);
-			viewContainer = (LinearLayout) findViewById(R.id.view_container);
-
 			// Setup Reed switch manager
 			this.frontReedSwitch = new ReedSwitchManager(button_nav_top);
 			this.centerReedSwitch = new ReedSwitchManager(button_nav_middle);
 			this.rearReedSwitch = new ReedSwitchManager(button_nav_bottom);
-
-			onBeginCourseRun();
 
 			// Setup nodes
 			system_node = new SystemNode();
@@ -156,8 +140,23 @@ import Communication.USBDeviceWrapper;
 				Log.d("ROV_ERROR", "Found too many input devices");
 			}
 
+			//UI Stuff
+			button_nav_bottom = (Button) findViewById(R.id.button_nav_bottom);
+			button_nav_middle = (Button) findViewById(R.id.button_nav_middle);
+			button_nav_top = (Button) findViewById(R.id.button_nav_top);
+			header = (TextView) findViewById(R.id.header);
+			description = (TextView) findViewById(R.id.description);
+			currentDraw = (TextView) findViewById(R.id.current_info_value);
+			batterySoc = (TextView) findViewById(R.id.soc_info_value);
+			runState = (TextView) findViewById(R.id.run_state);
+			viewContainer = (LinearLayout) findViewById(R.id.view_container);
+			translation_target = (TextView) findViewById(R.id.translation_target);
+			rotation_target = (TextView) findViewById(R.id.rotation_target);
+			//UI updater
+			monitorUIHandler = new Handler();
+			monitorUI.run();
 
-
+			onBeginCourseRun();
 		}
 
 
@@ -183,11 +182,11 @@ import Communication.USBDeviceWrapper;
 				System.out.println("Socket error: " + e.getMessage());
 			}
 
-
 			// Set parameters
-			parameters_node.setDynamics("rough_controller_data.txt");
+			parameters_node.setDynamics("rough_controller_2.txt");
 			parameters_node.setRunMode(2);
-
+			parameters_node.setTeleopStyle(3);
+			parameters_node.setInitialPose(new Transform(new Vector3(0,0,0.05),new Quaternion(0,0,0,1)));
 		}
 
 		@Override
@@ -219,6 +218,8 @@ import Communication.USBDeviceWrapper;
 					Log.d(TAG, "USB: Caught exception when unregistering " + usb_device_smc.name + ": " + e.getMessage());
 				}
 			}
+
+			monitorUIHandler.removeCallbacks(monitorUI);
 		}
 
 		// =========================== USB =================================
@@ -226,12 +227,20 @@ import Communication.USBDeviceWrapper;
 			//Defining a Callback which triggers whenever data is read.
 			@Override
 			public void onReceivedData(byte[] arg0) {
-				Log.d("ROV_LOG","received "+arg0.length+" bytes now");
+				//Log.d("ROV_SERIAL","received "+arg0.length+" bytes now");
 				if (arg0.length == message_manager.msg_smc_sensors.size_bytes) {
 					message_manager.msg_smc_sensors.parseData(arg0);
 					communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);
+					// update switches
+					MainActivity.this.runOnUiThread(new Runnable() {
+						public void run() {
+							frontReedSwitch.updateSwitchStates(message_manager.msg_smc_sensors.switch_front);
+							centerReedSwitch.updateSwitchStates(message_manager.msg_smc_sensors.switch_center);
+							rearReedSwitch.updateSwitchStates(message_manager.msg_smc_sensors.switch_rear);
+						}
+					});
 				} else {
-					Log.d(TAG_ERROR, "First cam callback got an invalid number of bytes: " + arg0.length);
+					Log.d(TAG_ERROR, "SMC callback got an invalid number of bytes: " + arg0.length);
 				}
 			}
 		};
@@ -391,22 +400,23 @@ import Communication.USBDeviceWrapper;
 
 		@Override
 		public boolean dispatchGenericMotionEvent(final MotionEvent event) {
-			Log.d(TAG_LOG,"EVENT!");
 			// Check that the event came from a game controller
+			// Log.d("ROV_STATE","event");
 			if ((event.getSource() & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK
 					&& event.getAction() == MotionEvent.ACTION_MOVE) {
-//					InputDevice mInputDevice = event.getDevice();
+//					InputDevice mInputDevice = event.getDevice();it l
 //					mInputDevice.getMotionRange(MotionEvent.AXIS_X, event.getSource()).getRange();
 
 				SimpleMatrix joy_state = new SimpleMatrix(6,1);
-				joy_state.set(0,0,event.getAxisValue(MotionEvent.AXIS_X));
-				joy_state.set(1,0,event.getAxisValue(MotionEvent.AXIS_Y));
-				joy_state.set(2,0,event.getAxisValue(MotionEvent.AXIS_Z));
-				joy_state.set(3,0,event.getAxisValue(MotionEvent.AXIS_RX));
-				joy_state.set(4,0,event.getAxisValue(MotionEvent.AXIS_RY));
-				joy_state.set(5,0,event.getAxisValue(MotionEvent.AXIS_RZ));
+				joy_state.set(0,0,(-1)*event.getAxisValue(MotionEvent.AXIS_Y));
+				joy_state.set(1,0,( 1)*event.getAxisValue(MotionEvent.AXIS_X));
+				joy_state.set(2,0,( 1)*event.getAxisValue(MotionEvent.AXIS_Z));
+				joy_state.set(3,0,(-1)*event.getAxisValue(MotionEvent.AXIS_RY));
+				joy_state.set(4,0,( 1)*event.getAxisValue(MotionEvent.AXIS_RX));
+				joy_state.set(5,0,( 1)*event.getAxisValue(MotionEvent.AXIS_RZ));
 
-				Log.d(TAG_LOG,"Joystick State, X:"+joy_state.get(0)+" Y:"+joy_state.get(1)+" Z:"+joy_state.get(2)+" RX"+joy_state.get(3)+" RY"+joy_state.get(4)+" RZ"+joy_state.get(5));
+				//Log.d("ROV_JOY",String.format("X:%2.2f  Y:%2.2f  Z:%2.2f  R:%1.3f  P:%1.3f  W:%1.3f",joy_state.get(0),joy_state.get(1),joy_state.get(2),joy_state.get(3),joy_state.get(4),joy_state.get(5)));
+				planner_node.setJoystickInput(joy_state);
 
 				return true;
 			}
@@ -418,12 +428,17 @@ import Communication.USBDeviceWrapper;
 		private void onBeginCourseRun(){
 			header.setText(R.string.begin_course_run);
 			description.setText(R.string.begin_course_run_description);
-			makeButtonsVisible();
+			makeVisible();
 			button_nav_top.setText(R.string.begin);
 			button_nav_middle.setText(R.string.next);
 			button_nav_bottom.setText(R.string.back);
-			pageState = Page_State.BEGIN_COURSE_RUN;
+			pageState = page_state.BEGIN_COURSE_RUN;
             viewContainer.setBackgroundResource(R.drawable.outline_bg);
+            translation_target.setVisibility(View.INVISIBLE);
+            rotation_target.setVisibility(View.INVISIBLE);
+            try {
+				system_node.setDesiredState(1);
+			}catch(Exception e){}
 
             resetButtonHandler();
 
@@ -434,13 +449,21 @@ import Communication.USBDeviceWrapper;
                     button_nav_top.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            onEnableRun();
+                        	if(system_node.status_system > 0) {
+								onEnableRun();
+							}else{
+                        		onBeginCourseRun();
+							}
                         }
                     });
                     frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
 						@Override
 						public void onClick(View view) {
-							onEnableRun();
+							if(system_node.status_system > 0) {
+								onEnableRun();
+							}else{
+								onBeginCourseRun();
+							}
 						}
 					});
 
@@ -456,13 +479,15 @@ import Communication.USBDeviceWrapper;
 		private void onEnableRun(){
 			header.setText(R.string.enable_run);
 			description.setText(R.string.enable_run_description);
-			makeButtonsVisible();
+			makeVisible();
 			button_nav_top.setText(R.string.hold);
 			button_nav_middle.setText(R.string.first);
 			button_nav_bottom.setText(R.string.back);
-			pageState = Page_State.ENABLE_RUN;
+			pageState = page_state.ENABLE_RUN;
             viewContainer.setBackgroundResource(R.drawable.outline_bg);
-
+			translation_target.setVisibility(View.INVISIBLE);
+			rotation_target.setVisibility(View.INVISIBLE);
+			system_node.setDesiredState(1);
 
             resetButtonHandler();
 
@@ -479,21 +504,22 @@ import Communication.USBDeviceWrapper;
                             enableClick.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    button_nav_top.setOnTouchListener(new View.OnTouchListener() {
-                                        @Override
-                                        public boolean onTouch(View v, MotionEvent event) {
+									if(pageState == page_state.ENABLE_RUN){
+										button_nav_top.setOnTouchListener(new View.OnTouchListener() {
+											@Override
+											public boolean onTouch(View v, MotionEvent event) {
+												switch (event.getAction()) {
+													case MotionEvent.ACTION_DOWN:
+														break;
+													case MotionEvent.ACTION_UP:
+														onBeginCourseRun();
+														break;
+												}
 
-                                            switch (event.getAction()) {
-                                                case MotionEvent.ACTION_DOWN:
-                                                    break;
-                                                case MotionEvent.ACTION_UP:
-                                                    onEnableRun();
-                                                    break;
-                                            }
-
-                                            return true;
-                                        }
-                                    });
+												return true;
+											}
+										});
+									}
                                 }
                             }, 2000);
 
@@ -506,7 +532,9 @@ import Communication.USBDeviceWrapper;
                                             onWaitingForLock();
                                             break;
                                         case MotionEvent.ACTION_UP:
-                                            onEnableRun();
+											if(pageState == page_state.ENABLE_RUN){
+												onBeginCourseRun();
+											}
                                             break;
                                     }
 
@@ -516,7 +544,14 @@ import Communication.USBDeviceWrapper;
                         }
                     });
 
-                    //SAME HANDLER FOR REED SWTICHES
+					button_nav_bottom.setOnClickListener(new View.OnClickListener() {
+						@Override
+						public void onClick(View view) {
+							onBeginCourseRun();
+						}
+					});
+
+                    //SAME HANDLER FOR REED SWITCHES
 					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
 						@Override
 						public void onClick(View view) {
@@ -524,19 +559,20 @@ import Communication.USBDeviceWrapper;
 							enableClick.postDelayed(new Runnable() {
 								@Override
 								public void run() {
-									frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
-										@Override
-										public void onTouch(View v, MotionEvent event) {
-
-											switch (event.getAction()) {
-												case MotionEvent.ACTION_DOWN:
-													break;
-												case MotionEvent.ACTION_UP:
-													onEnableRun();
-													break;
+									if(pageState == page_state.ENABLE_RUN) {
+										frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+											@Override
+											public void onTouch(View v, MotionEvent event) {
+												switch (event.getAction()) {
+													case MotionEvent.ACTION_DOWN:
+														break;
+													case MotionEvent.ACTION_UP:
+														onBeginCourseRun();
+														break;
+												}
 											}
-										}
-									});
+										});
+									}
 								}
 							}, 2000);
 
@@ -548,7 +584,9 @@ import Communication.USBDeviceWrapper;
 											onWaitingForLock();
 											break;
 										case MotionEvent.ACTION_UP:
-											onEnableRun();
+											if(pageState == page_state.ENABLE_RUN){
+												onBeginCourseRun();
+											}
 											break;
 									}
 								}
@@ -569,12 +607,15 @@ import Communication.USBDeviceWrapper;
         private void onWaitingForLock() {
 			header.setText(R.string.waiting_for_lock);
 			description.setText(R.string.waiting_for_lock_description);
-			makeButtonsVisible();
+			makeVisible();
 			button_nav_top.setText(R.string.hold);
 			button_nav_middle.setVisibility(View.INVISIBLE);
 			button_nav_bottom.setVisibility(View.INVISIBLE);
-			pageState = Page_State.WAITING_FOR_LOCK;
+			pageState = page_state.WAITING_FOR_LOCK;
 			viewContainer.setBackgroundResource(R.drawable.outline_bg);
+			translation_target.setVisibility(View.INVISIBLE);
+			rotation_target.setVisibility(View.INVISIBLE);
+			system_node.setDesiredState(2);
 
 			button_nav_bottom.setOnClickListener(null);
 			rearReedSwitch.setOnClickListener(null);
@@ -587,7 +628,7 @@ import Communication.USBDeviceWrapper;
 						case MotionEvent.ACTION_DOWN:
 							break;
 						case MotionEvent.ACTION_UP:
-							onEnableRun();
+							onBeginCourseRun();
 							break;
 					}
 
@@ -603,31 +644,76 @@ import Communication.USBDeviceWrapper;
 						case MotionEvent.ACTION_DOWN:
 							break;
 						case MotionEvent.ACTION_UP:
-							onEnableRun();
+							onBeginCourseRun();
 							break;
 					}
 				}
 			});
-            //Testing to force view change
-//            Handler handler2 = new Handler();
-//            handler2.postDelayed(new Runnable() {
-//                @Override
-//                public void run() {
-//                    // Do something after 5s = 5000ms
-//                    onPositionLocked();
-//                }
-//            }, 5000);
+            Handler handler2 = new Handler();
+            handler2.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if(system_node.isStateTransitionReady()){
+						onPositionLocked();
+					}else{
+                    	Log.d("ROV_ERROR", "Position lock was not true after timeout");
+                    	onBeginCourseRun();
+					}
+                }
+            }, 1000);
 		}
 
 		private void onPositionLocked() {
 			header.setText(R.string.position_locked);
 			description.setText(R.string.position_locked_description);
-			makeButtonsVisible();
+			makeVisible();
 			button_nav_top.setText(R.string.hold);
 			button_nav_middle.setVisibility(View.INVISIBLE);
 			button_nav_bottom.setVisibility(View.INVISIBLE);
-			pageState = Page_State.POSITION_LOCKED;
-			viewContainer.setBackgroundResource(R.drawable.outline_bg_green);
+			pageState = page_state.POSITION_LOCKED;
+			viewContainer.setBackgroundResource(R.drawable.outline_bg);
+			translation_target.setVisibility(View.VISIBLE);
+			rotation_target.setVisibility(View.VISIBLE);
+			system_node.setDesiredState(3);
+
+			button_nav_top.setOnTouchListener(new View.OnTouchListener() {
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+
+					switch (event.getAction()) {
+						case MotionEvent.ACTION_DOWN:
+							break;
+						case MotionEvent.ACTION_UP:
+							if(system_node.isStateTransitionReady()){
+								onReadyToLaunch();
+							}else{
+								Log.d(TAG_LOG, "Attempted arm at too far a distance from start");
+								onBeginCourseRun();
+							}
+							break;
+					}
+
+					return true;
+				}
+			});
+
+			frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+				@Override
+				public void onTouch(View v, MotionEvent event) {
+					switch (event.getAction()) {
+						case MotionEvent.ACTION_DOWN:
+							break;
+						case MotionEvent.ACTION_UP:
+							if(system_node.isStateTransitionReady()){
+								onReadyToLaunch();
+							}else{
+								Log.d(TAG_LOG, "Attempted arm at too far a distance from start");
+								onBeginCourseRun();
+							}
+							break;
+					}
+				}
+			});
 
 			button_nav_middle.setOnClickListener(null);
 			button_nav_bottom.setOnClickListener(null);
@@ -649,12 +735,15 @@ import Communication.USBDeviceWrapper;
 		private void onReadyToLaunch(){
             header.setText(R.string.ready_to_launch);
             description.setText(R.string.armed);
-            makeButtonsVisible();
+            makeVisible();
             button_nav_top.setText(R.string.start);
             button_nav_middle.setText(R.string.stop);
             button_nav_bottom.setText(R.string.stop);
-            pageState = Page_State.READY_TO_LAUNCH;
+            pageState = page_state.READY_TO_LAUNCH;
             viewContainer.setBackgroundResource(R.drawable.outline_bg_green);
+			translation_target.setVisibility(View.INVISIBLE);
+			rotation_target.setVisibility(View.INVISIBLE);
+			system_node.setDesiredState(4);
 
             resetButtonHandler();
 
@@ -679,9 +768,7 @@ import Communication.USBDeviceWrapper;
 
                     button_nav_middle.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            onBeginCourseRun();
-                        }
+                        public void onClick(View view) {onBeginCourseRun(); }
                     });
 					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
 						@Override
@@ -692,8 +779,7 @@ import Communication.USBDeviceWrapper;
 
                     button_nav_bottom.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            onBeginCourseRun();
+                        public void onClick(View view) {onBeginCourseRun();
                         }
                     });
 					rearReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
@@ -709,12 +795,16 @@ import Communication.USBDeviceWrapper;
 		private void onRunning(){
             header.setText(R.string.running);
             description.setText(null);
-            makeButtonsVisible();
+            makeVisible();
             button_nav_top.setText(R.string.stop);
             button_nav_middle.setText(R.string.stop);
             button_nav_bottom.setText(R.string.stop);
-            pageState = Page_State.RUNNING;
+			description.setVisibility(View.INVISIBLE);
+            pageState = page_state.RUNNING;
             viewContainer.setBackgroundResource(R.drawable.outline_bg_green);
+			translation_target.setVisibility(View.INVISIBLE);
+			rotation_target.setVisibility(View.INVISIBLE);
+			system_node.setDesiredState(5);
 
             resetButtonHandler();
 
@@ -724,8 +814,7 @@ import Communication.USBDeviceWrapper;
                 public void run() {
                     button_nav_top.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            onBeginCourseRun();
+                        public void onClick(View view) {onBeginCourseRun();
                         }
                     });
 					frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
@@ -737,8 +826,7 @@ import Communication.USBDeviceWrapper;
 
                     button_nav_middle.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            onBeginCourseRun();
+                        public void onClick(View view) {onBeginCourseRun();
                         }
                     });
 					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
@@ -750,8 +838,7 @@ import Communication.USBDeviceWrapper;
 
                     button_nav_bottom.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            onBeginCourseRun();
+                        public void onClick(View view) {onBeginCourseRun();
                         }
                     });
 					rearReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
@@ -765,10 +852,11 @@ import Communication.USBDeviceWrapper;
 
         }
 
-		private void makeButtonsVisible(){
+		private void makeVisible(){
             button_nav_top.setVisibility(View.VISIBLE);
             button_nav_middle.setVisibility(View.VISIBLE);
             button_nav_bottom.setVisibility(View.VISIBLE);
+			description.setVisibility(View.VISIBLE);
         }
 
         private void resetButtonHandler(){
@@ -786,5 +874,41 @@ import Communication.USBDeviceWrapper;
 			centerReedSwitch.setOnTouchListener(null);
 			rearReedSwitch.setOnTouchListener(null);
         }
+
+		Runnable monitorUI = new Runnable() {
+			@Override
+			public void run() {
+				try {
+					//currentDraw;
+					batterySoc.setText(String.valueOf(((double)((int)(communication_node.ui_battery_voltage*100)))/100).concat("V"));
+					runState.setText(run_states[system_node.status_system+1]);
+					if(system_node.status_system >= 1){
+						runState.setBackgroundResource(R.drawable.outline_bg_green);
+					}else if(system_node.status_system == 0){
+						runState.setBackgroundResource(R.drawable.outline_bg_blue);
+					}else{
+						runState.setBackgroundResource(R.drawable.outline_bg_red);
+					}
+					Vector3 trans_targ = planner_node.rov_planner.translation_initial_error;
+					Vector3 rot_targ = planner_node.rov_planner.rotation_initial_error;
+					//Log.d(TAG,String.format("Dist to target  X:%2.2f  Y:%2.2f  Z:%2.2f",trans_targ.getX(),trans_targ.getY(),trans_targ.getZ()));
+					//Log.d(TAG,String.format("Dist to target  R:"+rot_targ.getX()+"  P:"+rot_targ.getY()+"  W:"+rot_targ.getZ()));
+					translation_target.setText(String.format("Dist to target  X:%1.3f  Y:%1.3f  Z:%1.3f",trans_targ.getX(),trans_targ.getY(),trans_targ.getZ()));
+					rotation_target.setText(String.format("Dist to target  R:%1.3f  P:%1.3f  W:%1.3f",rot_targ.getX(),rot_targ.getY(),rot_targ.getZ()));
+					if(planner_node.rov_planner.ready_initial_translation){
+						translation_target.setBackgroundResource(R.drawable.outline_bg_green);
+					}else{
+						translation_target.setBackgroundResource(R.drawable.outline_bg_red);
+					}
+					if(planner_node.rov_planner.ready_initial_rotation){
+						rotation_target.setBackgroundResource(R.drawable.outline_bg_green);
+					}else{
+						rotation_target.setBackgroundResource(R.drawable.outline_bg_red);
+					}
+				} finally {
+					monitorUIHandler.postDelayed(monitorUI, 50);
+				}
+			}
+		};
 
 	}

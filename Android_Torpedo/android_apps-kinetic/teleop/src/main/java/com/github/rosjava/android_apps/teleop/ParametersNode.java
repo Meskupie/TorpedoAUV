@@ -12,6 +12,7 @@ import org.ros.node.ConnectedNode;
 import org.ros.node.parameter.ParameterTree;
 import org.ros.node.topic.Publisher;
 import org.ros.node.topic.Subscriber;
+import org.ros.rosjava_geometry.Transform;
 import org.yaml.snakeyaml.nodes.Node;
 
 import java.io.BufferedReader;
@@ -39,7 +40,9 @@ public class ParametersNode extends AbstractNodeMain {
 
     private Time time_current;
     private Time time_status_system;
+    private Time time_start;
     private Duration timeout_status_system= new Duration(0.1);
+    private Duration startup_delay = new Duration(2.5);
 
     private int status_system;
     private int status_parameters;
@@ -48,6 +51,8 @@ public class ParametersNode extends AbstractNodeMain {
     private boolean update_dynamics = false;
     private boolean update_map = false;
     private boolean update_run_mode = false;
+    private boolean update_teleop_style = false;
+    private boolean update_initial_pose = false;
 
 
     public ParametersNode(){}
@@ -79,6 +84,24 @@ public class ParametersNode extends AbstractNodeMain {
         return true;
     }
 
+    public boolean setTeleopStyle(int _mode){
+        if(!params.updateTeleopStyle(_mode)){
+            Log.e("ROV_ERROR", "Parameters node: Failure updating teleop style");
+            return false;
+        }
+        update_teleop_style = true;
+        return true;
+    }
+
+    public boolean setInitialPose(Transform pose){
+        if(!params.updateInitialPose(pose)){
+            Log.e("ROV_ERROR", "Parameters node: Failure updating initial pose");
+            return false;
+        }
+        update_initial_pose = true;
+        return true;
+    }
+
     @Override
     public GraphName getDefaultNodeName() {
         return GraphName.of("ParametersNode");
@@ -96,12 +119,13 @@ public class ParametersNode extends AbstractNodeMain {
             @Override
             protected void setup(){
                 time_status_system = connectedNode.getCurrentTime();
+                time_start = connectedNode.getCurrentTime();
             }
 
             @Override
             protected void loop() throws InterruptedException {
                 // Check compliance
-                if(status_system <= 2){
+                if(status_system <= 1){
                     status_parameters |= 1;
                 } else {status_parameters &= ~1;}
 
@@ -112,27 +136,38 @@ public class ParametersNode extends AbstractNodeMain {
                     status_parameters |= 2;
                 } else { status_parameters &= ~2;}
 
-                if(status_parameters == 0) {
-                    // Update any parameters that have been modified
-                    if (update_dynamics) {
-                        param_tree.set("/dynamics_A", params.getDataA());
-                        param_tree.set("/dynamics_B", params.getDataB());
-                        param_tree.set("/controller_K", params.getDataK());
-                        update_dynamics = false;
-                    }
-                    if (update_map){
-                        param_tree.set("/planner_map", params.getDataMap());
-                        update_map = false;
-                    }
-                    if (update_run_mode){
-                        param_tree.set("/run_mode", params.getRunMode());
-                        update_run_mode = false;
-                    }
-
-                }
                 status_parameters_msg.setData(status_parameters);
                 status_parameters_pub.publish(status_parameters_msg);
-                Thread.sleep(1000);
+
+                Thread.sleep(500);
+
+                if(time_current.compareTo(time_start.add(startup_delay)) == 1) {
+                    if (status_parameters == 1) {
+                        // Update any parameters that have been modified
+                        if (update_dynamics) {
+                            param_tree.set("/dynamics_A", params.getDataA());
+                            param_tree.set("/dynamics_B", params.getDataB());
+                            param_tree.set("/controller_K", params.getDataK());
+                            update_dynamics = false;
+                        }
+                        if (update_map) {
+                            param_tree.set("/planner_map", params.getDataMap());
+                            update_map = false;
+                        }
+                        if (update_run_mode) {
+                            param_tree.set("/run_mode", params.getRunMode());
+                            update_run_mode = false;
+                        }
+                        if (update_teleop_style) {
+                            param_tree.set("/teleop_style", params.getTeleopStyle());
+                            update_teleop_style = false;
+                        }
+                        if (update_initial_pose) {
+                            param_tree.set("/initial_pose", params.getInitialPose());
+                            update_initial_pose = false;
+                        }
+                    }
+                }
             }
         });
 

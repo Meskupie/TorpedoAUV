@@ -2,6 +2,10 @@ package com.github.rosjava.android_apps.teleop;
 
 import android.util.Log;
 
+import org.ros.rosjava_geometry.Quaternion;
+import org.ros.rosjava_geometry.Transform;
+import org.ros.rosjava_geometry.Vector3;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,11 +19,13 @@ import java.util.List;
 
 public class Parameters {
     // Declare data
-    ArrayList<Double> data_A;
-    ArrayList<Double> data_B;
-    ArrayList<Double> data_K;
-    ArrayList<Double> data_map;
-    int data_run_mode;
+    private ArrayList<Double> data_A;
+    private ArrayList<Double> data_B;
+    private ArrayList<Double> data_K;
+    private ArrayList<Double> data_map;
+    private int param_run_mode;
+    private int param_teleop_style;
+    private ArrayList<Double> param_initial_pose;
 
     // Other
     private String path = "res/raw/";
@@ -33,7 +39,9 @@ public class Parameters {
         data_B = new ArrayList<>(SIZE_B);
         data_K = new ArrayList<>(SIZE_K);
         data_map = new ArrayList<>();
-        data_run_mode = 0;
+        param_run_mode = 0;
+        param_teleop_style = 0;
+        param_initial_pose = new ArrayList<>(7);
     }
 
     public boolean updateDynamics(String _filename) {
@@ -103,7 +111,24 @@ public class Parameters {
     }
 
     public boolean updateRunMode(int _mode){
-        data_run_mode = _mode;
+        param_run_mode = _mode;
+        return true;
+    }
+
+    public boolean updateTeleopStyle(int _mode){
+        param_teleop_style = _mode;
+        return true;
+    }
+
+    public boolean updateInitialPose(Transform _pose){
+        param_initial_pose = new ArrayList<>(7);
+        param_initial_pose.add(_pose.getTranslation().getX());
+        param_initial_pose.add(_pose.getTranslation().getY());
+        param_initial_pose.add(_pose.getTranslation().getZ());
+        param_initial_pose.add(_pose.getRotationAndScale().getX());
+        param_initial_pose.add(_pose.getRotationAndScale().getY());
+        param_initial_pose.add(_pose.getRotationAndScale().getZ());
+        param_initial_pose.add(_pose.getRotationAndScale().getW());
         return true;
     }
 
@@ -112,6 +137,7 @@ public class Parameters {
     public ArrayList getDataB(){return data_B;}
     public ArrayList getDataK(){return data_K;}
     public ArrayList getDataMap(){return data_map;}
-    public int getRunMode(){return data_run_mode;}
-
+    public int getRunMode(){return param_run_mode;}
+    public int getTeleopStyle(){return param_teleop_style;}
+    public ArrayList getInitialPose(){return param_initial_pose;}
 }

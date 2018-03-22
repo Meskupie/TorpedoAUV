@@ -188,7 +188,7 @@ public class MessageManager {
             battery_voltage = ((double)parsed[0])*scale[0]; // V
             depth = ((double)parsed[1])*scale[1]; // m
             imu = new Quaternion(((double)parsed[2])*scale[2],((double)parsed[3])*scale[2],((double)parsed[4])*scale[2],((double)parsed[5])*scale[2]); // Quaternion
-            motor_thrust = new double[]{((double)parsed[6])*scale[3],((double)parsed[7])*scale[3],((double)parsed[8])*scale[3],((double)parsed[9])*scale[3],((double)parsed[10])*scale[3],((double)parsed[11])*scale[3]}; // N
+            motor_thrust = new double[]{((double)parsed[10])*scale[3],((double)parsed[6])*scale[3],((double)parsed[11])*scale[3],((double)parsed[7])*scale[3],((double)parsed[8])*scale[3],((double)parsed[9])*scale[3]}; // N
             battery_SOC = parsed[12]*(int)scale[4]; // %
             battery_SOP = parsed[13]*(int)scale[5]; // %
             battery_current = ((double)parsed[14])*scale[6]; // A
@@ -223,9 +223,12 @@ public class MessageManager {
 
         public byte[] getBuiltMsg(){
             int[] input = new int[input_thrust.length];
-            for(int i = 0; i < input_thrust.length; i++){
-                input[i] = (int)(input_thrust[i]/scale[0]);
-            }
+            input[4] = (int)(input_thrust[0]/scale[0]);
+            input[0] = (int)(input_thrust[1]/scale[0]);
+            input[5] = (int)(input_thrust[2]/scale[0]);
+            input[1] = (int)(input_thrust[3]/scale[0]);
+            input[2] = (int)(input_thrust[4]/scale[0]);
+            input[3] = (int)(input_thrust[5]/scale[0]);
             raw = buildRawBytes(input,bit_size,arr_size,size_bytes,true);
             raw[0] = serial_write_tag[0];
             return raw;
