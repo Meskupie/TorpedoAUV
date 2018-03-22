@@ -94,8 +94,8 @@ public class CommunicationNode extends AbstractNodeMain {
 
     private MessageManager message_manager = new MessageManager();
 
-    private String[] smc_status_enum = new String[]{"running","idle","startup","timeout","fault", "fault_IMU","fault battery","fault motors"};
-
+    private String[] smc_status_enum = new String[]{"RUNNING","IDLE","STARTUP","TIMEOUT","FAULT", "FAULT_IMU","FAULT_BATTERY","FAULT MOTORS"};
+    private String[] smc_motor_status_enum = new String[]{"COMM_FAILURE","IDLE,STARTUP","VALIDATION","STOP","START,RUN","ALIGNMENT","SPEEDFBKERROR","OVERCURRENT","STARTUP_FAILURE","STARTUP_BEMF_FAILURE","LF_TIMER_FAILURE","WD_RESET"};
 
     public CommunicationNode(){
         status_system = 0;
@@ -202,7 +202,6 @@ public class CommunicationNode extends AbstractNodeMain {
                 status_system = status_system_msg.getData();
                 // request data from systems
                 if(ready_usb_smc) {
-                    Log.d("ROV_SERIAL","Sending sensor request");
                     new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_sensors.getRequest()});
                 }
                 if(ready_usb_front_cam) {
@@ -223,7 +222,6 @@ public class CommunicationNode extends AbstractNodeMain {
                 if (status_system >= 3) {
                     double[] thrusts = input_thrust_msg.getData();
                     message_manager.msg_smc_motors.input_thrust = thrusts;
-                    Log.d("ROV_SERIAL","Sending thrust command, FL:"+thrusts[0]+" FR:"+thrusts[1]+" RL:"+thrusts[2]+" RR:"+thrusts[3]+" FC:"+thrusts[4]+" RC:"+thrusts[5]);
                     new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_motors.getBuiltMsg()});
                 }
             }
@@ -240,7 +238,7 @@ public class CommunicationNode extends AbstractNodeMain {
         embedded_imu_msg.setY(message.imu.getY());
         embedded_imu_msg.setZ(message.imu.getZ());
         embedded_imu_msg.setW(message.imu.getW());
-        embedded_depth_msg.setData(message.depth);
+        embedded_depth_msg.setData(0);//TODO: CHANGE THIS BACK TO: message.depth);
         embedded_temperature_msg.setData(message.temperature);
         embedded_thrust_msg.setData(message.motor_thrust);
         embedded_controller_states_msg.setData(message.motor_status);
@@ -272,12 +270,7 @@ public class CommunicationNode extends AbstractNodeMain {
         ui_battery_voltage = message.battery_voltage;
         ui_battery_soc = message.battery_SOC;
 
-        Log.d("ROV_LOG", "SMC Status: "+smc_status_enum[message.smc_status]+" Reed Switches: "+embedded_reed_switches_msg.getData());
-
-        //test if onClicks/onTouches should activate
-
-
-
+        //Log.d("ROV_LOG", "SMC Status: "+smc_status_enum[message.smc_status]+" Reed Switches: "+embedded_reed_switches_msg.getData());
     }
 
     public void frontCameraPub(MessageManager.MsgCameraTargets message){

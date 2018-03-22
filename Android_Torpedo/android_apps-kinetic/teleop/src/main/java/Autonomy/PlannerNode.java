@@ -141,6 +141,7 @@ public class PlannerNode extends AbstractNodeMain{
                     Float64MultiArray state_reference_msg = state_reference_pub.newMessage();
                     if (status_system <= 3) {
                         state_reference = new double[12];
+                        state_reference_msg.setData(state_reference);
                         state_reference_pub.publish(state_reference_msg);
                     } else {
                         // Setup planner input
@@ -176,6 +177,14 @@ public class PlannerNode extends AbstractNodeMain{
             @Override
             public void onNewValue(Object param_data) {
                 rov_planner.setRunMode((int) param_data);
+            }
+        });
+
+        // Parameter callbacks
+        param_tree.addParameterListener("/teleop_style", new ParameterListener() {
+            @Override
+            public void onNewValue(Object param_data) {
+                rov_planner.setTeleopStyle((int) param_data);
             }
         });
 

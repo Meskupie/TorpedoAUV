@@ -179,7 +179,7 @@ import Communication.USBDeviceWrapper;
 			}
 
 			// Set parameters
-			parameters_node.setDynamics("rough_controller_data.txt");
+			parameters_node.setDynamics("rough_controller_2.txt");
 			parameters_node.setRunMode(2);
 			parameters_node.setTeleopStyle(0);
 			parameters_node.setInitialPose(new Transform(new Vector3(0,0,0.1),new Quaternion(0,0,0,1)));
@@ -227,9 +227,14 @@ import Communication.USBDeviceWrapper;
 				if (arg0.length == message_manager.msg_smc_sensors.size_bytes) {
 					message_manager.msg_smc_sensors.parseData(arg0);
 					communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);
-					//frontReedSwitch.updateSwitchStates(message_manager.msg_smc_sensors.switch_front);
-					//centerReedSwitch.updateSwitchStates(message_manager.msg_smc_sensors.switch_center);
-					//rearReedSwitch.updateSwitchStates(message_manager.msg_smc_sensors.switch_rear);
+					// update switches
+					MainActivity.this.runOnUiThread(new Runnable() {
+						public void run() {
+							frontReedSwitch.updateSwitchStates(message_manager.msg_smc_sensors.switch_front);
+							centerReedSwitch.updateSwitchStates(message_manager.msg_smc_sensors.switch_center);
+							rearReedSwitch.updateSwitchStates(message_manager.msg_smc_sensors.switch_rear);
+						}
+					});
 				} else {
 					Log.d(TAG_ERROR, "SMC callback got an invalid number of bytes: " + arg0.length);
 				}
@@ -491,7 +496,6 @@ import Communication.USBDeviceWrapper;
 										button_nav_top.setOnTouchListener(new View.OnTouchListener() {
 											@Override
 											public boolean onTouch(View v, MotionEvent event) {
-
 												switch (event.getAction()) {
 													case MotionEvent.ACTION_DOWN:
 														break;
@@ -503,8 +507,6 @@ import Communication.USBDeviceWrapper;
 												return true;
 											}
 										});
-									}else {
-										Log.d(TAG_LOG,"Fuck off here");
 									}
                                 }
                             }, 2000);
@@ -545,19 +547,20 @@ import Communication.USBDeviceWrapper;
 							enableClick.postDelayed(new Runnable() {
 								@Override
 								public void run() {
-									frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
-										@Override
-										public void onTouch(View v, MotionEvent event) {
-
-											switch (event.getAction()) {
-												case MotionEvent.ACTION_DOWN:
-													break;
-												case MotionEvent.ACTION_UP:
-													onBeginCourseRun();
-													break;
+									if(pageState == page_state.ENABLE_RUN) {
+										frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+											@Override
+											public void onTouch(View v, MotionEvent event) {
+												switch (event.getAction()) {
+													case MotionEvent.ACTION_DOWN:
+														break;
+													case MotionEvent.ACTION_UP:
+														onBeginCourseRun();
+														break;
+												}
 											}
-										}
-									});
+										});
+									}
 								}
 							}, 2000);
 
@@ -569,7 +572,9 @@ import Communication.USBDeviceWrapper;
 											onWaitingForLock();
 											break;
 										case MotionEvent.ACTION_UP:
-											onBeginCourseRun();
+											if(pageState == page_state.ENABLE_RUN){
+												onBeginCourseRun();
+											}
 											break;
 									}
 								}
@@ -609,7 +614,6 @@ import Communication.USBDeviceWrapper;
 						case MotionEvent.ACTION_DOWN:
 							break;
 						case MotionEvent.ACTION_UP:
-							Log.d("TAG_LOG","So I did hit this case");
 							onBeginCourseRun();
 							break;
 					}
@@ -626,13 +630,11 @@ import Communication.USBDeviceWrapper;
 						case MotionEvent.ACTION_DOWN:
 							break;
 						case MotionEvent.ACTION_UP:
-
 							onBeginCourseRun();
 							break;
 					}
 				}
 			});
-            //Testing to force view change
             Handler handler2 = new Handler();
             handler2.postDelayed(new Runnable() {
                 @Override
@@ -666,7 +668,6 @@ import Communication.USBDeviceWrapper;
 						case MotionEvent.ACTION_DOWN:
 							break;
 						case MotionEvent.ACTION_UP:
-							Log.d(TAG_LOG, "Trying, will I succeed? "+system_node.isStateTransitionReady());
 							if(system_node.isStateTransitionReady()){
 								onReadyToLaunch();
 							}else{
@@ -677,6 +678,24 @@ import Communication.USBDeviceWrapper;
 					}
 
 					return true;
+				}
+			});
+
+			frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+				@Override
+				public void onTouch(View v, MotionEvent event) {
+					switch (event.getAction()) {
+						case MotionEvent.ACTION_DOWN:
+							break;
+						case MotionEvent.ACTION_UP:
+							if(system_node.isStateTransitionReady()){
+								onReadyToLaunch();
+							}else{
+								Log.d(TAG_LOG, "Attempted arm at too far a distance from start");
+								onBeginCourseRun();
+							}
+							break;
+					}
 				}
 			});
 
@@ -731,9 +750,7 @@ import Communication.USBDeviceWrapper;
 
                     button_nav_middle.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            onBeginCourseRun();
-                        }
+                        public void onClick(View view) {onBeginCourseRun(); }
                     });
 					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
 						@Override
@@ -744,8 +761,7 @@ import Communication.USBDeviceWrapper;
 
                     button_nav_bottom.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            onBeginCourseRun();
+                        public void onClick(View view) {onBeginCourseRun();
                         }
                     });
 					rearReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
@@ -777,8 +793,7 @@ import Communication.USBDeviceWrapper;
                 public void run() {
                     button_nav_top.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            onBeginCourseRun();
+                        public void onClick(View view) {onBeginCourseRun();
                         }
                     });
 					frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
@@ -790,8 +805,7 @@ import Communication.USBDeviceWrapper;
 
                     button_nav_middle.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            onBeginCourseRun();
+                        public void onClick(View view) {onBeginCourseRun();
                         }
                     });
 					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
@@ -803,8 +817,7 @@ import Communication.USBDeviceWrapper;
 
                     button_nav_bottom.setOnClickListener(new View.OnClickListener() {
                         @Override
-                        public void onClick(View view) {
-                            onBeginCourseRun();
+                        public void onClick(View view) {onBeginCourseRun();
                         }
                     });
 					rearReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
@@ -847,6 +860,14 @@ import Communication.USBDeviceWrapper;
 					//currentDraw;
 					batterySoc.setText(String.valueOf(((double)((int)(communication_node.ui_battery_voltage*100)))/100).concat("V"));
 					runState.setText(run_states[system_node.status_system+1]);
+					if(system_node.status_system > 1){
+						runState.setBackgroundResource(R.drawable.outline_bg_green);
+					}else if(system_node.status_system == 0){
+						runState.setBackgroundResource(R.drawable.outline_bg_blue);
+					}else{
+						runState.setBackgroundResource(R.drawable.outline_bg_red);
+					}
+
 					//##### update stuff #####
 				} finally {
 					monitorUIHandler.postDelayed(monitorUI, 50);

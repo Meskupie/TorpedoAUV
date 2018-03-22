@@ -39,6 +39,9 @@ public class Controller {
             for(int i = 0; i < SIZE_INPUTS; i++){
                 input_thrust[i] = Math.min(Math.max(input_thrust_mat.get(i),input_thrust_min[i]),input_thrust_max[1]);
             }
+            double[] ref = state_reference;
+            double[] u = input_thrust;
+            Log.d("ROV_CONTROL",String.format("Ref %1.3f, %1.3f, %1.3f, %1.3f, %1.3f, %1.3f, %1.3f, %1.3f, %1.3f, %1.3f, %1.3f, %1.3f| u %1.3f, %1.3f, %1.3f, %1.3f, %1.3f, %1.3f" , ref[0],ref[1],ref[2],ref[3],ref[4],ref[5],ref[6],ref[7],ref[8],ref[9],ref[10],ref[11],u[0],u[1],u[2],u[3],u[4],u[5]) );
             ready_state_reference = false;
             return true;
         }
@@ -58,10 +61,13 @@ public class Controller {
             return false;
         }
         for(int i = 0; i < SIZE_INPUTS; i++) {
-            for(int j = 0; j < SIZE_STATES; j++) {
-                lqr_K_mat.set(i,j,(double)data_K_arr.get(j+i*SIZE_STATES));
+            for (int j = 0; j < SIZE_STATES; j++) {
+                lqr_K_mat.set(i, j, (double) data_K_arr.get(j + i * SIZE_STATES));
             }
         }
+//        for(int i = 0; i < 6; i++){
+//            Log.d("DEBUG_MSG","K matrix: "+lqr_K_mat.get(i,0)+" "+lqr_K_mat.get(i,1)+" "+lqr_K_mat.get(i,2)+" "+lqr_K_mat.get(i,3)+" "+lqr_K_mat.get(i,4)+" "+lqr_K_mat.get(i,5)+" "+lqr_K_mat.get(i,6)+" "+lqr_K_mat.get(i,7)+" "+lqr_K_mat.get(i,8)+" "+lqr_K_mat.get(i,9)+" "+lqr_K_mat.get(i,10)+" "+lqr_K_mat.get(i,11));
+//        }
         ready_controller = true;
         return true;
     }

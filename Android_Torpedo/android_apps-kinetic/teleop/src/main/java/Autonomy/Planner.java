@@ -16,8 +16,8 @@ import Autonomy.MyQuaternion;
 
 public class Planner {
 
-    private double TRANSLATION_RATE = 1;
-    private double ROTATION_RATE = 0.5;
+    private double TRANSLATION_RATE = 0.05;
+    private double ROTATION_RATE = 0.1;
 
     private Transform pose_current = new Transform(new Vector3(0,0,0), new Quaternion(0,0,0,1));
     private Transform pose_initial = new Transform(new Vector3(0,0,0), new Quaternion(0,0,0,1));
@@ -29,23 +29,27 @@ public class Planner {
     //private boolean ready_path = false;
     private boolean ready_initial_pose = false;
     private boolean ready_run_mode = false;
+    private boolean ready_teleop_style = false;
 
     private int run_mode;
+    private int teleop_style;
 
 
     public Planner(){}
 
     public boolean calculateReference(){
+        //pose_reference = new Transform(new Vector3(0,0,0),new Quaternion(0,0,0,1));
         if(ready_pose) {
-            Vector3 position = pose_current.getTranslation();
-            MyQuaternion attitude = new MyQuaternion(pose_current.getRotationAndScale());
+            Transform delta = pose_current.invert().multiply(pose_reference);
+            Vector3 delta_pos = delta.getTranslation();
+            MyQuaternion delta_rot = new MyQuaternion(delta.getRotationAndScale());
             state_reference = new double[12];
-            state_reference[0] = position.getX();
-            state_reference[2] = position.getY();
-            state_reference[4] = position.getZ();
-            state_reference[6] = attitude.getRoll();
-            state_reference[8] = attitude.getPitch();
-            state_reference[10] = attitude.getYaw();
+            state_reference[0] = delta_pos.getX();
+            state_reference[2] = delta_pos.getY();
+            state_reference[4] = delta_pos.getZ();
+            state_reference[6] = delta_rot.getRoll();
+            state_reference[8] = delta_rot.getPitch();
+            state_reference[10] = delta_rot.getYaw();
             ready_pose = false;
 
             return true;
@@ -65,7 +69,7 @@ public class Planner {
                 case 1:
                     break;
                 case 2:
-                    return ready_initial_pose;
+                    return ready_initial_pose&&ready_teleop_style;
             }
         }
         return false;
@@ -78,19 +82,49 @@ public class Planner {
         return ready_pose;
     }
 
-    public boolean setJoyInput(SimpleMatrix joy_input,double period){
-        // joy range should be -1 to 1
-        for(int i = 0; i < joy_input.numRows(); i++) {
-            if (joy_input.get(i) > 1 || joy_input.get(i) < -1) {
-                Log.d("ROV_ERROR", "Planner: Joystick input range is out of bounds");
-                joy_input = new SimpleMatrix(6,1);
+    public boolean setTeleopStyle(int _mode){
+        teleop_style = _mode;
+        ready_teleop_style = true;
+        return ready_teleop_style;
+    }
+
+    public boolean setJoyInput(SimpleMatrix joy_input,double period) {
+        if (ready_teleop_style) {
+            // joy range should be -1 to 1
+            for (int i = 0; i < joy_input.numRows(); i++) {
+                if (joy_input.get(i) > 1 || joy_input.get(i) < -1) {
+                    Log.d("ROV_ERROR", "Planner: Joystick input range is out of bounds");
+                    joy_input = new SimpleMatrix(6, 1);
+                }
             }
+            Vector3 delta_translation;
+            Quaternion delta_rotation;
+            Transform delta;
+            switch (teleop_style) {
+                case 0: // Inertial frame translation only, fixed rotation
+                    delta_translation = new Vector3(joy_input.get(0) * TRANSLATION_RATE * period, joy_input.get(1) * TRANSLATION_RATE * period, joy_input.get(2) * TRANSLATION_RATE * period);
+                    pose_reference = new Transform(pose_reference.getTranslation().add(delta_translation),pose_reference.getRotationAndScale());
+                    break;
+                case 1: // Body frame rotation only, fixed translation
+                    // TODO: make this
+                    break;
+                case 2: // Inertial frame translation, body frame rotation
+                    delta_translation = new Vector3(joy_input.get(0) * TRANSLATION_RATE * period, joy_input.get(1) * TRANSLATION_RATE * period, joy_input.get(2) * TRANSLATION_RATE * period);
+                    pose_reference = new Transform(pose_reference.getTranslation().add(delta_translation),pose_reference.getRotationAndScale());
+                    delta_rotation = MyQuaternion.createFromEuler(joy_input.get(3) * ROTATION_RATE * period, joy_input.get(4) * ROTATION_RATE * period, joy_input.get(5) * ROTATION_RATE * period);
+                    delta = new Transform(new Vector3(0,0,0), delta_rotation);
+                    pose_reference = pose_reference.multiply(delta);
+                    break;
+                case 3: // Body frame all axis
+                    delta_translation = new Vector3(joy_input.get(0) * TRANSLATION_RATE * period, joy_input.get(1) * TRANSLATION_RATE * period, joy_input.get(2) * TRANSLATION_RATE * period);
+                    delta_rotation = MyQuaternion.createFromEuler(joy_input.get(3) * ROTATION_RATE * period, joy_input.get(4) * ROTATION_RATE * period, joy_input.get(5) * ROTATION_RATE * period);
+                    delta = new Transform(delta_translation, delta_rotation);
+                    pose_reference = pose_reference.multiply(delta);
+                    break;
+            }
+            return true;
         }
-        Vector3 delta_translation = new Vector3(joy_input.get(0)*TRANSLATION_RATE*period,joy_input.get(1)*TRANSLATION_RATE*period,joy_input.get(2)*TRANSLATION_RATE*period);
-        Quaternion delta_rotation = MyQuaternion.createFromEuler(joy_input.get(3)*ROTATION_RATE*period,joy_input.get(4)*ROTATION_RATE*period,joy_input.get(5)*ROTATION_RATE*period);
-        Transform delta = new Transform(delta_translation,delta_rotation);
-        pose_reference = pose_reference.multiply(delta);
-        return true;
+        return false;
     }
 
     // Parameters
