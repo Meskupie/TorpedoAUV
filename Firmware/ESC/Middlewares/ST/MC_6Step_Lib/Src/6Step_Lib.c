@@ -227,6 +227,14 @@ void MC_SixStep_Init_main_data(void);
 /**
   * @} end MC_6-STEP_LIB_Private_Functions
   */
+	// CUSTOM Functions:
+	int16_t thrustToDirection(int16_t thrust_mN);
+	int16_t currentToReference(int16_t current_mA);
+	int16_t referenceToCurrent(int16_t reference);
+	int16_t currentToThrust(int16_t current_mA, uint8_t direction);
+	int16_t thrustToCurrent(int16_t thrust_mN);
+	int16_t thrustToSpeed(int16_t thrust_mN);
+	int16_t speedToThrust(int16_t speed);
 
 /** @defgroup MC_SixStep_TABLE    MC_SixStep_TABLE
   *  @{
@@ -1230,6 +1238,99 @@ void MC_Set_PI_param(SIXSTEP_PI_PARAM_InitTypeDef_t *PI_PARAM)
     * @param  speed_fdb motor_speed_value
     * @retval int16_t Currente reference 
 */
+#ifdef ST_PID
+uint16_t MC_PI_Controller(SIXSTEP_PI_PARAM_InitTypeDef_t *PI_PARAM, int32_t speed_fdb)
+{
+  int32_t wProportional_Term=0, wIntegral_Term=0, wDerivative_Term=0, wOutput_32=0;
+  int32_t error0;
+
+  if (PI_PARAM->Reference>0)
+    error0 = (PI_PARAM->Reference - speed_fdb);
+  else
+    error0 = (speed_fdb - PI_PARAM->Reference);
+  
+  /* Proportional term computation*/
+  wProportional_Term = PI_PARAM->Kp_Gain * error0;
+    
+  /* Integral term computation */
+	
+  wIntegral_Term = PI_PARAM->Ki_Gain * SIXSTEP_parameters.error1;
+  
+  /* Derivative computation */
+  wDerivative_Term = PI_PARAM->Kd_Gain * SIXSTEP_parameters.error2;
+
+  SIXSTEP_parameters.error2 = SIXSTEP_parameters.error1;
+  SIXSTEP_parameters.error1 = error0;
+
+#ifndef VOLTAGE_MODE  
+  wOutput_32 = SIXSTEP_parameters.current_reference
+#else
+  wOutput_32 = SIXSTEP_parameters.pulse_value    
+#endif
+    + ((wProportional_Term - wIntegral_Term + wDerivative_Term)>>K_GAIN_SCALING);
+  
+  if (wOutput_32 > PI_PARAM->Upper_Limit_Output)
+  {
+    wOutput_32 = PI_PARAM->Upper_Limit_Output;
+  }
+  else if (wOutput_32 < PI_PARAM->Lower_Limit_Output)
+  {
+    wOutput_32 = PI_PARAM->Lower_Limit_Output;
+  }
+
+  return((uint16_t)(wOutput_32));
+}
+#endif
+#ifdef SPEED_CONTROL
+uint16_t MC_PI_Controller(SIXSTEP_PI_PARAM_InitTypeDef_t *PI_PARAM, int32_t speed_fdb)
+{
+  int32_t wProportional_Term=0, wIntegral_Term=0, wDerivative_Term=0, wOutput_32=0;
+  int32_t error0;
+
+  if (PI_PARAM->Reference>0)
+    error0 = (PI_PARAM->Reference - speed_fdb);
+  else
+    error0 = (speed_fdb - PI_PARAM->Reference);
+	/* FeedForward term*/
+	
+  
+  /* Proportional term computation*/
+  wProportional_Term = PI_PARAM->Kp_Gain * error0;
+    
+  /* Integral term computation */
+	SIXSTEP_parameters.Integral_Term_sum = SIXSTEP_parameters.Integral_Term_sum + (PI_PARAM->Ki_Gain * error0);
+	
+  wIntegral_Term = SIXSTEP_parameters.Integral_Term_sum;
+  
+  /* Derivative computation */
+  wDerivative_Term = PI_PARAM->Kd_Gain * (SIXSTEP_parameters.error1 - error0);
+
+  SIXSTEP_parameters.error2 = SIXSTEP_parameters.error1;
+  SIXSTEP_parameters.error1 = error0;
+
+#ifndef VOLTAGE_MODE  
+  wOutput_32 = SIXSTEP_parameters.current_reference
+#else
+  wOutput_32 = SIXSTEP_parameters.pulse_value    
+#endif
+    + ((wProportional_Term - wIntegral_Term + wDerivative_Term)>>K_GAIN_SCALING);
+  
+  if (wOutput_32 > PI_PARAM->Upper_Limit_Output)
+  {
+    wOutput_32 = PI_PARAM->Upper_Limit_Output;
+  }
+  else if (wOutput_32 < PI_PARAM->Lower_Limit_Output)
+  {
+    wOutput_32 = PI_PARAM->Lower_Limit_Output;
+  }
+
+  return((uint16_t)(wOutput_32));
+}
+#else
+
+#endif
+
+
 #ifdef PID
 uint16_t MC_PI_Controller(SIXSTEP_PI_PARAM_InitTypeDef_t *PI_PARAM, int32_t speed_fdb)
 {
@@ -1245,10 +1346,11 @@ uint16_t MC_PI_Controller(SIXSTEP_PI_PARAM_InitTypeDef_t *PI_PARAM, int32_t spee
   wProportional_Term = PI_PARAM->Kp_Gain * error0;
     
   /* Integral term computation */
-  wIntegral_Term = PI_PARAM->Ki_Gain * SIXSTEP_parameters.error1;
+	SIXSTEP_parameters.Integral_Term_sum = SIXSTEP_parameters.Integral_Term_sum + (PI_PARAM->Ki_Gain * error0);
+  wIntegral_Term = SIXSTEP_parameters.Integral_Term_sum;
   
   /* Derivative computation */
-  wDerivative_Term = PI_PARAM->Kd_Gain * SIXSTEP_parameters.error2;
+  wDerivative_Term = PI_PARAM->Kd_Gain * (SIXSTEP_parameters.error1 - error0);
 
   SIXSTEP_parameters.error2 = SIXSTEP_parameters.error1;
   SIXSTEP_parameters.error1 = error0;
@@ -1410,7 +1512,8 @@ void MC_Task_Speed()
   }
 #endif
 #ifndef VOLTAGE_MODE
-    SIXSTEP_parameters.current_reference = MC_PI_Controller(&PI_parameters,SIXSTEP_parameters.speed_fdbk_filtered);  
+    //SIXSTEP_parameters.current_reference = MC_PI_Controller(&PI_parameters,SIXSTEP_parameters.speed_fdbk_filtered); 
+	
     MC_SixStep_Current_Reference_Setvalue(SIXSTEP_parameters.current_reference);
 #else 
     SIXSTEP_parameters.pulse_value = MC_PI_Controller(&PI_parameters,SIXSTEP_parameters.speed_fdbk_filtered);
@@ -1451,6 +1554,7 @@ void MC_Task_Speed()
   }
 }
 #else
+#ifdef ST_SPEED
 void MC_Task_Speed()
 {
   if (SIXSTEP_parameters.STATUS == RUN)
@@ -1510,7 +1614,40 @@ void MC_Task_Speed()
   }
 }
 #endif
-     
+#endif   
+
+
+#ifdef THRUST_CONTROL
+
+void MC_Task_Speed()
+{
+  if (SIXSTEP_parameters.STATUS == RUN)
+  {
+
+    if(PI_parameters.ReferenceToBeUpdated != 0)
+    {
+      if(PI_parameters.Reference < SIXSTEP_parameters.speed_target)
+      {
+        PI_parameters.Reference += ((SIXSTEP_parameters.Speed_Loop_Time*SIXSTEP_parameters.ACCEL) >> 10);
+        if (PI_parameters.Reference > SIXSTEP_parameters.speed_target) PI_parameters.Reference = SIXSTEP_parameters.speed_target;
+      }
+      else if (PI_parameters.Reference > SIXSTEP_parameters.speed_target)
+      {
+        PI_parameters.Reference -= ((SIXSTEP_parameters.Speed_Loop_Time*SIXSTEP_parameters.ACCEL) >> 10);
+        if (PI_parameters.Reference < SIXSTEP_parameters.speed_target) PI_parameters.Reference = SIXSTEP_parameters.speed_target;
+      }
+      else
+      {
+        PI_parameters.ReferenceToBeUpdated = 0;
+      }        
+    }
+    SIXSTEP_parameters.current_reference = currentToReference(thrustToCurrent(PI_parameters.Reference)); 
+    MC_SixStep_Current_Reference_Setvalue(SIXSTEP_parameters.current_reference);
+
+  }
+}
+
+#endif
 /**
   * @} 
   */
@@ -1548,6 +1685,41 @@ void MC_Set_Speed(uint16_t speed_value)
     * @param  thrust_mN:  thrust in mili newtons
     * @retval speed in RPM
 */
+int16_t thrustToDirection(int16_t thrust_mN)
+{
+    if (thrust_mN >0)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+int16_t currentToReference(int16_t current_mA)
+{
+    int currentSenseVoltage = (((current_mA*SENSE_RESISTOR)/1000)*SENSE_GAIN)/1000;
+    int currentReferenceTHDS = (1000-(((2*OC_THRESHOLD-currentSenseVoltage)*REFERENCE_PWM_DIVIDER_RATIO)/REFERENCE_PWM_HIGH_VOLTAGE));
+    return((currentReferenceTHDS<<UPPER_OUT_SHIFT)/1000);
+}
+int16_t referenceToCurrent(int16_t reference)
+{
+    int32_t currentReferenceTHDS = (reference*1000)>>UPPER_OUT_SHIFT;
+    int currentSenseVoltage =  (2*OC_THRESHOLD-(((1000 -currentReferenceTHDS)*REFERENCE_PWM_HIGH_VOLTAGE)/REFERENCE_PWM_DIVIDER_RATIO));
+    return (((currentSenseVoltage*1000)/SENSE_GAIN)*1000)/SENSE_RESISTOR;
+}
+int16_t currentToThrust(int16_t current_mA, uint8_t direction)
+{
+    if (direction == 1) return THRUST_C_FORWARD_C0*current_mA + THRUST_C_FORWARD_C1;
+    return THRUST_C_BACKWARD_C0*current_mA + THRUST_C_BACKWARD_C1;
+}
+int16_t thrustToCurrent(int16_t thrust_mN)
+{
+    if (thrustToDirection(thrust_mN)) return (thrust_mN - THRUST_C_FORWARD_C1)/THRUST_C_FORWARD_C0;
+    return (thrust_mN - THRUST_C_BACKWARD_C1)/THRUST_C_BACKWARD_C0;
+}
+
+
 int16_t thrustToSpeed(int16_t thrust_mN)
 {
     uint16_t speed_value;
@@ -1568,6 +1740,7 @@ int16_t thrustToSpeed(int16_t thrust_mN)
 int16_t speedToThrust(int16_t speed)
 {
     double speed_d = (double) speed;
+  
     if(speed>0)
     {
         return (int16_t) (THRUST_FORWARD_C0*((speed_d*THRUST_FORWARD_C1)*(speed_d*THRUST_FORWARD_C1)));
@@ -1576,19 +1749,6 @@ int16_t speedToThrust(int16_t speed)
     {
         return (int16_t) (THRUST_BACKWARD_C0*((speed_d*THRUST_BACKWARD_C1)*(speed_d*THRUST_BACKWARD_C1)));
     }
-}
-
-int16_t thrustToDirection(int16_t thrust_mN)
-{
-    if (thrust_mN >0)
-    {
-        return 1;
-    }
-    else
-		{
-			return 0;
-		}
-
 }
 
 /** @defgroup MC_Set_Thrust    MC_Set_Thrust
@@ -1600,12 +1760,24 @@ int16_t thrustToDirection(int16_t thrust_mN)
 void MC_Set_Thrust(int16_t thrust_mN)
 {
 		SIXSTEP_parameters.CW_CCW = thrustToDirection(thrust_mN);
+#ifndef THRUST_CONTROL
 #ifdef SPEED_RAMP  
   PI_parameters.ReferenceToBeUpdated++;
   SIXSTEP_parameters.speed_target = thrustToSpeed(thrust_mN);
+  SIXSTEP_parameters.thrust_target = thrust_mN;
 #else  
   PI_parameters.Reference = thrustToSpeed(thrust_mN);
   SIXSTEP_parameters.speed_target = PI_parameters.Reference;
+#endif
+#else
+	#ifdef SPEED_RAMP  
+  PI_parameters.ReferenceToBeUpdated++;
+  SIXSTEP_parameters.speed_target = thrust_mN;
+#else  
+  PI_parameters.Reference = thrust_mN;
+  SIXSTEP_parameters.speed_target = PI_parameters.Reference;
+#endif
+	
 #endif
 }
 
@@ -2213,7 +2385,7 @@ void MC_SixStep_ARR_Bemf(uint8_t up_bemf)
 #ifdef HALL_SENSORS
 void MC_SixStep_Hall_Startup_Failure_Handler(void)
 {
-  SIXSTEP_parameters.start_attempts--;
+  //SIXSTEP_parameters.start_attempts--;
   if (SIXSTEP_parameters.start_attempts != 0)
   {
     __disable_irq();
@@ -2252,7 +2424,7 @@ void MC_SixStep_Hall_Startup_Failure_Handler(void)
 #ifdef HALL_SENSORS
 void MC_SixStep_Hall_Run_Failure_Handler(void)
 {
-  SIXSTEP_parameters.run_attempts--;
+ // SIXSTEP_parameters.run_attempts--;
   if (SIXSTEP_parameters.run_attempts != 0)
   {
     __disable_irq();

@@ -64,18 +64,7 @@
 /** @defgroup STEVAL-SPIN3202_TIMER_Related_Constants STEVAL-SPIN3202 Timer Related Constants
   * @{
   */
-//#define LARGE_THRUSTOR
-#ifdef LARGE_THRUSTOR
-#define THRUST_FORWARD_C0 (4.5812)
-#define THRUST_FORWARD_C1 (0.0125)
-#define THRUST_BACKWARD_C0 (-6.9684)
-#define THRUST_BACKWARD_C1 (-0.0087)
-#else
-#define THRUST_FORWARD_C0 (4.0492)
-#define THRUST_FORWARD_C1 (0.0105)
-#define THRUST_BACKWARD_C0 (-2.1797)
-#define THRUST_BACKWARD_C1 (-0.0098)
-#endif
+
 
 #ifndef HALL_SENSORS
 	#define BSP_BOARD_HF_TIMX_SLAVE_MODE      (TIM_SLAVEMODE_TRIGGER)

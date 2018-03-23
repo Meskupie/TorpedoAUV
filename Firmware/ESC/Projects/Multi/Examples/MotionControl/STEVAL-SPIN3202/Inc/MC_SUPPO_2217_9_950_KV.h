@@ -62,6 +62,9 @@
 #define TARGET_SPEED                      1000      /*!< Target speed in closed loop control */
 //#define FIXED_HALL_DELAY
 #ifdef VOLTAGE_MODE
+
+
+
 /* **************************************************************************** 
  ==============================================================================   
            ###### ADVANCED PARAMETERS VOLTAGE MODE ######
@@ -111,9 +114,12 @@
 #define KP_GAIN                            2048     /*!< Kp parameter for PI regulator */
 #define KI_GAIN                            1960     /*!< Ki parameter for PI regulator */
 #else
-#define KP_GAIN                           2730     /*!< Kp parameter for PID regulator */
-#define KI_GAIN                           1180     /*!< Ki parameter for PID regulator */
-#define KD_GAIN                            295     /*!< Kd parameter for PID regulator */
+//#define KP_GAIN                           2730     /*!< Kp parameter for PID regulator */
+//#define KI_GAIN                           1180     /*!< Ki parameter for PID regulator */
+//#define KD_GAIN                            295     /*!< Kd parameter for PID regulator */
+#define KP_GAIN                             2730     /*!< Kp parameter for PID regulator */
+#define KI_GAIN                           	0     /*!< Ki parameter for PID regulator */
+#define KD_GAIN                             0     /*!< Kd parameter for PID regulator */
 #endif
 #define K_GAIN_SCALING                      14     /*!< Kp, Ki, (Kd) scaling for PI(D) regulator */
 #define LOWER_OUT_LIMIT                     30     /*!< Low Out value of PI regulator */

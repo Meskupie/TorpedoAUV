@@ -179,7 +179,20 @@ unsigned int ESCSetThrust(ESC_Struct* ESC_hande,int16_t thrustSetPoint_mN)
     SPI.transfer(thrustSetPoint_mN & 0xff);
     digitalWrite(ESC_hande->pin, HIGH);
     #endif
-    ESC_hande->thrustSetPoint_mN =thrustSetPoint_mN;
+    if( ESC_hande->runState == SPEEDFBKERROR ||
+        ESC_hande->runState == OVERCURRENT||
+       ESC_hande->runState == STARTUP_FAILURE||
+       ESC_hande->runState == STARTUP_BEMF_FAILURE||
+       ESC_hande->runState == LF_TIMER_FAILURE||
+       ESC_hande->runState == STARTUP_BEMF_FAILURE
+       )
+    {
+        ESC_hande->thrustSetPoint_mN =0;
+    }
+    else
+    {
+        ESC_hande->thrustSetPoint_mN =thrustSetPoint_mN;
+    }
     return 0;
 }
 int16_t ESCGetThrust(ESC_Struct* ESC_hande)
