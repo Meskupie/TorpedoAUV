@@ -1603,7 +1603,8 @@ void MC_Task_Speed()
     }
 #endif  
 #ifndef VOLTAGE_MODE
-    SIXSTEP_parameters.current_reference = MC_PI_Controller(&PI_parameters,SIXSTEP_parameters.speed_fdbk_filtered);    
+   // SIXSTEP_parameters.current_reference = MC_PI_Controller(&PI_parameters,SIXSTEP_parameters.speed_fdbk_filtered);    
+		SIXSTEP_parameters.current_reference = currentToReference(thrustToCurrent(PI_parameters.Reference)); 
     MC_SixStep_Current_Reference_Setvalue(SIXSTEP_parameters.current_reference);
 #else
     SIXSTEP_parameters.pulse_value = MC_PI_Controller(&PI_parameters,SIXSTEP_parameters.speed_fdbk_filtered);
@@ -1619,33 +1620,34 @@ void MC_Task_Speed()
 
 #ifdef THRUST_CONTROL
 
-void MC_Task_Speed()
-{
-  if (SIXSTEP_parameters.STATUS == RUN)
-  {
+//void MC_Task_Speed()
+//{
+//  if (SIXSTEP_parameters.STATUS == RUN)
+//  {
 
-    if(PI_parameters.ReferenceToBeUpdated != 0)
-    {
-      if(PI_parameters.Reference < SIXSTEP_parameters.speed_target)
-      {
-        PI_parameters.Reference += ((SIXSTEP_parameters.Speed_Loop_Time*SIXSTEP_parameters.ACCEL) >> 10);
-        if (PI_parameters.Reference > SIXSTEP_parameters.speed_target) PI_parameters.Reference = SIXSTEP_parameters.speed_target;
-      }
-      else if (PI_parameters.Reference > SIXSTEP_parameters.speed_target)
-      {
-        PI_parameters.Reference -= ((SIXSTEP_parameters.Speed_Loop_Time*SIXSTEP_parameters.ACCEL) >> 10);
-        if (PI_parameters.Reference < SIXSTEP_parameters.speed_target) PI_parameters.Reference = SIXSTEP_parameters.speed_target;
-      }
-      else
-      {
-        PI_parameters.ReferenceToBeUpdated = 0;
-      }        
-    }
-    SIXSTEP_parameters.current_reference = currentToReference(thrustToCurrent(PI_parameters.Reference)); 
-    MC_SixStep_Current_Reference_Setvalue(SIXSTEP_parameters.current_reference);
+//    if(PI_parameters.ReferenceToBeUpdated != 0)
+//    {
+//      if(PI_parameters.Reference < SIXSTEP_parameters.speed_target)
+//      {
+//        PI_parameters.Reference += ((SIXSTEP_parameters.Speed_Loop_Time*SIXSTEP_parameters.ACCEL) >> 10);
+//        if (PI_parameters.Reference > SIXSTEP_parameters.speed_target) PI_parameters.Reference = SIXSTEP_parameters.speed_target;
+//      }
+//      else if (PI_parameters.Reference > SIXSTEP_parameters.speed_target)
+//      {
+//        PI_parameters.Reference -= ((SIXSTEP_parameters.Speed_Loop_Time*SIXSTEP_parameters.ACCEL) >> 10);
+//        if (PI_parameters.Reference < SIXSTEP_parameters.speed_target) PI_parameters.Reference = SIXSTEP_parameters.speed_target;
+//      }
+//      else
+//      {
+//        PI_parameters.ReferenceToBeUpdated = 0;
+//      }        
+//    }
+//    SIXSTEP_parameters.current_reference = currentToReference(thrustToCurrent(PI_parameters.Reference)); 
+//    //SIXSTEP_parameters.current_reference = 200; 		
+//    MC_SixStep_Current_Reference_Setvalue(SIXSTEP_parameters.current_reference);
 
-  }
-}
+//  }
+//}
 
 #endif
 /**
