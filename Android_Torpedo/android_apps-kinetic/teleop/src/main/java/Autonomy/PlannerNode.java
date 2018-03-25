@@ -155,9 +155,13 @@ public class PlannerNode extends AbstractNodeMain{
                         state_reference_pub.publish(state_reference_msg);
                     } else {
                         // Attempt reference calculation
-                        if (status_system > 3) {
+                        if (status_system >= 3) {
                             if (rov_planner.calculateReference()) {
-                                state_reference = rov_planner.getStateReference();
+                                if (status_system == 3){
+                                    state_reference = new double[12];
+                                }else {
+                                    state_reference = rov_planner.getStateReference();
+                                }
                                 state_reference_msg.setData(state_reference);
                                 state_reference_pub.publish(state_reference_msg);
                             } else {

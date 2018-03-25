@@ -227,7 +227,7 @@ import Communication.USBDeviceWrapper;
 			//Defining a Callback which triggers whenever data is read.
 			@Override
 			public void onReceivedData(byte[] arg0) {
-				//Log.d("ROV_SERIAL","received "+arg0.length+" bytes now");
+				Log.d("ROV_SERIAL","received "+arg0.length+" bytes now");
 				if (arg0.length == message_manager.msg_smc_sensors.size_bytes) {
 					message_manager.msg_smc_sensors.parseData(arg0);
 					communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);

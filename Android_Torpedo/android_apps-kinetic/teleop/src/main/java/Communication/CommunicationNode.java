@@ -203,6 +203,7 @@ public class CommunicationNode extends AbstractNodeMain {
                 status_system = status_system_msg.getData();
                 // request data from systems
                 if(ready_usb_smc) {
+                    Log.d("ROV_LOG","writing request");
                     new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_sensors.getRequest()});
                 }
                 if(ready_usb_front_cam) {
