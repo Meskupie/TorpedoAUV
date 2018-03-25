@@ -66,7 +66,11 @@
 /** @defgroup Exported_types  Exported_types
 * @{
 */
-#define LARGE_THRUSTOR
+/** 
+  * @brief  Six Step parameters  
+  */
+	
+//#define LARGE_THRUSTOR
 #ifdef LARGE_THRUSTOR
 #define THRUST_FORWARD_C0 (4.5812)
 #define THRUST_FORWARD_C1 (0.0125)
@@ -79,23 +83,6 @@
 #define THRUST_BACKWARD_C1 (-0.0098)
 #endif
 
-#ifdef LARGE_THRUSTOR
-#define THRUST_C_FORWARD_C0 (1.1304)
-#define THRUST_C_FORWARD_C1 (421.4)
-#define THRUST_C_BACKWARD_C0 (-0.81016)
-#define THRUST_C_BACKWARD_C1 (-72.088)
-#else
-#define THRUST_C_FORWARD_C0 (0.84247)
-#define THRUST_C_FORWARD_C1 (95.635)
-#define THRUST_C_BACKWARD_C0 (-0.56804)
-#define THRUST_C_BACKWARD_C1 (-77.096)
-#endif
-
-#define THRUST_CONTROL
-
-/** 
-  * @brief  Six Step parameters  
-  */
 typedef enum 
 {
     COMM_FAILURE,                       /* 0 */
@@ -169,15 +156,13 @@ typedef struct
   int32_t speed_fdbk;                    /*!< Motor speed variable */  
   int32_t speed_fdbk_filtered;           /*!< Filtered Motor speed variable */
   int32_t speed_target;                  /*!< Speed target for the motor */
-	int16_t thrust_target;
-	
+
 #ifdef PID
   int32_t error2;
   int32_t error1;
 #else
-
-#endif
   int32_t Integral_Term_sum;             /*!< Global Integral part for PI*/
+#endif
   uint8_t ALIGN_OK;                      /*!< Flag control for Motor Alignment*/ 
   uint8_t ALIGNMENT;                     /*!< Flag control for Motor Alignment ongoing*/   
   uint16_t Speed_Loop_Time;              /*!< Speed loop variable for timing */ 
@@ -234,7 +219,6 @@ typedef struct
   int32_t Reference;                    /*!< Current reference value for PI regulator */
   uint16_t Kp_Gain;                     /*!< Kp value for PI(D) regulator */ 
   uint16_t Ki_Gain;                     /*!< Ki value for PI(D) regulator */
-	int16_t ReferenceThrust;
 #ifdef PID
   int16_t Kd_Gain;                      /*!< Kd value for PID regulator */  
 #endif

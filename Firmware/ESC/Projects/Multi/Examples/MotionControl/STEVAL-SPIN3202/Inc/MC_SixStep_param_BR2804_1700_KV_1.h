@@ -58,8 +58,8 @@
 **************************************************************************** */   
 #define NUM_POLE_PAIRS                       7      /*!< Number of Motor Pole pairs */
 #define DIRECTION                            0      /*!< Set motor direction CW = 0 and CCW = 1*/
-#define TARGET_SPEED_OPEN_LOOP            1200      /*!< Target speed in open loop control */
-#define TARGET_SPEED                      3000      /*!< Target speed in closed loop control */
+#define TARGET_SPEED_OPEN_LOOP            1000      /*!< Target speed in open loop control */
+#define TARGET_SPEED                      1500      /*!< Target speed in closed loop control */
 
 #ifdef VOLTAGE_MODE
 /* **************************************************************************** 
@@ -68,7 +68,7 @@
  ============================================================================== 
 **************************************************************************** */
 /*!< ********************* Open loop control *********************************/
-#define STARTUP_DUTY_CYCLE                  90     /*!< Tenths of percentage of PWM on time */
+#define STARTUP_DUTY_CYCLE                  200     /*!< Tenths of percentage of PWM on time */
 
 /*!< ********************* Closed Loop control *********************************/
 #ifndef PID
@@ -153,10 +153,10 @@
 /*!< ********************* Open loop control *********************************/
 #define ACC                              20000     /*!< Mechanical acceleration rate (setting available in manual mode, LOAD_TYPE = 0) */
 #define MINIMUM_ACC                        500     /*!< Mechanical acceleration rate for BIG load application */
-#define NUMBER_OF_STEPS                  20000     /*!< Number of elements for motor start-UP (max value 65535)*/
+#define NUMBER_OF_STEPS                   1000     /*!< Number of elements for motor start-UP (max value 65535)*/
 #define TIME_FOR_ALIGN                     500     /*!< Time for alignment (msec)*/
 #define BUTTON_DELAY                      1000     /*!< Delay time to enable push button for new command (1 = 1msec)*/
-#define NUMBER_ZCR                          12     /*!< Number of zero crossing event during the startup for closed loop control begin */
+#define NUMBER_ZCR                          4     /*!< Number of zero crossing event during the startup for closed loop control begin */
 
 /*!< ********************* Closed Loop control *******************************/
 /*!< Zero Crossing parameters */

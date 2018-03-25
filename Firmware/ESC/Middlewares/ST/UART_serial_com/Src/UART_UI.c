@@ -349,7 +349,7 @@ void UART_Set_Value()
       switch(SIXSTEP_parameters.Uart_cmd_to_set) 
       {
         case SETSPD_CMD:  /*!<  Set the new speed value command received */
-          MC_Set_Thrust((uint16_t)SIXSTEP_parameters.Uart_value_to_set);
+          MC_Set_Speed((uint16_t)SIXSTEP_parameters.Uart_value_to_set);
         break;
         case INIREF_CMD:  /*!<  Set the new STARTUP REFERENCE value command received */
           SIXSTEP_parameters.startup_reference = SIXSTEP_parameters.Uart_value_to_set;

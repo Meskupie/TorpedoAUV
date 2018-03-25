@@ -58,13 +58,10 @@
 **************************************************************************** */   
 #define NUM_POLE_PAIRS                       7      /*!< Number of Motor Pole pairs */
 #define DIRECTION                            1      /*!< Set motor direction CW = 0 and CCW = 1*/
-#define TARGET_SPEED_OPEN_LOOP            800      /*!< Target speed in open loop control */
+#define TARGET_SPEED_OPEN_LOOP            600      /*!< Target speed in open loop control */
 #define TARGET_SPEED                      1000      /*!< Target speed in closed loop control */
 //#define FIXED_HALL_DELAY
 #ifdef VOLTAGE_MODE
-
-
-
 /* **************************************************************************** 
  ==============================================================================   
            ###### ADVANCED PARAMETERS VOLTAGE MODE ######
@@ -114,12 +111,9 @@
 #define KP_GAIN                            2048     /*!< Kp parameter for PI regulator */
 #define KI_GAIN                            1960     /*!< Ki parameter for PI regulator */
 #else
-//#define KP_GAIN                           2730     /*!< Kp parameter for PID regulator */
-//#define KI_GAIN                           1180     /*!< Ki parameter for PID regulator */
-//#define KD_GAIN                            295     /*!< Kd parameter for PID regulator */
-#define KP_GAIN                             2730     /*!< Kp parameter for PID regulator */
-#define KI_GAIN                           	0     /*!< Ki parameter for PID regulator */
-#define KD_GAIN                             0     /*!< Kd parameter for PID regulator */
+#define KP_GAIN                           2730     /*!< Kp parameter for PID regulator */
+#define KI_GAIN                           1180     /*!< Ki parameter for PID regulator */
+#define KD_GAIN                            295     /*!< Kd parameter for PID regulator */
 #endif
 #define K_GAIN_SCALING                      14     /*!< Kp, Ki, (Kd) scaling for PI(D) regulator */
 #define LOWER_OUT_LIMIT                     30     /*!< Low Out value of PI regulator */
@@ -150,7 +144,7 @@
 
 /*!< ********************* Hall sensors **************************************/
 #if defined(HALL_SENSORS)
-#define START_COUNTER_STEPS_DECREMENTATION   4
+#define START_COUNTER_STEPS_DECREMENTATION   8
 #define NUMBER_OF_STARTS                     10
 #define HALL_KO_SUCCESSIVE_MAX              60
 #define MAX_SPEED                        20000      /*!< Motor rated max speed */
@@ -193,13 +187,13 @@
 #endif
 
 /*!< ********************* Open loop control *********************************/
-#define ACC                              100000     /*!< Mechanical acceleration rate (setting available in manual mode, LOAD_TYPE = 0) */
+#define ACC                              10000     /*!< Mechanical acceleration rate (setting available in manual mode, LOAD_TYPE = 0) */
 #define MINIMUM_ACC                        500     /*!< Mechanical acceleration rate for BIG load application */
 //#define NUMBER_OF_STEPS                  20000    /*!< Number of elements for motor start-UP (max value 65535)*///
 #define NUMBER_OF_STEPS                  	100    /*!< Number of elements for motor start-UP (max value 65535)*/
-#define TIME_FOR_ALIGN                    1000     /*!< Time for alignment (msec)*/
+#define TIME_FOR_ALIGN                     500     /*!< Time for alignment (msec)*/
 #define BUTTON_DELAY                      1000     /*!< Delay time to enable push button for new command (1 = 1msec)*/
-#define NUMBER_ZCR                          20     /*!< Number of zero crossing event during the startup for closed loop control begin */
+#define NUMBER_ZCR                          12     /*!< Number of zero crossing event during the startup for closed loop control begin */
 
 /*!< ********************* Closed Loop control *******************************/
 /*!< Zero Crossing parameters */
@@ -217,7 +211,7 @@
 #endif
 
 /*!< Speed parameters */
-#define SPEED_LOOP_TIME                      4     /*!< Speed Loop time (1 = 1msec) */
+#define SPEED_LOOP_TIME                      1     /*!< Speed Loop time (1 = 1msec) */
 #define FILTER_DEEP_SHIFT                    5
 #define FILTER_DEEP     (1<<FILTER_DEEP_SHIFT)     /*!< Number of bits for digital filter */
 #define POT_BUFFER_SIZE_SHIFT                4

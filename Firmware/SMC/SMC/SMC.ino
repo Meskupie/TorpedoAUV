@@ -210,7 +210,7 @@ void setup()
 void loop()
 {
 #ifdef MANUAL_CONTROL
-    printStatusStruct(ESC_Fast_COMM(&ESC[1]));
+    printStatusStruct(ESC_Fast_COMM(&ESC[2]));
     delay(20);
     
 #else

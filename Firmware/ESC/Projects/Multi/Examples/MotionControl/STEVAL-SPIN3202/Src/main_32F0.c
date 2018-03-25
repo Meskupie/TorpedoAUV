@@ -80,7 +80,6 @@ extern void SPI_Communication_Task(void);
 
 static void MX_IWDG_Init(void);
 static void MX_DMA_Init(void);
-#define M_PI 3.14159265358979323846
 
 int main(void)
 {
@@ -126,7 +125,6 @@ MX_SPI1_Init();
 	 
 	 
 	#ifndef ROV
-	
 //		MC_Set_Thrust(-400);
 //	MC_StartMotor();
 //	HAL_Delay(1000);
@@ -191,15 +189,10 @@ MX_SPI1_Init();
    SPI_Communication_Task();
 	 //HAL_IWDG_Refresh(&hiwdg);
 #else
-//	for (double t = 0; t< 2.0*M_PI; t +=  (M_PI / 360.0))
-//	{
-//		MC_Set_Thrust(2500*sin(t));
-//		HAL_Delay(10);
-//	}
-//	MC_Set_Thrust(1000);
-//	HAL_Delay(1000);
-//		MC_Set_Thrust(1000);
-//	HAL_Delay(1000);
+//	MC_Set_Thrust(400);
+//	HAL_Delay(2000);
+//	MC_Set_Thrust(-400);
+//	HAL_Delay(2000);
 
 #endif
    
