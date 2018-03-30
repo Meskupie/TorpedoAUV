@@ -211,7 +211,7 @@
 #endif
 
 /*!< Speed parameters */
-#define SPEED_LOOP_TIME                      4     /*!< Speed Loop time (1 = 1msec) */
+#define SPEED_LOOP_TIME                      1     /*!< Speed Loop time (1 = 1msec) */
 #define FILTER_DEEP_SHIFT                    5
 #define FILTER_DEEP     (1<<FILTER_DEEP_SHIFT)     /*!< Number of bits for digital filter */
 #define POT_BUFFER_SIZE_SHIFT                4

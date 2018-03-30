@@ -26,6 +26,10 @@
 #define SERIAL_AVAILABLE Serial.available
 #define STOP_ALL_MOTORS for (int i = 0; i<6;i++) ESCStop(&ESC[i]);
 #define HOST_TIMEOUT_MS (500)
+
+#define BATTERY_VOLTAGE_MIN (9200)
+#define BATTERY_VOLTAGE_MAX (12700)
+
 //#define PRO_MICRO
 
 hostUpdateStruct_transmit_union txUnion;
@@ -42,6 +46,16 @@ uint16_t current = 0;
 int8_t direction = 0;
 
 extern ESC_Struct ESC[];
+extern int16_t depthOffset;
+
+void batteryReset()
+{
+    txUnion.statusStruct.battVoltage_mV = gasGauge.getVoltage();
+    if (txUnion.statusStruct.battVoltage_mV>BATTERY_VOLTAGE_MIN && txUnion.statusStruct.battVoltage_mV<BATTERY_VOLTAGE_MAX )
+    {
+                smc_curent_status = System_Idle;
+    }
+}
 
 void printESCState(int state)
 {
@@ -130,6 +144,7 @@ void readSerialCommand() {
     if (SERIAL_AVAILABLE()) {
         queryType = SERIAL_READ();
         switch (queryType) {
+                
             case 'G': // StartMotor
                 motor  = readIntegerSerial();
                 if( motor>=0&& motor<6)
@@ -142,6 +157,16 @@ void readSerialCommand() {
                 {
                     Serial.print("Invalid index");
                 }
+                break;
+                
+            case 'B': // Battery Reset
+                batteryReset();
+                break;
+            
+            case 'R': // global Reset
+                batteryReset();
+                depthOffset = depthSensor.depth_mm();
+                
                 break;
             case 'H': // STOP
                 motor  = readIntegerSerial();
@@ -181,6 +206,9 @@ void readSerialCommand() {
                 if( motor>=0&& motor<6)
                 {
                     ESCSetThrust(&ESC[motor], thrust);
+#ifdef FASTCOMM
+                    ESC_Fast_COMM(&ESC[motor]);
+#endif
                 }
                 else
                 {
@@ -295,7 +323,7 @@ void readSerialCommand() {
                 txUnion.statusStruct.swStateRear = swRear.updateButton();
                 
                 depthSensor.readAsync();
-                txUnion.statusStruct.depth_m = depthSensor.depth_mm();
+                txUnion.statusStruct.depth_m = depthSensor.depth_mm() - depthOffset;
                 
                 //ESC_Status_update_all();
                 txUnion.statusStruct.motorStatus0 = ESC[0].runState;
@@ -424,12 +452,33 @@ void readSerialCommand() {
                         }
                         break;
                     case System_running:
+                        if (txUnion.statusStruct.battVoltage_mV>BATTERY_VOLTAGE_MIN && txUnion.statusStruct.battVoltage_mV<BATTERY_VOLTAGE_MAX )
+                        {
                         ESCSetThrust(&ESC[0], rxUnion.motorStruct.motorThrust0_mN);
                         ESCSetThrust(&ESC[1], rxUnion.motorStruct.motorThrust1_mN);
                         ESCSetThrust(&ESC[2], rxUnion.motorStruct.motorThrust2_mN);
                         ESCSetThrust(&ESC[3], rxUnion.motorStruct.motorThrust3_mN);
                         ESCSetThrust(&ESC[4], rxUnion.motorStruct.motorThrust4_mN);
                         ESCSetThrust(&ESC[5], rxUnion.motorStruct.motorThrust5_mN);
+                        }
+                        else
+                        {
+                            txUnion.statusStruct.battVoltage_mV = gasGauge.getVoltage();
+                            if (txUnion.statusStruct.battVoltage_mV>BATTERY_VOLTAGE_MIN && txUnion.statusStruct.battVoltage_mV<BATTERY_VOLTAGE_MAX )
+                            {
+                                ESCSetThrust(&ESC[0], rxUnion.motorStruct.motorThrust0_mN);
+                                ESCSetThrust(&ESC[1], rxUnion.motorStruct.motorThrust1_mN);
+                                ESCSetThrust(&ESC[2], rxUnion.motorStruct.motorThrust2_mN);
+                                ESCSetThrust(&ESC[3], rxUnion.motorStruct.motorThrust3_mN);
+                                ESCSetThrust(&ESC[4], rxUnion.motorStruct.motorThrust4_mN);
+                                ESCSetThrust(&ESC[5], rxUnion.motorStruct.motorThrust5_mN);
+                            }
+                            else
+                            {
+                                smc_curent_status = System_Fault_Battery;
+                                ESC_Stop_all();
+                            }
+                        }
                         ESC_update_all();
                         break;
                         

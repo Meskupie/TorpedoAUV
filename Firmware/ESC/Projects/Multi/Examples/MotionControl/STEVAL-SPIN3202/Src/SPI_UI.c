@@ -96,12 +96,12 @@ void SPI_Send_16BIT(uint16_t data)
 //	return thrust;
 //}
 
-int16_t referenceToCurrent(int16_t reference)
-{
-    int32_t currentReferenceTHDS = (reference*1000)>>UPPER_OUT_SHIFT;
-    int currentSenseVoltage =  (2*OC_THRESHOLD-(((1000 -currentReferenceTHDS)*REFERENCE_PWM_HIGH_VOLTAGE)/REFERENCE_PWM_DIVIDER_RATIO));
-    return (((currentSenseVoltage*1000)/SENSE_GAIN)*1000)/SENSE_RESISTOR;
-}
+//int16_t referenceToCurrent(int16_t reference)
+//{
+//    int32_t currentReferenceTHDS = (reference*1000)>>UPPER_OUT_SHIFT;
+//    int currentSenseVoltage =  (2*OC_THRESHOLD-(((1000 -currentReferenceTHDS)*REFERENCE_PWM_HIGH_VOLTAGE)/REFERENCE_PWM_DIVIDER_RATIO));
+//    return (((currentSenseVoltage*1000)/SENSE_GAIN)*1000)/SENSE_RESISTOR;
+//}
 
 #ifdef FASTCOMM
 void SPI_Communication_Task()

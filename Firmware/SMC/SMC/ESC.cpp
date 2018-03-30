@@ -20,6 +20,7 @@
 #define CW 0
 #define CCW 1
 #define SPI_COMMS_DELAY_MICROSECONDS 1000
+#define RESET_WAIT_TIME  (1000)
 
 #define MINIMUM_SPEED (500)
 #define MINIMUM_THRUST (50)
@@ -39,7 +40,8 @@ unsigned int ESCStop(ESC_Struct* ESC_hande);
 unsigned int ESCSetSpeed(ESC_Struct* ESC_hande,int16_t speed);
 unsigned int ESCSetDirection(ESC_Struct* ESC_hande,uint8_t direction);
 unsigned int ESCSetAcceleration(ESC_Struct* ESC_hande,int16_t acceleration);
-
+long timeOfLastCommFailure = 0;
+bool comFailureDetected = false;
 
 unsigned int ESC_init_all()
 {
@@ -179,7 +181,20 @@ unsigned int ESCSetThrust(ESC_Struct* ESC_hande,int16_t thrustSetPoint_mN)
     SPI.transfer(thrustSetPoint_mN & 0xff);
     digitalWrite(ESC_hande->pin, HIGH);
     #endif
-    ESC_hande->thrustSetPoint_mN =thrustSetPoint_mN;
+    if( ESC_hande->runState == SPEEDFBKERROR ||
+        ESC_hande->runState == OVERCURRENT||
+       ESC_hande->runState == STARTUP_FAILURE||
+       ESC_hande->runState == STARTUP_BEMF_FAILURE||
+       ESC_hande->runState == LF_TIMER_FAILURE||
+       ESC_hande->runState == STARTUP_BEMF_FAILURE
+       )
+    {
+        ESC_hande->thrustSetPoint_mN =0;
+    }
+    else
+    {
+        ESC_hande->thrustSetPoint_mN =thrustSetPoint_mN;
+    }
     return 0;
 }
 int16_t ESCGetThrust(ESC_Struct* ESC_hande)
@@ -320,6 +335,9 @@ ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande)
     ESC_StatusStructUnion newStatusStruct;
     ESC_CommandStructUnion newCommandStruct;
     newCommandStruct.commandStruct.comms_key = COMM_KEY;
+    
+
+    
     if ((ESC_hande->thrustSetPoint_mN>=ESC_DEADBAND_U) || ESC_hande->thrustSetPoint_mN <=(-ESC_DEADBAND_U))
     {
         newCommandStruct.commandStruct.state = 1;
@@ -341,9 +359,64 @@ ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande)
         newCommandStruct.commandStruct.state = 0;
         newCommandStruct.commandStruct.thrust_mN = 0;
     }
+    
+    if( ESC_hande->runState == SPEEDFBKERROR ||
+       ESC_hande->runState == OVERCURRENT||
+       ESC_hande->runState == STARTUP_FAILURE||
+       ESC_hande->runState == STARTUP_BEMF_FAILURE||
+       ESC_hande->runState == LF_TIMER_FAILURE||
+       //ESC_hande->runState == COMM_FAILURE||
+       //ESC_hande->runState == STOP||
+       ESC_hande->runState == STARTUP_BEMF_FAILURE
+       )
+    {
+        newCommandStruct.commandStruct.state = 0;
+        newCommandStruct.commandStruct.thrust_mN =0;
+    }
 //    Serial.print("setting thrust to: ");
 //    
 //    Serial.println(newCommandStruct.commandStruct.thrust_mN);
+//    if(!comFailureDetected)
+//    {
+//        if (ESC_hande->runState == COMM_FAILURE) {
+//            comFailureDetected = true;
+//            timeOfLastCommFailure = millis();
+//        }
+//        else{
+//            digitalWrite(ESC_hande->pin, LOW);
+//            for (int i = 0;i<sizeof(newStatusStruct); i++)
+//            {
+//                newStatusStruct.stuctRaw[i] = SPI.transfer(newCommandStruct.stuctRaw[i]);
+//            }
+//            digitalWrite(ESC_hande->pin, HIGH);
+//            ESC_hande->currentMeasured = newStatusStruct.statusStruct.currentMeasured_mA;
+//            ESC_hande->runState = newStatusStruct.statusStruct.runState;
+//            ESC_hande->speedSetPoint = ESC_hande->flipMotor*newStatusStruct.statusStruct.speedSetPoint_rpm;
+//            ESC_hande->speedMeasured = ESC_hande->flipMotor*newStatusStruct.statusStruct.speedMeasured_rpm;
+//            ESC_hande->thrustMeasured_mN = newStatusStruct.statusStruct.thrustMeasured_mN;
+//            ESC_hande->temperature = newStatusStruct.statusStruct.temperature;
+//            ESC_hande->direction =newStatusStruct.statusStruct.direction;
+//
+//        }
+//    }
+//    else if((timeOfLastCommFailure+RESET_WAIT_TIME)>millis())
+//    {
+//        comFailureDetected = false;
+//        digitalWrite(ESC_hande->pin, LOW);
+//        for (int i = 0;i<sizeof(newStatusStruct); i++)
+//        {
+//            newStatusStruct.stuctRaw[i] = SPI.transfer(newCommandStruct.stuctRaw[i]);
+//        }
+//        digitalWrite(ESC_hande->pin, HIGH);
+//        ESC_hande->currentMeasured = newStatusStruct.statusStruct.currentMeasured_mA;
+//        ESC_hande->runState = newStatusStruct.statusStruct.runState;
+//        ESC_hande->speedSetPoint = ESC_hande->flipMotor*newStatusStruct.statusStruct.speedSetPoint_rpm;
+//        ESC_hande->speedMeasured = ESC_hande->flipMotor*newStatusStruct.statusStruct.speedMeasured_rpm;
+//        ESC_hande->thrustMeasured_mN = newStatusStruct.statusStruct.thrustMeasured_mN;
+//        ESC_hande->temperature = newStatusStruct.statusStruct.temperature;
+//        ESC_hande->direction =newStatusStruct.statusStruct.direction;
+//
+//    }
     digitalWrite(ESC_hande->pin, LOW);
     for (int i = 0;i<sizeof(newStatusStruct); i++)
     {
@@ -357,6 +430,7 @@ ESC_StatusStruct ESC_Fast_COMM(ESC_Struct* ESC_hande)
     ESC_hande->thrustMeasured_mN = newStatusStruct.statusStruct.thrustMeasured_mN;
     ESC_hande->temperature = newStatusStruct.statusStruct.temperature;
     ESC_hande->direction =newStatusStruct.statusStruct.direction;
+
     return newStatusStruct.statusStruct;
 }
 

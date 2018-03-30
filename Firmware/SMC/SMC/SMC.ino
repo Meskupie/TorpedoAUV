@@ -105,8 +105,12 @@ extern ESC_Struct ESC[];
 
 //#define MATLAB_MODE
 
+// Battery
+#define BATTERY_VOLTAGE_MIN (9200)
+#define BATTERY_VOLTAGE_MAX (12700)
 
 
+int16_t depthOffset = 0;
 
 
 Adafruit_BNO055 IMU = Adafruit_BNO055();
@@ -206,7 +210,7 @@ void setup()
 void loop()
 {
 #ifdef MANUAL_CONTROL
-    printStatusStruct(ESC_Fast_COMM(&ESC[0]));
+    printStatusStruct(ESC_Fast_COMM(&ESC[2]));
     delay(20);
     
 #else

@@ -125,8 +125,8 @@ MX_SPI1_Init();
 	 
 	 
 	#ifndef ROV
-		MC_Set_Thrust(-400);
-	MC_StartMotor();
+//		MC_Set_Thrust(-400);
+//	MC_StartMotor();
 //	HAL_Delay(1000);
 #endif
 

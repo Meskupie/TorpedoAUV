@@ -103,26 +103,29 @@ void USART1_IRQHandler(void)
 * @brief This function handles DMA USART1 TX interrupt.
 */
 
+#ifdef ROV
 void SPI1_IRQHandler(void)
 {
 	HAL_SPI_IRQHandler(&hspi1);
 }
+#endif
 
 void DMA1_Channel2_3_IRQHandler(void)
 {
-//	#ifndef ROV
-//  HAL_DMA_IRQHandler(huart.hdmatx);
-//	#elseif 
+	#ifndef ROV
+  HAL_DMA_IRQHandler(huart.hdmatx);
+	#else
   HAL_DMA_IRQHandler(&hdma_spi1_rx);
   HAL_DMA_IRQHandler(&hdma_spi1_tx);
-	//#endif
+	#endif
 }
 
+#ifdef ROV
 void HAL_SPI_TxCpltCallback (SPI_HandleTypeDef * hspi)
 {
 	HAL_SPI_FlushRxFifo(hspi);
 }
-
+#endif
 /**
 * @brief This function handles TIM1 Break, Update, Trigger and Commutation Interrupts.
 */

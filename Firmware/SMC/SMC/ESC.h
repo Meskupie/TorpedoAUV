@@ -84,7 +84,7 @@
 #define ESC_DIRECTION_FR (-1) //1 for forward -1 for reverse
 #define ESC_DIRECTION_RR (-1)
 #define ESC_DIRECTION_FC (-1)
-#define ESC_DIRECTION_RC (-1)
+#define ESC_DIRECTION_RC (1)
 #define ESC_DIRECTION_FL (-1)
 #define ESC_DIRECTION_RL (-1)
 
@@ -95,7 +95,7 @@
 #define ESC_DEADBAND_FL (250)
 #define ESC_DEADBAND_RL (250)
 
-#define ESC_DEADBAND_U (250)
+#define ESC_DEADBAND_U (100)
 #define ESC_DEADBAND_L (50)
 
 
