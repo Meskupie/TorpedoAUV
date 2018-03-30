@@ -19,8 +19,20 @@ task wrapper(type: Wrapper) {
 }
 
 buildscript {
+    def f = new File("buildscript.gradle")
+    try{
+        new URL("https://github.com/rosjava/android_core/raw/kinetic/buildscript.gradle").withInputStream{ i -> f.withOutputStream{ it << i }}
+    } catch (all) {
+        //do nothing, keep cached script
+    }
+    apply from: "buildscript.gradle"
+}
+
+/*
+buildscript {
     apply from: "https://github.com/rosjava/android_core/raw/kinetic/buildscript.gradle"
 }
+*/
 
 /*
 buildscript {

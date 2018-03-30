@@ -166,19 +166,19 @@ public class MessageManager {
         //public final byte[] serial_request_tag = new byte[]{0x74}; //t for testing fixed response
 
         // Data
-        public double battery_voltage; // V
-        public double depth; // m
-        public Quaternion imu; // Quaternion
-        public double[] motor_thrust; // N
-        public int battery_SOC; // %
-        public int battery_SOP; // %
-        public double battery_current; // A
-        public int temperature; // C
-        public int[] motor_status; // enum
-        public int smc_status; // enum
-        public boolean switch_front; // enum
-        public boolean switch_center; // enum
-        public boolean switch_rear; // enum
+        public double battery_voltage = 0; // V
+        public double depth = 0; // m
+        public Quaternion imu = new Quaternion(0,0,0,1); // Quaternion
+        public double[] motor_thrust = new double[6]; // N
+        public int battery_SOC = 0; // %
+        public int battery_SOP = 0; // %
+        public double battery_current = 0; // A
+        public int temperature = 0; // C
+        public int[] motor_status = new int[6]; // enum
+        public int smc_status = 0; // enum
+        public boolean switch_front = false; // enum
+        public boolean switch_center = false; // enum
+        public boolean switch_rear = false; // enum
 
         public MsgSMCSensors() {}
 
@@ -193,7 +193,7 @@ public class MessageManager {
             battery_SOP = parsed[13]*(int)scale[5]; // %
             battery_current = ((double)parsed[14])*scale[6]; // A
             temperature = parsed[15]*(int)scale[7]; // C
-            motor_status = new int[]{parsed[16]*(int)scale[8],parsed[17]*(int)scale[8],parsed[18]*(int)scale[8],parsed[19]*(int)scale[8],parsed[20]*(int)scale[8],parsed[21]*(int)scale[8]}; // enum
+            motor_status = new int[]{parsed[20]*(int)scale[8],parsed[16]*(int)scale[8],parsed[21]*(int)scale[8],parsed[17]*(int)scale[8],parsed[18]*(int)scale[8],parsed[19]*(int)scale[8]}; // enum
             smc_status = parsed[22]*(int)scale[9]; // enum
             switch_front = parsed[23]*(int)scale[10]==1; // bool
             switch_center = parsed[24]*(int)scale[11]==1; // bool

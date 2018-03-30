@@ -82,7 +82,12 @@ import Communication.USBDeviceWrapper;
 		private TextView currentDraw;
 		private TextView batterySoc;
 		private TextView runState;
-		private String[] run_states = new String[]{"Error","Init","Idle","Lock","Arm","Hold","Run"};
+		private TextView motor_states_field;
+		private TextView motor_data_field;
+		private TextView state_reference_field;
+		private String[] run_states = new String[]{"Error","Init","Idle","Lock","Arm","Hold","Auto","Tele"};
+		private String[] smc_motor_status_enum = new String[]{"COMM_FAILURE ","IDLE         ","STARTUP      ","VALIDATION    ","STOP         ","START        ","RUN          ","ALIGNMENT    ","SPEEDFBKERROR","OVERCURRENT  ","STARTUP_FAILU","START_BEMF_FA","LF_TIMER_FAIL","WD_RESET     ","STATE_14     ","STATE_15     "};
+
 
 		private ReedSwitchManager frontReedSwitch;
 		private ReedSwitchManager centerReedSwitch;
@@ -152,11 +157,17 @@ import Communication.USBDeviceWrapper;
 			viewContainer = (LinearLayout) findViewById(R.id.view_container);
 			translation_target = (TextView) findViewById(R.id.translation_target);
 			rotation_target = (TextView) findViewById(R.id.rotation_target);
+			motor_states_field = (TextView) findViewById(R.id.motor_states);
+			motor_data_field = (TextView) findViewById(R.id.motor_data);
+			state_reference_field = (TextView) findViewById(R.id.state_reference);
 			//UI updater
 			monitorUIHandler = new Handler();
 			monitorUI.run();
 
 			onBeginCourseRun();
+
+			//Transform test = new Transform(new Vector3(0,0,0),new Quaternion(0,0,0,1));
+			//Transform test2 = test.invert();
 		}
 
 
@@ -183,10 +194,10 @@ import Communication.USBDeviceWrapper;
 			}
 
 			// Set parameters
-			parameters_node.setDynamics("rough_controller_2.txt");
+			parameters_node.setDynamics("good_controller_lqi.txt");
 			parameters_node.setRunMode(2);
-			parameters_node.setTeleopStyle(3);
-			parameters_node.setInitialPose(new Transform(new Vector3(0,0,0.05),new Quaternion(0,0,0,1)));
+			parameters_node.setTeleopStyle(4);
+			parameters_node.setInitialPose(new Transform(new Vector3(0,0,0),new Quaternion(0,0,0,1)));
 		}
 
 		@Override
@@ -227,7 +238,7 @@ import Communication.USBDeviceWrapper;
 			//Defining a Callback which triggers whenever data is read.
 			@Override
 			public void onReceivedData(byte[] arg0) {
-				Log.d("ROV_SERIAL","received "+arg0.length+" bytes now");
+				//Log.d("ROV_SERIAL","received "+arg0.length+" bytes now");
 				if (arg0.length == message_manager.msg_smc_sensors.size_bytes) {
 					message_manager.msg_smc_sensors.parseData(arg0);
 					communication_node.SMCSensorsPub(message_manager.msg_smc_sensors);
@@ -415,7 +426,7 @@ import Communication.USBDeviceWrapper;
 				joy_state.set(4,0,( 1)*event.getAxisValue(MotionEvent.AXIS_RX));
 				joy_state.set(5,0,( 1)*event.getAxisValue(MotionEvent.AXIS_RZ));
 
-				//Log.d("ROV_JOY",String.format("X:%2.2f  Y:%2.2f  Z:%2.2f  R:%1.3f  P:%1.3f  W:%1.3f",joy_state.get(0),joy_state.get(1),joy_state.get(2),joy_state.get(3),joy_state.get(4),joy_state.get(5)));
+				Log.d("ROV_JOY",String.format("X:%2.2f  Y:%2.2f  Z:%2.2f  R:%1.3f  P:%1.3f  W:%1.3f",joy_state.get(0),joy_state.get(1),joy_state.get(2),joy_state.get(3),joy_state.get(4),joy_state.get(5)));
 				planner_node.setJoystickInput(joy_state);
 
 				return true;
@@ -456,7 +467,7 @@ import Communication.USBDeviceWrapper;
 							}
                         }
                     });
-                    frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+                    centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
 						@Override
 						public void onClick(View view) {
 							if(system_node.status_system > 0) {
@@ -468,7 +479,7 @@ import Communication.USBDeviceWrapper;
 					});
 
                     button_nav_middle.setOnClickListener(null);
-                    centerReedSwitch.setOnClickListener(null);
+                    frontReedSwitch.setOnClickListener(null);
 
                     button_nav_bottom.setOnClickListener(null);
                     rearReedSwitch.setOnClickListener(null);
@@ -576,7 +587,7 @@ import Communication.USBDeviceWrapper;
 								}
 							}, 2000);
 
-							frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+							centerReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
 								@Override
 								public void onTouch(View v, MotionEvent event) {
 									switch (event.getAction()) {
@@ -636,7 +647,7 @@ import Communication.USBDeviceWrapper;
 				}
 			});
 
-			frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+			centerReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
 				@Override
 				public void onTouch(View v, MotionEvent event) {
 
@@ -697,7 +708,7 @@ import Communication.USBDeviceWrapper;
 				}
 			});
 
-			frontReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
+			centerReedSwitch.setOnTouchListener(new ReedSwitchManager.OnTouchListener() {
 				@Override
 				public void onTouch(View v, MotionEvent event) {
 					switch (event.getAction()) {
@@ -718,7 +729,7 @@ import Communication.USBDeviceWrapper;
 			button_nav_middle.setOnClickListener(null);
 			button_nav_bottom.setOnClickListener(null);
 
-			centerReedSwitch.setOnClickListener(null);
+			frontReedSwitch.setOnClickListener(null);
 			rearReedSwitch.setOnClickListener(null);
 
 			//Testing to force view change
@@ -758,7 +769,7 @@ import Communication.USBDeviceWrapper;
                             resetButtonHandler();
                         }
                     });
-					frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
 						@Override
 						public void onClick(View view) {
 							onRunning();
@@ -770,7 +781,7 @@ import Communication.USBDeviceWrapper;
                         @Override
                         public void onClick(View view) {onBeginCourseRun(); }
                     });
-					centerReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
+					frontReedSwitch.setOnClickListener(new ReedSwitchManager.OnClickListener() {
 						@Override
 						public void onClick(View view) {
 							onBeginCourseRun();
@@ -789,7 +800,7 @@ import Communication.USBDeviceWrapper;
 						}
 					});
                 }
-            }, 200);
+            }, 500);
         }
 
 		private void onRunning(){
@@ -848,7 +859,7 @@ import Communication.USBDeviceWrapper;
 						}
 					});
                 }
-            }, 200);
+            }, 500);
 
         }
 
@@ -905,6 +916,12 @@ import Communication.USBDeviceWrapper;
 					}else{
 						rotation_target.setBackgroundResource(R.drawable.outline_bg_red);
 					}
+					int[] motor_states = message_manager.msg_smc_sensors.motor_status;
+					motor_states_field.setText(String.format("Motor States\nFL:%s FR:%s\nRL:%s RR:%s\nFC:%s RC%s",smc_motor_status_enum[motor_states[0]],smc_motor_status_enum[motor_states[1]],smc_motor_status_enum[motor_states[2]],smc_motor_status_enum[motor_states[3]],smc_motor_status_enum[motor_states[4]],smc_motor_status_enum[motor_states[5]]));
+					double[] motor_data = controller_node.input_thrust;//message_manager.msg_smc_sensors.motor_thrust;
+					motor_data_field.setText(String.format("Motor Data\nFL:%1.3f             FR:%1.3f\nRL:%1.3f             RR:%1.3f\nFC:%1.3f             RC%1.3f",motor_data[0],motor_data[1],motor_data[2],motor_data[3],motor_data[4],motor_data[5]));
+					double[] state_reference = planner_node.state_reference;
+					state_reference_field.setText(String.format("Controller Reference\nX:%1.3f  Y:%1.3f  Z:%1.3f\nR:%1.3f  P:%1.3f  W:%1.3f",state_reference[0],state_reference[2],state_reference[4],state_reference[6],state_reference[8],state_reference[10]));
 				} finally {
 					monitorUIHandler.postDelayed(monitorUI, 50);
 				}

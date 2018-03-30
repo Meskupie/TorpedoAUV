@@ -20,17 +20,17 @@ import std_msgs.Float64MultiArray;
 import std_msgs.Int32;
 
 public class ControllerNode extends AbstractNodeMain{
-    private Controller rov_controller = new Controller();
+    private SimpleController rov_controller = new SimpleController();
     private int status_controller;
     private int status_system;
 
     private Time time_current;
     private Time time_state_reference;
     private Time time_status_system;
-    private Duration timeout_state_reference = new Duration(0.15);
-    private Duration timeout_status_system= new Duration(0.15);
+    private Duration timeout_state_reference = new Duration(0.25);
+    private Duration timeout_status_system= new Duration(0.25);
 
-    private double[] input_thrust = new double[6];
+    public double[] input_thrust = new double[6];
     private double[] limits_thrusters_initial = new double[]{2,2,2,2,1,1};
 
     @Override
@@ -123,7 +123,7 @@ public class ControllerNode extends AbstractNodeMain{
                             input_thrust = rov_controller.getInputThrust();
                             if(status_system == 4){ // We should limit our outputs
                                 for(int i = 0; i < input_thrust.length; i++){
-                                    input_thrust[i] = Math.min(input_thrust[i],Math.max(-input_thrust[i],limits_thrusters_initial[i]));
+                                    input_thrust[i] = Math.min(input_thrust[i],Math.max(input_thrust[i],-limits_thrusters_initial[i]));
                                 }
                             }
                             input_thrust_msg.setData(input_thrust);

@@ -5,9 +5,6 @@ import android.util.Log;
 import org.ejml.simple.SimpleMatrix;
 
 import java.util.ArrayList;
-import java.util.SimpleTimeZone;
-
-import tf2_msgs.LookupTransformGoal;
 
 /**
  * Created by meskupie on 05/03/18.
@@ -15,16 +12,19 @@ import tf2_msgs.LookupTransformGoal;
 
 public class Controller {
 
-    double[] input_thrust = new double[6];
-    double[] state_reference = new double[12];
-    double[] input_thrust_max = new double[]{15,15,15,15,10,10};
-    double[] input_thrust_min = new double[]{-15,-15,-15,-15,-10,-10};
+    private double DT = 0.05;
+
+    private double[] input_thrust = new double[6];
+    private double[] state_reference = new double[12];
+    private double[] input_thrust_max = new double[]{8,8,8,8,4,4};
+    private double[] input_thrust_min = new double[]{-8,-8,-8,-8,-4,-4};
 
     private final int SIZE_STATES = 12;
     private final int SIZE_INPUTS = 6;
 
-    private SimpleMatrix lqr_K_mat = new SimpleMatrix(SIZE_INPUTS,SIZE_STATES);
+    private SimpleMatrix lqi_K_mat = new SimpleMatrix(SIZE_INPUTS,SIZE_STATES+SIZE_STATES/2);
     private SimpleMatrix state_reference_mat = new SimpleMatrix(SIZE_STATES,1);
+    private SimpleMatrix state_reference_integral_mat = new SimpleMatrix(SIZE_STATES/2,1);
     private SimpleMatrix input_thrust_mat = new SimpleMatrix(SIZE_INPUTS,1);
 
     private boolean ready_controller = false;
@@ -33,9 +33,29 @@ public class Controller {
     public Controller() {}
 
     public boolean computeInputThrust (){
+        state_reference[0] = 0;
+        state_reference[1] = 0;//state_reference[1];
+        state_reference[2] = 0;
+        state_reference[3] = 0;//state_reference[3];
+        state_reference[4] = 0;//state_reference[4];
+        state_reference[5] = 0;//state_reference[5];
+        state_reference[6] = state_reference[6];
+        state_reference[7] = state_reference[7];
+        state_reference[8] = state_reference[8];
+        state_reference[9] = state_reference[9];
+        state_reference[10] = state_reference[10];
+        state_reference[11] = state_reference[11];
+
         if(ready_controller&&ready_state_reference){
-            state_reference_mat = new SimpleMatrix(12,1,false,state_reference);
-            input_thrust_mat = lqr_K_mat.mult(state_reference_mat);
+            state_reference_integral_mat = state_reference_integral_mat.plus(new SimpleMatrix(6,1,false,new double[]{state_reference[0],state_reference[2],state_reference[4],state_reference[6],state_reference[8],state_reference[10]}).scale(DT));
+            state_reference_mat = new SimpleMatrix(SIZE_STATES+SIZE_STATES/2,1);
+            for(int i = 0; i < SIZE_STATES;i++){
+                state_reference_mat.set(i,state_reference[i]);
+            }
+            for(int i = SIZE_STATES; i < state_reference_mat.numRows();i++){
+                state_reference_mat.set(i,-state_reference_integral_mat.get(i-SIZE_STATES));
+            }
+            input_thrust_mat = lqi_K_mat.mult(state_reference_mat);
             for(int i = 0; i < SIZE_INPUTS; i++){
                 input_thrust[i] = Math.min(Math.max(input_thrust_mat.get(i),input_thrust_min[i]),input_thrust_max[1]);
             }
@@ -61,8 +81,8 @@ public class Controller {
             return false;
         }
         for(int i = 0; i < SIZE_INPUTS; i++) {
-            for (int j = 0; j < SIZE_STATES; j++) {
-                lqr_K_mat.set(i, j, (double) data_K_arr.get(j + i * SIZE_STATES));
+            for (int j = 0; j < SIZE_STATES+SIZE_STATES/2; j++) {
+                lqi_K_mat.set(i, j, (double) data_K_arr.get(j + i * SIZE_STATES+SIZE_STATES/2));
             }
         }
 //        for(int i = 0; i < 6; i++){

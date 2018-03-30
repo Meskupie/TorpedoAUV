@@ -1,142 +1,10 @@
 %% Set Veriables
-%clear
+clear
 path = '/Users/meskupie/Desktop/torpedoauv/Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/';
 %path = '../Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/';
-filename = 'good_controller.txt';
+filename = 'good_controller_lqi.txt';
 
-p = 1000;
-
-%% Roll Torque
-%1: tube, frame, vertduct, camera
-%2: frame, tube
-%3: duct
-
-w_roll1 = 0.253;
-w_roll2 = 0.229;
-w_roll3 = 0.184;
-
-r_roll1 = 0.044;
-r_roll2 = 0.057;
-r_roll3 = 0.125;
-
-Cd_roll1 = 1.0;
-Cd_roll2 = 1.0;
-Cd_roll3 = 1.0;
-
-Tr_coeff = 4*0.5*p/3*(Cd_roll1*w_roll1*(r_roll1^3)+Cd_roll2*w_roll2*(r_roll2^3-r_roll1^3)+Cd_roll3*w_roll3*(r_roll3^3-r_roll2^3));
-
-%% Pitch Torque
-%1: tube, frame
-%2: duct, vert duct
-%3: camera
-
-l_pitch1 = 0.184;
-l_pitch2 = 0.229;
-l_pitch3 = 0.253;
-
-w_pitch1 = 0.057;
-w_pitch2 = 0.125;
-w_pitch3 = 0.044;
-
-Cd_pitch1 = 1.0;
-Cd_pitch2 = 1.0;
-Cd_pitch3 = 1.0;
-
-Tp_coeff = 4*0.5*p/3*(Cd_pitch1*w_pitch1*(l_pitch1^3)+Cd_pitch2*w_pitch2*(l_pitch2^3-l_pitch1^3)+Cd_pitch3*w_pitch3*(l_pitch3^3-l_pitch2^3));
-
-%% Yaw Torque
-%1: tube
-%2: frame
-%3: duct
-%4: camera
-
-l_yaw1 = 0.130;
-l_yaw2 = 0.175;
-l_yaw3 = 0.233;
-l_yaw4 = 0.253;
-
-h_yaw1 = 0.056;
-h_yaw2 = 0.030;
-h_yaw3 = 0.038;
-h_yaw4 = 0.020;
-
-Cd_yaw1 = 1.0;
-Cd_yaw2 = 1.0;
-Cd_yaw3 = 1.0;
-Cd_yaw4 = 1.0;
-
-Ty_coeff = 4*0.5*p/3*(Cd_yaw1*h_yaw1*(l_yaw1^3)+Cd_yaw2*h_yaw2*(l_yaw2^3-l_yaw1^3)+Cd_yaw3*h_yaw3*(l_yaw3^3-l_yaw2^3)+Cd_yaw4*h_yaw4*(l_yaw4^3-l_yaw3^3));
-
-% Translation
-m = 3;
-
-area_front = 15900/1000000;
-Cd_drag_front = 1.0;
-
-area_side = 45500/1000000;
-Cd_drag_side = 1.0;
-
-area_top = 74200/1000000;
-Cd_drag_top = 1.0;
-
-bx = 0.5*p*Cd_drag_front*area_front;% assume thrust at 30N forward. Assume 3m/s SS. b = 100/3^2
-by = 0.5*p*Cd_drag_side*area_side;% guess
-bz = 0.5*p*Cd_drag_top*area_top;% guess
-% bx_v0 = 0.5;
-% by_v0 = 0.25;
-% bz_v0 = 0.25;
-bx_v0 = 0.0;
-by_v0 = 0.0;
-bz_v0 = 0.0;
-
-% Rotation
-Ixx = 0.0098;% assume I = m*r^2/2 = 3*(0.1)^2/2 
-Iyy = 0.075;% assume I = m/12(3r^2+h^2) = 3/12(3*0.08^2+0.35^2)
-Izz = 0.08;% same as above
-br = Tr_coeff;
-bp = Tp_coeff;
-bw = Ty_coeff;
-% br_v0 = 15*pi/180;
-% bp_v0 = 15*pi/180;
-% bw_v0 = 15*pi/180;
-br_v0 = 0;
-bp_v0 = 0;
-bw_v0 = 0;
-
-% Thrusters
-sign = 1; %use this to reverse the direction of the vertical thrusters from the original direction
-a = 0.0165; % mapping of thrust(n) to torque torque(n.m) = a*Trust, t = a*T. Taken from T200 data
-
-TpU = 13.5;  % upper limit of primary thrusters(n)
-TpL = -8; % lower limit of primary thrusters(n)
-TsU = 8;   % upper limit of secondary thrusters(n)
-TsL = -4;  % lower limit of secondary thrusters(n)
-Tp_min_input = 0.5;
-Tp_deadband = 0.25;
-Ts_min_input = 0.5;
-Ts_deadband = 0.25;
-
-% TpU = 1000;  % upper limit of primary thrusters(n)
-% TpL = -1000; % lower limit of primary thrusters(n)
-% TsU = 1000;   % upper limit of secondary thrusters(n)
-% TsL = -1000;  % lower limit of secondary thrusters(n)
-% 
-% Tp_min_input = 0.0;
-% Tp_deadband = 0.0;
-% Ts_min_input = 0.0;
-% Ts_deadband = 0.0;
-% Other
-dt = 0.05;
-
-% Shape
-lax = 0.2;
-lay = 0.1;
-lbx = 0.175;
-b = 20*pi/180;
-syms c_sym 
-c = 8;%double(solve(cos(c_sym)*a-sin(c_sym)*lbx == 0,c_sym));
-%c = 0;
-%disp(['Twist vertical thrusters by ',num2str(c*180/pi), ' degrees'])
+run('controller_params.m');
 
 %% Build Matrices
 % X = [X dX Y dY Z dZ R dR P dP W dW]'
@@ -193,6 +61,11 @@ Bd=[0 0 0 0 0 0;
     0 0 0 0 0 0;
     (lay*cos(b)+lax*sin(b))*dt/Izz -(lay*cos(b)+lax*sin(b))*dt/Izz (lay*cos(b)+lax*sin(b))*dt/Izz -(lay*cos(b)+lax*sin(b))*dt/Izz (cos(c)*a-sin(c)*lbx)*dt/Izz -(cos(c)*a-sin(c)*lbx)*dt/Izz];
 
+Cd = eye(12);
+Cd = [Cd(1,:);Cd(3,:);Cd(5,:);Cd(7,:);Cd(9,:);Cd(11,:)];
+Dd = zeros(6,6);
+
+m = m*1.2;
 
 % Are things controllable?
 Cmd_rank = rank(ctrb(Ad,Bd));
@@ -200,17 +73,25 @@ Cmd_rank = rank(ctrb(Ad,Bd));
 %% Define controllers
 
 X_pos_cost = 10;
-X_vel_cost = 0.001;
-Y_pos_cost = 2;
-Y_vel_cost = 0.2;
-Z_pos_cost = 10;
-Z_vel_cost = 10;
-R_pos_cost = 0.2;
+X_vel_cost = 0.1;
+Y_pos_cost = 1;
+Y_vel_cost = 0.1;
+Z_pos_cost = 4;
+Z_vel_cost = 0.5;
+R_pos_cost = 0.005;
 R_vel_cost = 1;
-P_pos_cost = 1;
-P_vel_cost = 0.15;
-W_pos_cost = 0.1;
-W_vel_cost = 0.5;
+P_pos_cost = 0.001;
+P_vel_cost = 0.1;
+W_pos_cost = 0.005;
+W_vel_cost = 0.1;
+Xi_cost = 0.5;
+Yi_cost = 0.2;
+Zi_cost = 0.01;
+Ri_cost = 0.01;
+Pi_cost = 0.01;
+Wi_cost = 0.005;
+
+
 gain = 0.1;
 Ta_cost = 1*gain;
 Tb_cost = 1*gain;
@@ -226,6 +107,10 @@ X_pos_range = 0.5;
 X_vel_range = 1;
 YZ_pos_range = 0.5;
 YZ_vel_range = 0.75;
+
+XYZi_range = 0.5;
+RPWi_range = 30/180*pi;
+
 RPW_pos_range = 30/180*pi;
 RPW_vel_range = 150/180*pi;
 Q_diag = [  X_pos_cost*(1/X_pos_range)^2
@@ -239,7 +124,13 @@ Q_diag = [  X_pos_cost*(1/X_pos_range)^2
             P_pos_cost*(1/RPW_pos_range)^2
             P_vel_cost*(1/RPW_vel_range)^2
             W_pos_cost*(1/RPW_pos_range)^2
-            W_vel_cost*(1/RPW_vel_range)^2];
+            W_vel_cost*(1/RPW_vel_range)^2
+            Xi_cost*(1/XYZi_range)^2
+            Yi_cost*(1/XYZi_range)^2
+            Zi_cost*(1/XYZi_range)^2
+            Ri_cost*(1/RPWi_range)^2
+            Pi_cost*(1/RPWi_range)^2
+            Wi_cost*(1/RPWi_range)^2];
 % Q_diag = [  X_pos_cost
 %             X_vel_cost
 %             Y_pos_cost
@@ -255,8 +146,8 @@ Q_diag = [  X_pos_cost*(1/X_pos_range)^2
 Q = diag(Q_diag);
 
 % R matrix
-Tp_range = 12;
-Ts_range = 8;
+Tp_range = 8;
+Ts_range = 4;
 % R_diag = [  Ta_cost*(1/Tp_range)^2
 %             Tb_cost*(1/Tp_range)^2
 %             Tc_cost*(1/Tp_range)^2
@@ -271,7 +162,9 @@ R_diag = [  Ta_cost
             Tf_cost];
 R = diag(R_diag);
 
-Kd = dlqr(Ad, Bd, Q, R);
+sys = ss(Ad,Bd,Cd,Dd,dt);
+
+Kd = lqi(sys, Q, R);
 Kd = round(Kd,4);
 
 %% Build Controller File for Import
@@ -289,65 +182,65 @@ for i = 1:12
 end
 fprintf(fileID,'\n');
 for i = 1:6
-    for j = 1:12
+    for j = 1:18
         fprintf(fileID,'%f\n',Kd(i,j));
     end
 end
 fclose(fileID);
 
 %% Plot Individual Step Responses
-t_f = 5;
-vx = 2;
-rpw_a = 60;
+t_f = 10;
+vx = 1;
+rpw_a = 45;
 yz_d = 0.5;
 %figure('name','Individual Responses of System','NumberTitle','off')
 figure(1);
 
-subplot(2,3,1)
-setpoint = [(0:dt:t_f)',linspace(0,vx*t_f,t_f/dt+1)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+subplot(2,3,1)%linspace(0,vx*t_f,t_f/dt+1)'
+setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0.5,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,2),':r',setpoint(:,1),ones(t_f/dt+1,1)*vx,':b',sim_state.time,sim_state.signals.values(:,1),'-r',sim_state.time,sim_state.signals.values(:,2),'-b');
 title('X axis response (+ -> forward)'); xlabel('time (s)'); ylabel('value (m or m/s)'); legend('Setpoint Pos','Setpoint Vel','X Position','X Velocity');
 axis([0,t_f,-0.5,6]);
-
+%%
 subplot(2,3,2)
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*yz_d,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,4),':r',sim_state.time,sim_state.signals.values(:,3),'-r',sim_state.time,sim_state.signals.values(:,4),'-b')
 title('Y axis response (+ -> right)'); xlabel('time (s)'); ylabel('value (m or m/s)'); legend('Setpoint','Y Position','Y Velocity')
 axis([0,t_f,-0.5,1.5]);
 
 subplot(2,3,3)
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*yz_d,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,6),':r',sim_state.time,sim_state.signals.values(:,5),'-r',sim_state.time,sim_state.signals.values(:,6),'-b')
 title('Z axis response (+ -> down)'); xlabel('time (s)'); ylabel('value (m or m/s)'); legend('Setpoint','Z Position','Z Velocity')
 axis([0,t_f,-0.5,1.5]);
 
 subplot(2,3,4)
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,8),':r',sim_state.time,sim_state.signals.values(:,7),'-r',sim_state.time,sim_state.signals.values(:,8),'-b')
 title('Roll axis response (+ -> Clockwise)'); xlabel('time (s)'); ylabel('value (deg or deg/s)'); legend('Setpoint','Roll Angle','Roll Angular Rate')
 axis([0,t_f,-0.75,6]);
 
 subplot(2,3,5)
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,10),':r',sim_state.time,sim_state.signals.values(:,9),'-r',sim_state.time,sim_state.signals.values(:,10),'-b')
 title('Pitch axis response (+ -> Pitch Up)'); xlabel('time (s)'); ylabel('value (deg or deg/s)'); legend('Setpoint','Pitch Angle','Pitch Angular Rate')
 axis([0,t_f,-0.75,6]);
 
 subplot(2,3,6)
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,12),':r',sim_state.time,sim_state.signals.values(:,11),'-r',sim_state.time,sim_state.signals.values(:,12),'-b')
 title('Yaw axis response (+ -> Clockwise)'); xlabel('time (s)'); ylabel('value (deg or deg/s)'); legend('Setpoint','Yaw Angle','Yaw Angular Rate')
 axis([0,t_f,-0.75,6]);
 
 %% Plot Comparison to All Steps Done Together
 setpoint = [(0:dt:t_f)',linspace(0,vx*t_f,t_f/dt+1)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*yz_d,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*yz_d,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 combined_sim_state = sim_state;
 combined_sim_u = sim_u;
 combined_sim_u_clipped = sim_u_clipped;
@@ -355,42 +248,42 @@ figure(2);
 
 subplot(2,3,1)
 setpoint = [(0:dt:t_f)',linspace(0,vx*t_f,t_f/dt+1)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,2),':r',setpoint(:,1),ones(t_f/dt+1,1)*vx,':b',sim_state.time,sim_state.signals.values(:,1),'--r',sim_state.time,sim_state.signals.values(:,2),'--b',combined_sim_state.time,combined_sim_state.signals.values(:,1),'-r',combined_sim_state.time,combined_sim_state.signals.values(:,2),'-b');
 title('X axis response (+ -> forward)'); xlabel('time (s)'); ylabel('value (m or m/s)'); legend('Setpoint Pos','Setpoint Vel','X Position Individual','X Velocity Individual','X Position Combined','X Velocity Combined');
 axis([0,t_f,-0.5,6]);
 
 subplot(2,3,2)
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*yz_d,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,4),':r',sim_state.time,sim_state.signals.values(:,3),'--r',sim_state.time,sim_state.signals.values(:,4),'--b',combined_sim_state.time,combined_sim_state.signals.values(:,3),'-r',combined_sim_state.time,combined_sim_state.signals.values(:,4),'-b')
 title('Y axis response (+ -> right)'); xlabel('time (s)'); ylabel('value (m or m/s)'); legend('Setpoint','Y Position Individual','Y Velocity Individual','Y Position Combined','Y Velocity Combined')
 axis([0,t_f,-0.5,1.5]);
 
 subplot(2,3,3)
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*yz_d,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,6),':r',sim_state.time,sim_state.signals.values(:,5),'--r',sim_state.time,sim_state.signals.values(:,6),'--b',combined_sim_state.time,combined_sim_state.signals.values(:,5),'-r',combined_sim_state.time,combined_sim_state.signals.values(:,6),'-b')
 title('Z axis response (+ -> down)'); xlabel('time (s)'); ylabel('value (m or m/s)'); legend('Setpoint','Z Position Individual','Z Velocity Individual','Z Position Combined','Z Velocity Combined')
 axis([0,t_f,-0.5,1.5]);
 
 subplot(2,3,4)
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,8),':r',sim_state.time,sim_state.signals.values(:,7),'--r',sim_state.time,sim_state.signals.values(:,8),'--b',combined_sim_state.time,combined_sim_state.signals.values(:,7),'-r',combined_sim_state.time,combined_sim_state.signals.values(:,8),'-b')
 title('Roll axis response (+ -> Clockwise)'); xlabel('time (s)'); ylabel('value (deg or deg/s)'); legend('Setpoint','Roll Angle Individual','Roll Angular Rate Individual','Roll Angle Combined','Roll Angular Rate Combined')
 axis([0,t_f,-0.75,6]);
 
 subplot(2,3,5)
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,10),':r',sim_state.time,sim_state.signals.values(:,9),'--r',sim_state.time,sim_state.signals.values(:,10),'--b',combined_sim_state.time,combined_sim_state.signals.values(:,9),'-r',combined_sim_state.time,combined_sim_state.signals.values(:,10),'-b')
 title('Pitch axis response (+ -> Pitch Up)'); xlabel('time (s)'); ylabel('value (deg or deg/s)'); legend('Setpoint','Pitch Angle Individual','Pitch Angular Rate Individual','Pitch Angle Combined','Pitch Angular Rate Combined')
 axis([0,t_f,-0.75,6]);
 
 subplot(2,3,6)
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 plot(setpoint(:,1),setpoint(:,12),':r',sim_state.time,sim_state.signals.values(:,11),'--r',sim_state.time,sim_state.signals.values(:,12),'--b',combined_sim_state.time,combined_sim_state.signals.values(:,11),'-r',combined_sim_state.time,combined_sim_state.signals.values(:,12),'-b')
 title('Yaw axis response (+ -> Clockwise)'); xlabel('time (s)'); ylabel('value (deg or deg/s)'); legend('Setpoint','Yaw Angle Individual','Yaw Angular Rate Individual','Yaw Angle Combined','Yaw Angular Rate Combined')
 axis([0,t_f,-0.75,6]);
@@ -408,37 +301,37 @@ axis_range = 14;
 figure(3);
 
 setpoint = [(0:dt:t_f)',linspace(0,vx*t_f,t_f/dt+1)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 subplot(2,3,1)
 plot(sim_u_clipped.time,sim_u_clipped.signals.values(:,1),'-r',sim_u_clipped.time,sim_u_clipped.signals.values(:,2),'-b',sim_u_clipped.time,sim_u_clipped.signals.values(:,3),'-g',sim_u_clipped.time,sim_u_clipped.signals.values(:,4),'-m',sim_u_clipped.time,sim_u_clipped.signals.values(:,5),'--r',sim_u_clipped.time,sim_u_clipped.signals.values(:,6),'--b')
 title('X axis response (+ -> Forward)'); xlabel('time (s)'); ylabel('Thrust (N)'); legend('Main-Ta','Main-Tb','Main-Tc','Main-Td','Secondary-Te','Secondary-Tf')
 axis([0,t_f,-axis_range,axis_range]);
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*yz_d,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 subplot(2,3,2)
 plot(sim_u_clipped.time,sim_u_clipped.signals.values(:,1),'-r',sim_u_clipped.time,sim_u_clipped.signals.values(:,2),'-b',sim_u_clipped.time,sim_u_clipped.signals.values(:,3),'-g',sim_u_clipped.time,sim_u_clipped.signals.values(:,4),'-m',sim_u_clipped.time,sim_u_clipped.signals.values(:,5),'--r',sim_u_clipped.time,sim_u_clipped.signals.values(:,6),'--b')
 title('Y axis response (+ -> right)'); xlabel('time (s)'); ylabel('Thrust (N)'); legend('Main-Ta','Main-Tb','Main-Tc','Main-Td','Secondary-Te','Secondary-Tf')
 axis([0,t_f,-axis_range,axis_range]);
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*yz_d,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 subplot(2,3,3)
 plot(sim_u_clipped.time,sim_u_clipped.signals.values(:,1),'-r',sim_u_clipped.time,sim_u_clipped.signals.values(:,2),'-b',sim_u_clipped.time,sim_u_clipped.signals.values(:,3),'-g',sim_u_clipped.time,sim_u_clipped.signals.values(:,4),'-m',sim_u_clipped.time,sim_u_clipped.signals.values(:,5),'--r',sim_u_clipped.time,sim_u_clipped.signals.values(:,6),'--b')
 title('Z axis response (+ -> down)'); xlabel('time (s)'); ylabel('Thrust (N)'); legend('Main-Ta','Main-Tb','Main-Tc','Main-Td','Secondary-Te','Secondary-Tf')
 axis([0,t_f,-axis_range,axis_range]);
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 subplot(2,3,4)
 plot(sim_u_clipped.time,sim_u_clipped.signals.values(:,1),'-r',sim_u_clipped.time,sim_u_clipped.signals.values(:,2),'-b',sim_u_clipped.time,sim_u_clipped.signals.values(:,3),'-g',sim_u_clipped.time,sim_u_clipped.signals.values(:,4),'-m',sim_u_clipped.time,sim_u_clipped.signals.values(:,5),'--r',sim_u_clipped.time,sim_u_clipped.signals.values(:,6),'--b')
 title('Roll axis response (+ -> Clockwise)'); xlabel('time (s)'); ylabel('Thrust (N)'); legend('Main-Ta','Main-Tb','Main-Tc','Main-Td','Secondary-Te','Secondary-Tf')
 axis([0,t_f,-axis_range,axis_range]);
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 subplot(2,3,5)
 plot(sim_u_clipped.time,sim_u_clipped.signals.values(:,1),'-r',sim_u_clipped.time,sim_u_clipped.signals.values(:,2),'-b',sim_u_clipped.time,sim_u_clipped.signals.values(:,3),'-g',sim_u_clipped.time,sim_u_clipped.signals.values(:,4),'-m',sim_u_clipped.time,sim_u_clipped.signals.values(:,5),'--r',sim_u_clipped.time,sim_u_clipped.signals.values(:,6),'--b')
 title('Pitch axis response (+ -> Pitch Up)'); xlabel('time (s)'); ylabel('Thrust (N)'); legend('Main-Ta','Main-Tb','Main-Tc','Main-Td','Secondary-Te','Secondary-Tf')
 axis([0,t_f,-axis_range,axis_range]);
 setpoint = [(0:dt:t_f)',ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*0,ones(t_f/dt+1,1)*rpw_a*pi/180,ones(t_f/dt+1,1)*0];
-sim('LQR_sim_non_linear_model.slx');
+sim('LQI_sim_non_linear_model.slx');
 subplot(2,3,6)
 plot(sim_u_clipped.time,sim_u_clipped.signals.values(:,1),'-r',sim_u_clipped.time,sim_u_clipped.signals.values(:,2),'-b',sim_u_clipped.time,sim_u_clipped.signals.values(:,3),'-g',sim_u_clipped.time,sim_u_clipped.signals.values(:,4),'-m',sim_u_clipped.time,sim_u_clipped.signals.values(:,5),'--r',sim_u_clipped.time,sim_u_clipped.signals.values(:,6),'--b')
 title('Yaw axis response (+ -> Clockwise)'); xlabel('time (s)'); ylabel('Thrust (N)'); legend('Main-Ta','Main-Tb','Main-Tc','Main-Td','Secondary-Te','Secondary-Tf')

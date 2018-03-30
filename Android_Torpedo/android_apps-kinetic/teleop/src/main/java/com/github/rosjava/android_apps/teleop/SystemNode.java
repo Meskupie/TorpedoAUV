@@ -27,7 +27,10 @@ public class SystemNode extends AbstractNodeMain {
 
     private Time time_state_transition;
     private Duration timeout_initial_leeway = new Duration(1);
-    private Duration start_delay = new Duration(5);
+    private Duration start_delay = new Duration(8);
+
+    private Time time_run_begin;
+    private Duration timeout_run = new Duration(2);
 
     private Time time_status_communication;
     private Time time_status_front_camera;
@@ -37,13 +40,13 @@ public class SystemNode extends AbstractNodeMain {
     private Time time_status_planner;
     private Time time_status_controller;
     private Time time_status_parameters;
-    private Duration timeout_status_communication = new Duration(0.15);
-    private Duration timeout_status_cameras = new Duration(0.15);
-    private Duration timeout_status_embedded = new Duration(0.15);
-    private Duration timeout_status_localization = new Duration(0.15);
-    private Duration timeout_status_planner = new Duration(0.15);
-    private Duration timeout_status_controller = new Duration(0.15);
-    private Duration timeout_status_parameters = new Duration(2);
+    private Duration timeout_status_communication = new Duration(0.25);
+    private Duration timeout_status_cameras = new Duration(0.25);
+    private Duration timeout_status_embedded = new Duration(0.25);
+    private Duration timeout_status_localization = new Duration(0.25);
+    private Duration timeout_status_planner = new Duration(0.25);
+    private Duration timeout_status_controller = new Duration(0.25);
+    private Duration timeout_status_parameters = new Duration(3);
     private int status_communication;
     private int status_embedded;
     private int status_front_camera;
@@ -243,6 +246,7 @@ public class SystemNode extends AbstractNodeMain {
                                 state_transition_ready = true;
                                 if((status_system_desired == 4)||(status_system_desired == 5)) {
                                     status_system = 4;
+
                                 }
                             }else{
                                 state_transition_ready = false;
@@ -263,6 +267,7 @@ public class SystemNode extends AbstractNodeMain {
                         case 4: // Position Hold
                             if (status_system_desired == 5) {
                                 status_system = 5;
+                                time_run_begin = connectedNode.getCurrentTime();
                             }
                             // Return to home
                             if(status_system_desired == 1){
@@ -274,6 +279,24 @@ public class SystemNode extends AbstractNodeMain {
                             }
                             break;
                         case 5: // Run
+                            if (status_system != status_system_prev){
+                                time_run_begin = connectedNode.getCurrentTime();
+                            }else {
+                                if (time_current.compareTo(time_run_begin.add(timeout_run)) == 1) {
+                                    status_system = 6;
+                                }
+                            }
+
+                            // Return to home
+                            if(status_system_desired == 1){
+                                status_system = 1;
+                            }
+                            // To error
+                            if (((status_fault_nodes > 0) || (status_timeouts > 0)) || (status_system_desired == -1)) {
+                                status_system = -1;
+                            }
+                            break;
+                        case 6: // tele
                             // Return to home
                             if(status_system_desired == 1){
                                 status_system = 1;

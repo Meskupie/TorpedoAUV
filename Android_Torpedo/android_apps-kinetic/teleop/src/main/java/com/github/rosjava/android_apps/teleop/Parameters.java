@@ -31,7 +31,7 @@ public class Parameters {
     private String path = "res/raw/";
     private final int SIZE_A = 144;
     private final int SIZE_B = 72;
-    private final int SIZE_K = 72;
+    private final int SIZE_K = 108;
 
     public Parameters() {
         // Initialize data

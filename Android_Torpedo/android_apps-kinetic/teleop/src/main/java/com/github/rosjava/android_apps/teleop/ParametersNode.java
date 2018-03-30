@@ -41,8 +41,8 @@ public class ParametersNode extends AbstractNodeMain {
     private Time time_current;
     private Time time_status_system;
     private Time time_start;
-    private Duration timeout_status_system= new Duration(0.1);
-    private Duration startup_delay = new Duration(2.5);
+    private Duration timeout_status_system= new Duration(0.25);
+    private Duration startup_delay = new Duration(3);
 
     private int status_system;
     private int status_parameters;

@@ -29,7 +29,7 @@ import visualization_msgs.Marker;
 public class PlannerNode extends AbstractNodeMain{
     public Planner rov_planner = new Planner();
 
-    double[] state_reference = new double[12];
+    public double[] state_reference = new double[12];
 
     SimpleMatrix joy_input_cur = new SimpleMatrix(6,1);
     SimpleMatrix joy_input_prev = new SimpleMatrix(6,1);
@@ -43,9 +43,9 @@ public class PlannerNode extends AbstractNodeMain{
     private Time time_status_system;
     private Time time_state_pose;
     private Time time_joy_input;
-    private Duration leeway_pipe_start = new Duration(0.15);
-    private Duration timeout_status_system = new Duration(0.15);
-    private Duration timeout_state_pose = new Duration(0.15);
+    private Duration leeway_pipe_start = new Duration(0.25);
+    private Duration timeout_status_system = new Duration(0.25);
+    private Duration timeout_state_pose = new Duration(0.25);
     private Duration timeout_joy_input = new Duration(0.5);
 
 
@@ -130,6 +130,12 @@ public class PlannerNode extends AbstractNodeMain{
                     status_planner &= ~128;
                 }
 
+                if (!(status_system == 6)){
+                    rov_planner.inAuto(true);
+                }else{
+                    rov_planner.inAuto(false);
+                }
+
                 // Publish status
                 status_planner_msg.setData(status_planner);
                 status_planner_pub.publish(status_planner_msg);
@@ -146,6 +152,10 @@ public class PlannerNode extends AbstractNodeMain{
                 Quaternion attitude = new Quaternion(pose_msg.getRotation().getX(), pose_msg.getRotation().getY(), pose_msg.getRotation().getZ(), pose_msg.getRotation().getW());
                 Transform pose = new Transform(position, attitude);
                 // Update pose
+                Vector3 temp_pos = pose.getTranslation();
+                MyQuaternion temp_rot = new MyQuaternion(pose.getRotationAndScale());
+                Log.d("DEBUG_MSG","Robot Pose planner, X:"+temp_pos.getX()+" Y:"+temp_pos.getY()+" Z:"+temp_pos.getZ()+" qX:"+temp_rot.getX()+" qYPitch:"+temp_rot.getY()+" qZ:"+temp_rot.getZ()+" qW:"+temp_rot.getW());//+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
+
                 rov_planner.setPose(pose);
                 if((status_planner&127) == 0) { // We should be good to output
                     Float64MultiArray state_reference_msg = state_reference_pub.newMessage();

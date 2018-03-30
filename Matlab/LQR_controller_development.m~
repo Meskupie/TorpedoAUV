@@ -2,7 +2,7 @@
 %clear
 path = '/Users/meskupie/Desktop/torpedoauv/Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/';
 %path = '../Android_Torpedo/android_apps-kinetic/teleop/src/main/res/raw/';
-filename = 'test.txt';
+filename = 'good_controller.txt';
 
 p = 1000;
 
@@ -112,9 +112,9 @@ TpL = -8; % lower limit of primary thrusters(n)
 TsU = 8;   % upper limit of secondary thrusters(n)
 TsL = -4;  % lower limit of secondary thrusters(n)
 Tp_min_input = 0.25;
-Tp_deadband = 0.1;
+Tp_deadband = 0.05;
 Ts_min_input = 0.25;
-Ts_deadband = 0.1;
+Ts_deadband = 0.05;
 
 % TpU = 1000;  % upper limit of primary thrusters(n)
 % TpL = -1000; % lower limit of primary thrusters(n)
@@ -206,11 +206,11 @@ Y_vel_cost = 0.2;
 Z_pos_cost = 10;
 Z_vel_cost = 10;
 R_pos_cost = 0.2;
-R_vel_cost = 2;
+R_vel_cost = 1;
 P_pos_cost = 0.5;
-P_vel_cost = 1;
-W_pos_cost = 0.2;
-W_vel_cost = 2;
+P_vel_cost = 0.15;
+W_pos_cost = 0.1;
+W_vel_cost = 1;
 gain = 0.1;
 Ta_cost = 1*gain;
 Tb_cost = 1*gain;

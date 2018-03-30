@@ -15,6 +15,7 @@ import org.ros.node.topic.Subscriber;
 import org.ros.rosjava_geometry.Quaternion;
 
 import Autonomy.Localization.CameraTarget;
+import Autonomy.MyQuaternion;
 import sensor_msgs.PointCloud;
 import std_msgs.Float64;
 import std_msgs.Float64MultiArray;
@@ -96,7 +97,7 @@ public class CommunicationNode extends AbstractNodeMain {
     private MessageManager message_manager = new MessageManager();
 
     private String[] smc_status_enum = new String[]{"RUNNING","IDLE","STARTUP","TIMEOUT","FAULT", "FAULT_IMU","FAULT_BATTERY","FAULT MOTORS"};
-    private String[] smc_motor_status_enum = new String[]{"COMM_FAILURE","IDLE,STARTUP","VALIDATION","STOP","START,RUN","ALIGNMENT","SPEEDFBKERROR","OVERCURRENT","STARTUP_FAILURE","STARTUP_BEMF_FAILURE","LF_TIMER_FAILURE","WD_RESET"};
+    private String[] smc_motor_status_enum = new String[]{"COMM_FAILURE ","IDLE         ","STARTUP      ","VALIDATION    ","STOP         ","START        ","RUN          ","ALIGNMENT    ","SPEEDFBKERROR","OVERCURRENT  ","STARTUP_FAILU","START_BEMF_FA","LF_TIMER_FAIL","WD_RESET     ","STATE_14     ","STATE_15     "};
 
     public CommunicationNode(){
         status_system = 0;
@@ -160,6 +161,9 @@ public class CommunicationNode extends AbstractNodeMain {
             protected void loop() throws InterruptedException {
                 // Update USB devices
                 if((usb_smc.usbDevice != null)&&(usb_smc.serial != null)){
+//                    if(ready_usb_smc == false){
+//                        new SerialWrite().execute(new Object[]{usb_smc.serial, 'B'});
+//                    }
                     ready_usb_smc = true;
                 }
                 if((usb_front_cam.usbDevice != null)&&(usb_front_cam.serial != null)){
@@ -203,7 +207,7 @@ public class CommunicationNode extends AbstractNodeMain {
                 status_system = status_system_msg.getData();
                 // request data from systems
                 if(ready_usb_smc) {
-                    Log.d("ROV_LOG","writing request");
+                    //Log.d("ROV_LOG","writing request");
                     new SerialWrite().execute(new Object[]{usb_smc.serial, message_manager.msg_smc_sensors.getRequest()});
                 }
                 if(ready_usb_front_cam) {
@@ -240,7 +244,10 @@ public class CommunicationNode extends AbstractNodeMain {
         embedded_imu_msg.setY(message.imu.getY());
         embedded_imu_msg.setZ(message.imu.getZ());
         embedded_imu_msg.setW(message.imu.getW());
-        embedded_depth_msg.setData(message.depth);
+        MyQuaternion temp_rot = new MyQuaternion(message.imu);
+        Log.d("DEBUG_MSG","IMU, qX:"+temp_rot.getX()+" qY:"+temp_rot.getY()+" qZ:"+temp_rot.getZ()+" qW:"+temp_rot.getW());//+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
+
+        embedded_depth_msg.setData(0);//message.depth);
         embedded_temperature_msg.setData(message.temperature);
         embedded_thrust_msg.setData(message.motor_thrust);
         embedded_controller_states_msg.setData(message.motor_status);
@@ -273,7 +280,8 @@ public class CommunicationNode extends AbstractNodeMain {
         ui_battery_soc = message.battery_SOC;
         ui_depth = message.depth;
 
-        //Log.d("ROV_LOG", "SMC Status: "+smc_status_enum[message.smc_status]+" Reed Switches: "+embedded_reed_switches_msg.getData());
+        int[] m_s = message.motor_status;
+        Log.d("ROV_EMBEDDED", "SMC Status: "+smc_status_enum[message.smc_status]+" M_FL:"+smc_motor_status_enum[m_s[0]]+" M_FR:"+smc_motor_status_enum[m_s[1]]+" M_RL:"+smc_motor_status_enum[m_s[2]]+" M_RR:"+smc_motor_status_enum[m_s[3]]+" M_FC:"+smc_motor_status_enum[m_s[4]]+" M_RC:"+smc_motor_status_enum[m_s[5]]+" Reed Switches: "+embedded_reed_switches_msg.getData());
     }
 
     public void frontCameraPub(MessageManager.MsgCameraTargets message){

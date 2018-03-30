@@ -21,6 +21,7 @@ import org.ros.rosjava_geometry.Vector3;
 
 import java.util.ArrayList;
 
+import Autonomy.MyQuaternion;
 import geometry_msgs.Twist;
 import sensor_msgs.PointCloud;
 import std_msgs.Float64;
@@ -59,10 +60,10 @@ public class LocalizationNode extends AbstractNodeMain{
     private Time time_camera_targets_front;
     private Time time_camera_targets_rear;
 
-    private Duration timeout_status_system = new Duration(0.15);
-    private Duration timeout_embedded_thrust = new Duration(0.15);
-    private Duration timeout_embedded_imu = new Duration(0.15);
-    private Duration timeout_embedded_depth = new Duration(0.15);
+    private Duration timeout_status_system = new Duration(0.25);
+    private Duration timeout_embedded_thrust = new Duration(0.25);
+    private Duration timeout_embedded_imu = new Duration(0.25);
+    private Duration timeout_embedded_depth = new Duration(0.25);
     private Duration timeout_camera_targets_front = new Duration(0.2);
     private Duration timeout_camera_targets_rear = new Duration(0.2);
 
@@ -74,6 +75,10 @@ public class LocalizationNode extends AbstractNodeMain{
                 if(rov_localization.attemptUpdate(connectedNode.getCurrentTime())){
                     // Get and publish pose
                     state_pose = rov_localization.getPose();
+//                    Vector3 temp_pos = state_pose.getTranslation();
+//                    MyQuaternion temp_rot = new MyQuaternion(state_pose.getRotationAndScale());
+//                    Log.d("DEBUG_MSG","Robot Pose local, X:"+temp_pos.getX()+" Y:"+temp_pos.getY()+" Z:"+temp_pos.getZ()+" qX:"+temp_rot.getX()+" qY:"+temp_rot.getY()+" qZ:"+temp_rot.getZ()+" qW:"+temp_rot.getW());//+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
+
                     state_pose_msg_vect.setX(state_pose.getTranslation().getX());
                     state_pose_msg_vect.setY(state_pose.getTranslation().getY());
                     state_pose_msg_vect.setZ(state_pose.getTranslation().getZ());

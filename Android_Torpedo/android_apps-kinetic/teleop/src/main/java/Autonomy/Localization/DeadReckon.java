@@ -84,8 +84,8 @@ public class DeadReckon {
                 }
                 Transform transform_imu_yaw = new Transform(new Vector3(0, 0, 0), MyQuaternion.createFromEuler(0, 0, imu_initial_yaw));
                 transform_imu = (transform_imu_fixed).multiply(transform_imu_yaw).invert();
-//                MyQuaternion temp_rot = new MyQuaternion(transform_imu.getRotationAndScale());
-//                Log.d("DEBUG_MSG","Transform IMU, Roll: "+temp_rot.getRoll()+" Pitch: "+temp_rot.getPitch()+" Yaw: "+temp_rot.getYaw());
+                MyQuaternion temp_rot = new MyQuaternion(transform_imu.getRotationAndScale());
+                Log.d("DEBUG_MSG","Transform IMU, Roll: "+temp_rot.getRoll()+" Pitch: "+temp_rot.getPitch()+" Yaw: "+temp_rot.getYaw());
                 imu_data_count++;
 
                 // Set the various poses
@@ -110,7 +110,7 @@ public class DeadReckon {
 
                 // Propagate pose through motion model
                 pose_body_cur = param_A_mat.mult(pose_body_prev).plus(param_B_mat.mult(data_thrust));
-                Transform delta = new Transform(new Vector3(pose_body_cur.get(0),pose_body_cur.get(2),pose_body_cur.get(4)), MyQuaternion.createFromEuler(pose_body_cur.get(6),pose_body_cur.get(8),pose_body_cur.get(10)));
+                Transform delta = new Transform(new Vector3(pose_body_cur.get(0),pose_body_cur.get(2),pose_body_cur.get(4)), new Quaternion(0,0,0,1)); // MyQuaternion.createFromEuler(pose_body_cur.get(6),pose_body_cur.get(8),pose_body_cur.get(10))
                 pose_inertial_cur = pose_inertial_cur.multiply(delta);
 
                 // Resolve pose with sensor data
@@ -118,9 +118,12 @@ public class DeadReckon {
 
                 // Final estimate
                 pose_estimate = pose_inertial_cur;
+//                Vector3 temp_pos = pose_estimate.getTranslation();
+//                MyQuaternion temp_rot = new MyQuaternion(pose_estimate.getRotationAndScale());
+//                Log.d("ROV_POSE","Robot Pose, X:"+temp_pos.getX()+" Y:"+temp_pos.getY()+" Z:"+temp_pos.getZ()+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
                 Vector3 temp_pos = pose_estimate.getTranslation();
                 MyQuaternion temp_rot = new MyQuaternion(pose_estimate.getRotationAndScale());
-                //Log.d("DEBUG_MSG","Robot Pose, X:"+temp_pos.getX()+" Y:"+temp_pos.getY()+" Z:"+temp_pos.getZ()+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
+                Log.d("DEBUG_MSG","Robot Pose Est, X:"+temp_pos.getX()+" Y:"+temp_pos.getY()+" Z:"+temp_pos.getZ()+" qX:"+temp_rot.getX()+" qY:"+temp_rot.getY()+" qZ:"+temp_rot.getZ()+" qW:"+temp_rot.getW());//+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
 
                 // Reset the body pose
                 Transform delta_final = pose_inertial_prev.invert().multiply(pose_inertial_cur);
@@ -160,6 +163,11 @@ public class DeadReckon {
         Vector3 pose_new_translation = new Vector3(pose_inertial_cur.getTranslation().getX(),pose_inertial_cur.getTranslation().getY(),pose_depth_z);
         Quaternion pose_new_orientation = pose_imu_orientation;
         pose_inertial_cur = new Transform(pose_new_translation,pose_new_orientation);
+
+        Vector3 temp_pos = pose_inertial_cur.getTranslation();
+        MyQuaternion temp_rot = new MyQuaternion(pose_inertial_cur.getRotationAndScale());
+        Log.d("DEBUG_MSG","Robot Pose local, X:"+temp_pos.getX()+" Y:"+temp_pos.getY()+" Z:"+temp_pos.getZ()+" qX:"+temp_rot.getX()+" qY:"+temp_rot.getY()+" qZ:"+temp_rot.getZ()+" qW:"+temp_rot.getW());//+" Roll:"+temp_rot.getRoll()+" Pitch:"+temp_rot.getPitch()+" Yaw:"+temp_rot.getYaw());
+
     }
 
 
